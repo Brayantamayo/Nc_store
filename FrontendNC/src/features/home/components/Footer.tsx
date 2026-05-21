@@ -5,15 +5,6 @@ import styles from '../css/Footer.module.css';
 export const Footer = () => {
   return (
     <footer className={styles.footer}>
-      <div className={styles.ginghamStrip}>
-        <Bow size={14} className={styles.stripBow} color="var(--color-primary)" opacity={0.2} />
-        <Bow size={14} className={styles.stripBow} color="var(--color-primary)" opacity={0.2} />
-        <Bow size={14} className={styles.stripBow} color="var(--color-primary)" opacity={0.2} />
-        <Bow size={14} className={styles.stripBow} color="var(--color-primary)" opacity={0.2} />
-        <Bow size={14} className={styles.stripBow} color="var(--color-primary)" opacity={0.2} />
-        <Bow size={14} className={styles.stripBow} color="var(--color-primary)" opacity={0.2} />
-        <Bow size={14} className={styles.stripBow} color="var(--color-primary)" opacity={0.2} />
-      </div>
       <div className={styles.footerContent}>
         <div className="container">
           <div className={styles.grid}>

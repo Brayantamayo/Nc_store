@@ -1,4 +1,4 @@
-// ReelsSection.tsx
+// Instagram Section
 import { useState } from 'react';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from 'lucide-react';
 import { Bow } from './Moñito';
@@ -60,15 +60,6 @@ const POSTS: Post[] = [
     hashtags: '#BTS #NCStore #HechoConAmor',
     comments: 63,
     timeAgo: 'Hace 3 días',
-  },
-  {
-    id: '6',
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80',
-    likes: 3102,
-    caption: 'Arte colombiano con alma propia. Esto es NC 💕',
-    hashtags: '#NCStore #ModaColombiana #BolsosLujo',
-    comments: 112,
-    timeAgo: 'Hace 4 días',
   },
 ];
 

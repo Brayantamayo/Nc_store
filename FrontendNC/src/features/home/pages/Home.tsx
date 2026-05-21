@@ -46,7 +46,8 @@ export const Home = () => {
 
       <MarqueeTicker />
 
-      {/* Featured Collection Section (Recién llegado Slider) */}
+
+      {/* Lista de los bolsos abajo del hero sectionRecién llegado Slider */}
       <section className="section container">
         <div className={styles.header}>
           <div className={styles.titleWrapper}>
@@ -76,14 +77,17 @@ export const Home = () => {
           </button>
         </div>
       </section>
+      {/* Lista de los bolsos abajo del hero */}
 
-      {/* Categories Section */}
+
+
+      {/* Nuestras Colecciones*/}
       <section className={styles.categoriesSection}>
         <div className="container">
           <div className={styles.centeredHeader}>
             <Bow size={30} className={styles.centeredBow} color="var(--color-primary)" />
-            <h2 className={styles.sectionTitleCentered}>Nuestras <span className={styles.cursive}>Colecciones</span></h2>
-            <p className={styles.sectionSubtitle}>Explora el diseño editorial NC a través de nuestras siluetas exclusivas.</p>
+            <h2 className={styles.sectionTitleCentered}>Nuevas <span className={styles.cursive}>Colecciones</span></h2>
+            <p className={styles.sectionSubtitle}>Explora lo mas nuevo y exclusivo de NC a través de nuestro diseños exclusivas.</p>
           </div>
           <div className={styles.categoryGrid}>
             {collections.map((col, idx) => {
@@ -115,33 +119,7 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* Brand Ethos */}
-      <section className={styles.ethosSection}>
-        <div className="container">
-          <div className={styles.ethosWrapper}>
-            <div className={styles.ethosText}>
-              <p className={styles.ethosEyebrow}>ESENCIA NC</p>
-              <h2 className={styles.ethosTitle}>Arte Colombiano <br /> con <span className={styles.cursive}>Amor</span></h2>
-              <p className={styles.ethosDesc}>
-                NC STORE nació bajo el sol de Medellín, con el deseo de democratizar el lujo.
-                Nuestros bolsos no son solo accesorios; son piezas de confianza diseñadas
-                para la mujer que se atreve a brillar con su propio estilo.
-              </p>
-              <Link to="/sobre-nosotros" className={styles.ethosLink}>
-                Descubre nuestro mundo <Bow size={16} className={styles.linkBow} />
-              </Link>
-            </div>
-            <div className={styles.ethosImageWrapper}>
-              <img src="https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&q=80&w=1200" alt="Lifestyle NC" className={styles.ethosImage} />
-              <div className={styles.imageBowOverlay}>
-                <Bow size={60} color="white" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Instagram Reels Section */}
+      {/* Instagram */}
       <ReelsSection />
 
     </motion.div>
