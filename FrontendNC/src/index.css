@@ -1,0 +1,106 @@
+/* index.css: Aquí es donde pusimos los colores rosados, las fuentes y los estilos generales de toda la web. */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=DM+Sans:wght@300;400;500&family=Playfair+Display:ital,wght@1,400&family=Petit+Formal+Script&display=swap');
+
+:root {
+  /* Colors */
+  --color-primary: #c2185b; /* Vibrant pink */
+  --color-secondary: #fff5f8;
+  --color-accent: #f06292;
+  --color-text: #4a142c;
+  --color-text-light: #ad1457;
+  --color-background: #fdf5f7;
+  --color-border: #f8bbd0;
+  --color-white: #ffffff;
+  --color-black: #2d0010;
+  --color-pearl: #fce4ec;
+  --color-luxury-beige: #f8bbd0;
+
+  /* Typography */
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-accent: 'Playfair Display', serif;
+  --font-cursive: 'Petit Formal Script', cursive;
+
+  /* Transitions */
+  --transition-smooth: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.2s ease-in-out;
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 4rem;
+  --spacing-xl: 8rem;
+
+  /* Misc */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--color-primary);
+  line-height: 1.1;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition-fast);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Base Utility Classes (Minimal use as requested) */
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+}
+
+.section {
+  padding: var(--spacing-lg) 0;
+}
+
+@media (min-width: 1024px) {
+  .section {
+    padding: var(--spacing-xl) 0;
+  }
+}

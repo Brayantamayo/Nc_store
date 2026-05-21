@@ -1,0 +1,54 @@
+.page {
+  padding-top: 140px;
+  padding-bottom: 100px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 6rem;
+}
+
+.title {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  color: var(--color-text-light);
+  font-size: 1.1rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.link {
+  display: inline-block;
+  margin-top: 2rem;
+  background: var(--color-black);
+  color: var(--color-white);
+  padding: 1rem 3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15rem;
+  font-weight: 500;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  row-gap: 3rem;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

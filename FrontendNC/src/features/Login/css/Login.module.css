@@ -1,0 +1,370 @@
+.page {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 135px);
+  padding: 9.5rem 2rem 3rem; /* Compacted top/bottom padding */
+  background-color: var(--color-background, #fdf5f7);
+  overflow: hidden;
+  font-family: var(--font-body), sans-serif;
+}
+
+/* Glowing background orbs for coquette aesthetic */
+.glowingOrbLeft {
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(248, 187, 208, 0.45) 0%, rgba(253, 245, 247, 0) 70%);
+  filter: blur(40px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.glowingOrbRight {
+  position: absolute;
+  bottom: 10%;
+  right: 5%;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(240, 98, 146, 0.25) 0%, rgba(253, 245, 247, 0) 70%);
+  filter: blur(50px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 5;
+}
+
+/* Header styles */
+.header {
+  text-align: center;
+  margin-bottom: 2rem; /* Compacted from 5rem to reduce scroll */
+  position: relative;
+}
+
+.headerTopDecoration {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.headerBow {
+  animation: floatBow 4s ease-in-out infinite;
+  color: var(--color-primary, #c2185b);
+}
+
+@keyframes floatBow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(8deg); }
+}
+
+.titleContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  z-index: 2;
+}
+
+.titleBackgroundText {
+  position: absolute;
+  font-family: var(--font-cursive), cursive;
+  font-size: clamp(3rem, 8.5vw, 6.5rem);
+  color: rgba(248, 187, 208, 0.25);
+  opacity: 0.8;
+  z-index: 1;
+  pointer-events: none;
+  text-transform: lowercase;
+  margin-top: -1.2rem;
+}
+
+.pageTitle {
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.2rem, 5.5vw, 3.4rem);
+  font-weight: 500;
+  color: var(--color-primary, #c2185b); /* Rich pink coquette tone that pops beautifully */
+  letter-spacing: 0.35rem;
+  text-transform: uppercase;
+  z-index: 2;
+  text-shadow: 0 4px 12px rgba(248, 187, 208, 0.25);
+  margin: 0;
+}
+
+.dividerWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 400px;
+  margin: 0.8rem auto 0;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: #f8bbd0;
+}
+
+.sparkleIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary, #c2185b);
+  animation: pulse 3s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+/* Content columns layout */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem; /* Reduced gap */
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem; /* Reduced gap */
+    padding: 0 2rem;
+  }
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.colTitle {
+  font-family: var(--font-display), serif;
+  font-size: 2rem; /* Slightly smaller title */
+  color: #4a142c;
+  margin-bottom: 1rem; /* Compacted margin */
+  font-weight: 400;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem; /* Reduced gap between form fields */
+  width: 100%;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem; /* Compacted label/input space */
+}
+
+.label {
+  font-size: 0.85rem;
+  color: #4a142c;
+  font-weight: 400;
+  letter-spacing: 0.02rem;
+}
+
+.required {
+  color: #e8a0b4;
+}
+
+.input, .inputPassword {
+  width: 100%;
+  padding: 0.75rem 1rem; /* Much more compact inputs */
+  font-size: 0.9rem;
+  font-family: var(--font-body), sans-serif;
+  color: #4a142c;
+  background-color: #f2f2f2;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.input:focus, .inputPassword:focus {
+  background-color: #fff;
+  border-color: #f8bbd0;
+  box-shadow: 0 4px 12px rgba(248, 187, 208, 0.15);
+}
+
+.passwordWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 1.2rem;
+  color: #4a142c;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.eyeBtn:hover {
+  opacity: 1;
+}
+
+/* Checkbox container formatting */
+.rememberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -0.5rem;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 15px;
+  height: 15px;
+  border: 1px solid #f8bbd0;
+  accent-color: var(--color-primary, #c2185b);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  font-size: 0.85rem;
+  color: #4a142c;
+}
+
+/* Submit buttons styled like screenshots */
+.submitBtn {
+  align-self: flex-start;
+  padding: 0.7rem 1.8rem; /* Slightly more compact */
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15rem;
+  color: white;
+  background-color: #e8a0b4;
+  border: none;
+  border-radius: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 10px rgba(232, 160, 180, 0.2);
+}
+
+.submitBtn:hover {
+  transform: translateY(-2px);
+  background-color: var(--color-primary, #c2185b);
+  box-shadow: 0 8px 18px rgba(194, 24, 91, 0.25);
+}
+
+.forgotLink {
+  margin-top: 1rem; /* Compacted from 1.8rem */
+  font-size: 0.85rem;
+  color: #4a142c;
+  font-weight: 600;
+  text-decoration: none;
+  align-self: flex-start;
+  transition: color 0.2s ease;
+}
+
+.forgotLink:hover {
+  color: var(--color-primary, #c2185b);
+  text-decoration: underline;
+}
+
+.infoText {
+  font-size: 0.85rem;
+  color: #7d6b73;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.privacyText {
+  font-size: 0.8rem;
+  color: #7d6b73;
+  line-height: 1.6;
+}
+
+.privacyLink {
+  color: #4a142c;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.privacyLink:hover {
+  text-decoration: underline;
+  color: var(--color-primary, #c2185b);
+}
+
+/* Floating WhatsApp layout exactly like the screenshot */
+.whatsappFloat {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  background-color: #fff;
+  border: 1px solid rgba(232, 160, 180, 0.3);
+  border-radius: 50px;
+  box-shadow: 0 6px 20px rgba(232, 160, 180, 0.15);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.whatsappFloat:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(232, 160, 180, 0.25);
+}
+
+.whatsappIconWrapper {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #e8a0b4;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.whatsappFloat:hover .whatsappIconWrapper {
+  background-color: var(--color-primary, #c2185b);
+}
+
+.whatsappText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.whatsappTitle {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: #7d6b73;
+}
+
+.whatsappSubtitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e8a0b4;
+}
+
+.whatsappFloat:hover .whatsappSubtitle {
+  color: var(--color-primary, #c2185b);
+}

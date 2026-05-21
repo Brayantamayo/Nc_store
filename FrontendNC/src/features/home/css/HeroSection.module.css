@@ -1,0 +1,221 @@
+/* ── HERO BASE ── */
+.hero {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 135px); /* 40px announcement + 95px navbar */
+  min-height: 685px;
+  margin-top: 95px; /* Compensate for fixed navbar */
+  overflow: hidden;
+  background: #1a0008;  
+}
+
+/* ── SLIDE ── */
+.slideWrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.slideImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.gradientOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(20, 0, 8, 0.72) 0%, rgba(20, 0, 8, 0.2) 60%, transparent 100%),
+    linear-gradient(to top, rgba(20, 0, 8, 0.4) 0%, transparent 50%);
+}
+
+/* ── CONTENT ── */
+.content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 6vw;
+  z-index: 10;
+}
+
+.textBlock {
+  max-width: 560px;
+  padding-top: 80px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.22rem;
+  margin-bottom: 1.8rem;
+  font-family: var(--font-body);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  margin-bottom: 1.4rem;
+}
+
+.cursive {
+  font-family: var(--font-cursive);
+  font-size: clamp(3.5rem, 7vw, 6rem);
+  color: var(--color-accent, #e8a0b4);
+  transform: rotate(-2deg);
+  display: inline-block;
+  margin-left: -0.3rem;
+  margin-bottom: -0.2rem;
+}
+
+.bold {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.15rem;
+}
+
+.desc {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 300;
+  margin-bottom: 2.5rem;
+  line-height: 1.7;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2.8rem;
+  background: var(--color-primary, #c2185b);
+  color: #fff;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.2rem;
+  font-family: var(--font-body);
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 10px 30px rgba(194, 24, 91, 0.35);
+}
+
+.cta:hover {
+  background: #fff;
+  color: var(--color-primary, #c2185b);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(194, 24, 91, 0.25);
+}
+
+/* ── ARROWS ── */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.arrow:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.arrowLeft  { left: 1.5rem; }
+.arrowRight { right: 1.5rem; }
+
+/* ── INDICATORS ── */
+.indicators {
+  position: absolute;
+  bottom: 2.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 20;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  padding: 0;
+}
+
+.dotActive {
+  width: 26px;
+  border-radius: 4px;
+  background: #fff;
+}
+
+/* ── COUNTER ── */
+.counter {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 20;
+}
+
+.counterCurrent {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #fff;
+  line-height: 1;
+}
+
+.counterSep {
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.counterTotal {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .content {
+    align-items: flex-end;
+    padding: 0 1.5rem 6rem;
+  }
+
+  .textBlock {
+    padding-top: 0;
+    max-width: 100%;
+  }
+
+  .arrowLeft  { left: 0.8rem; }
+  .arrowRight { right: 0.8rem; }
+}

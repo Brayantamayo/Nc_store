@@ -1,0 +1,6 @@
+{
+  "name": "NC STORE",
+  "description": "Tienda e-commerce de bolsos de lujo accesible colombiana. Estilo coquette, sofisticado, femenino y editorial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
