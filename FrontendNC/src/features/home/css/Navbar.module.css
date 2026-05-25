@@ -250,6 +250,23 @@
   color: var(--color-accent);
 }
 
+.cartPulse {
+  animation: cartBounce 0.65s ease;
+}
+
+@keyframes cartBounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.22);
+  }
+  55% {
+    transform: scale(0.95);
+  }
+}
+
 .cartIconWrapper {
   position: relative;
 }

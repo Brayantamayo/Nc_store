@@ -4,11 +4,12 @@ import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Filter, X } from 'lucide-react';
 import { ProductCard } from './ProductCard';
-import { MOCK_PRODUCTS } from '../../../mockData';
+import { useProductStore } from '../pages/productStore';
 import { ProductCategory } from '../../../types';
 import styles from '../css/Collection.module.css';
 
 export const Collection = () => {
+  const { products } = useProductStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
@@ -17,7 +18,7 @@ export const Collection = () => {
   const categories: (ProductCategory | 'all')[] = ['all', 'tote', 'clutch', 'crossbody', 'mini', 'shopper'];
 
   const filteredProducts = useMemo(() => {
-    let result = MOCK_PRODUCTS;
+    let result = products;
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();

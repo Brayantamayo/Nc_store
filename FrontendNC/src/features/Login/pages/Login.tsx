@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Eye, EyeOff, MessageCircle } from 'lucide-react';
 import { Bow } from '../../home/components/Moñito';
 import styles from '../css/Login.module.css';
 
 export const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -13,7 +15,12 @@ export const Login = () => {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Iniciando sesión con: ${loginEmail}`);
+    if (loginEmail.trim() === 'admin' && loginPassword === 'admin') {
+      localStorage.setItem('nc-admin-session', 'active');
+      navigate('/admin');
+    } else {
+      alert(`Iniciando sesión con: ${loginEmail}`);
+    }
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
@@ -162,7 +169,7 @@ export const Login = () => {
 
       {/* Floating WhatsApp Support Button */}
       <a 
-        href="https://wa.me/573000000000" 
+        href="https://wa.me/573226865883" 
         target="_blank" 
         rel="noopener noreferrer" 
         className={styles.whatsappFloat}

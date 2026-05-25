@@ -215,3 +215,199 @@
   letter-spacing: 0.1rem;
   font-weight: 500;
 }
+
+/* ── CHECKOUT MODAL & SUCCESS VIEW ── */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(45, 0, 16, 0.55);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.checkoutModal {
+  background: var(--color-white);
+  width: 100%;
+  max-width: 500px;
+  border-radius: 24px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 20px 50px rgba(45, 0, 16, 0.1);
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalScaleUp {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modalHeader h2 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.closeModalBtn {
+  color: var(--color-text-light);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.checkoutForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.formLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.required {
+  color: var(--color-primary);
+}
+
+.textInput {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-secondary);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.textInput:focus {
+  border-color: var(--color-primary);
+  background-color: var(--color-white);
+  box-shadow: 0 4px 12px rgba(248, 187, 208, 0.15);
+}
+
+.inputError {
+  border-color: #c62828 !important;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: #c62828;
+  font-weight: 500;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cancelBtn {
+  padding: 0.7rem 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-light);
+  background: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancelBtn:hover {
+  background-color: var(--color-secondary);
+}
+
+.confirmBtn {
+  padding: 0.7rem 1.8rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-white);
+  background-color: var(--color-primary);
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(194, 24, 91, 0.25);
+  transition: all 0.3s ease;
+}
+
+.confirmBtn:hover {
+  background-color: #a00d43;
+}
+
+/* Success View */
+.successView {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.successIcon {
+  color: #2b9348;
+}
+
+.successTitle {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.successText {
+  color: var(--color-text-light);
+  font-size: 1rem;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.orderIdBadge {
+  background-color: var(--color-secondary);
+  border: 1px dashed var(--color-primary);
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin: 0.5rem 0;
+}
+
+.successLink {
+  background: var(--color-black);
+  color: var(--color-white);
+  padding: 0.9rem 2.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  font-weight: 500;
+  border-radius: 0;
+  transition: all 0.3s ease;
+}
+
+.successLink:hover {
+  background-color: var(--color-primary);
+}

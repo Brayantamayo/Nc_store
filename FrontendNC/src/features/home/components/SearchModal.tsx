@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, ShoppingBag } from 'lucide-react';
 import { useUIStore } from '../../store/pages/uiStore';
-import { MOCK_PRODUCTS } from '../../../mockData';
+import { useProductStore } from '../../store/pages/productStore';
 import { Product } from '../../../types';
 import styles from '../css/SearchModal.module.css';
 
 export const SearchModal = () => {
+  const { products } = useProductStore();
   const { isSearchOpen, setSearchOpen } = useUIStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
@@ -34,7 +35,7 @@ export const SearchModal = () => {
       return;
     }
 
-    const filtered = MOCK_PRODUCTS.filter(p =>
+    const filtered = products.filter(p =>
       p.name.toLowerCase().includes(query.toLowerCase()) ||
       p.category.toLowerCase().includes(query.toLowerCase()) ||
       (p.tags && p.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())))

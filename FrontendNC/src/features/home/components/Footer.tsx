@@ -30,6 +30,7 @@ export const Footer = () => {
               <Link to="/envios">Envíos y Devoluciones</Link>
               <Link to="/guia-tallas">Cuidado del Bolso</Link>
               <Link to="/faqs">Preguntas Frecuentes</Link>
+              <Link to="/admin">Administración</Link>
             </div>
 
             <div className={styles.linksColumn}>

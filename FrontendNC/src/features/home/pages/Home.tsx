@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // 2. Datos / Tipos
-import { MOCK_PRODUCTS } from '../../../mockData';
+import { useProductStore } from '../../store/pages/productStore';
 
 // 3. Componentes
 import { HeroSection } from '../components/HeroSection';
@@ -16,8 +16,12 @@ import { Bow } from '../components/Moñito';
 
 // 4. Estilos
 import styles from '../css/Home.module.css';
+import collectionStyles from '../css/NuevasColecions.module.css';
+import { Eye, EyeOff, MessageCircle } from 'lucide-react';
+
 
 export const Home = () => {
+  const { products } = useProductStore();
   const trackRef = useRef<HTMLDivElement>(null);
 
   const scrollTrack = (direction: 'left' | 'right') => {
@@ -65,7 +69,7 @@ export const Home = () => {
           </button>
           
           <div className={styles.carouselTrack} ref={trackRef}>
-            {MOCK_PRODUCTS.map((product, index) => (
+            {products.map((product, index) => (
               <div key={product.id} className={styles.carouselSlide}>
                 <ProductCard product={product} index={index} />
               </div>
@@ -77,50 +81,84 @@ export const Home = () => {
           </button>
         </div>
       </section>
-      {/* Lista de los bolsos abajo del hero */}
+  {/* NUEVAS COLECCIONES */}
 
 
 
-      {/* Nuestras Colecciones*/}
-      <section className={styles.categoriesSection}>
-        <div className="container">
-          <div className={styles.centeredHeader}>
-            <Bow size={30} className={styles.centeredBow} color="var(--color-primary)" />
-            <h2 className={styles.sectionTitleCentered}>Nuevas <span className={styles.cursive}>Colecciones</span></h2>
-            <p className={styles.sectionSubtitle}>Explora lo mas nuevo y exclusivo de NC a través de nuestro diseños exclusivas.</p>
+  {/* Nuevas Colecciones — cinta infinita */}
+<section className={collectionStyles.collectionsSection}>
+  <div className="container">
+    <div className={collectionStyles.collectionsHeader}>
+      <div className={collectionStyles.eyebrow}>
+        <span className={collectionStyles.eyebrowLine} />
+        <span className={collectionStyles.eyebrowText}>✦ Temporada 2025 ✦</span>
+        <span className={collectionStyles.eyebrowLine} />
+      </div>
+      <h2 className={collectionStyles.collectionsTitle}>
+        Nuevas <em className={collectionStyles.cursive}>Colecciones</em>
+      </h2>
+      <p className={collectionStyles.collectionsSub}>
+        Piezas exclusivas que mezclan artesanía y diseño contemporáneo
+      </p>
+    </div>
+  </div>
+
+  {/* cinta fuera del container para que llegue al borde */}
+  <div className={collectionStyles.beltWrapper}>
+    <div className={collectionStyles.beltTrack}>
+      {/* duplicamos para el loop infinito */}
+      {[...collections, ...collections].map((col, idx) => (
+        <Link
+          key={idx}
+          to={`/coleccion?category=${col.name.toLowerCase()}`}
+          className={`${collectionStyles.lookbookCard} ${idx % collections.length === 0 ? collectionStyles.lookbookHero : ''}`}
+        >
+          <div className={collectionStyles.lookbookImgWrap}>
+            <img
+              src={`${col.image}?auto=format&fit=crop&q=80&w=800`}
+              alt={col.name}
+              className={collectionStyles.lookbookImg}
+            />
           </div>
-          <div className={styles.categoryGrid}>
-            {collections.map((col, idx) => {
-              const styleClasses = [
-                styles.categoryCardTote,
-                styles.categoryCardMini,
-                styles.categoryCardNoche,
-                styles.categoryCardCrossbody
-              ];
-              const cardClass = `${styles.categoryCard} ${styleClasses[idx]}`;
-
-              return (
-                <Link key={idx} to={`/coleccion?category=${col.name.toLowerCase()}`} className={cardClass}>
-                  <div className={styles.catImageWrapper}>
-                    <img src={`${col.image}?auto=format&fit=crop&q=80&w=800`} alt={col.name} className={styles.catImage} />
-                    <div className={styles.glassOverlay}>
-                      <span className={styles.viewLabel}>VER PIEZAS <Bow size={10} /></span>
-                    </div>
-                  </div>
-                  <div className={styles.catInfo}>
-                    <span className={styles.catNumber}>0{idx + 1}</span>
-                    <span className={styles.catName}>{col.name}</span>
-                    <Bow size={12} className={styles.catBow} />
-                  </div>
-                </Link>
-              );
-            })}
+          <div className={collectionStyles.lookbookOverlay} />
+          <div className={collectionStyles.lookbookLabel}>
+            <span className={collectionStyles.lookbookNum}>0{(idx % collections.length) + 1}</span>
+            <span className={collectionStyles.lookbookName}>{col.name}</span>
+            <span className={collectionStyles.lookbookCta}>
+              Ver piezas <Bow size={9} />
+            </span>
           </div>
+        </Link>
+      ))}
+    </div>
+  </div>
+
+  <div className="container">
+    <div className={collectionStyles.collectionsFooter}>
+      <Link to="/coleccion" className={collectionStyles.allCollectionsBtn}>
+        Ver todas las colecciones
+      </Link>
+    </div>
+  </div>
+</section>
+    {/* Instagram */}
+    <ReelsSection />
+
+    {/* Floating WhatsApp Support Button */}
+      <a 
+        href="https://wa.me/573226865883" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className={styles.whatsappFloat}
+      >
+        <div className={styles.whatsappIconWrapper}>
+          <MessageCircle size={22} fill="currentColor" />
         </div>
-      </section>
-
-      {/* Instagram */}
-      <ReelsSection />
+        <div className={styles.whatsappText}>
+          <span className={styles.whatsappTitle}>Línea de</span>
+          <span className={styles.whatsappSubtitle}>atención</span>
+        </div>
+      </a>
 
     </motion.div>
   );

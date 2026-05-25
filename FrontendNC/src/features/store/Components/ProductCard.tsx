@@ -1,11 +1,12 @@
 /// PRODUCTOS CARD COMO SE MUESTRA EN LA LANDING 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Plus, Eye, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product } from '../../../types';
 import { useWishlistStore } from '../pages/wishlistStore';
 import { useCartStore } from '../pages/cartStore';
+import { useFlyToCartStore } from '../pages/flyToCartStore';
 import { Bow } from '../../home/components/Moñito';
 import styles from '../css/ProductCard.module.css';
 
@@ -20,9 +21,14 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const [selectedColor, setSelectedColor] = useState(0);
   const { toggle, isWishlisted } = useWishlistStore();
   const { addItem } = useCartStore();
+  const triggerFly = useFlyToCartStore((s) => s.triggerFly);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    const source = imageRef.current ?? (e.currentTarget as HTMLElement);
+    triggerFly(product.images[0], source);
     addItem(product, product.colors[selectedColor]);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1800);
@@ -50,6 +56,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       <Link to={`/producto/${product.slug}`} className={styles.imageWrapper}>
         {/* Imagen principal */}
         <img
+          ref={imageRef}
           src={product.images[0]}
           alt={product.name}
           className={`${styles.image} ${

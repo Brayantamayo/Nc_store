@@ -7,6 +7,7 @@ import { ShoppingBag, Heart, Search, Menu, X } from 'lucide-react';
 // 2. Estado (Zustand)
 import { useUIStore } from '../../store/pages/uiStore';
 import { useCartStore } from '../../store/pages/cartStore';
+import { useFlyToCartStore } from '../../store/pages/flyToCartStore';
 import { useWishlistStore } from '../../store/pages/wishlistStore';
 
 // 3. Componentes
@@ -24,6 +25,7 @@ interface NavLinkItem {
 export const Navbar = () => {
   const { isMobileMenuOpen, setMobileMenuOpen, setSearchOpen } = useUIStore();
   const { toggleCart, itemCount } = useCartStore();
+  const cartPulse = useFlyToCartStore((s) => s.cartPulse);
   const { items: wishlistItems } = useWishlistStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
@@ -135,7 +137,12 @@ export const Navbar = () => {
                   <span className={styles.badge}>{wishlistItems.length}</span>
                 )}
               </Link>
-              <button className={styles.iconBtn} onClick={() => toggleCart(true)} aria-label="Carrito">
+              <button
+                id="nc-cart-trigger"
+                className={`${styles.iconBtn} ${cartPulse ? styles.cartPulse : ''}`}
+                onClick={() => toggleCart(true)}
+                aria-label="Carrito"
+              >
                 <div className={styles.cartIconWrapper}>
                   <ShoppingBag size={20} />
                   <Bow size={14} className={styles.cartBow} color="var(--color-primary)" />

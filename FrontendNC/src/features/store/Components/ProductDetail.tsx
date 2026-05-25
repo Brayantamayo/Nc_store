@@ -1,15 +1,16 @@
 ///Es la página donde se ve un solo producto a detalle con su precio y descripción.
 // 1. Librerías
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Plus, Minus, Heart, ArrowRight } from 'lucide-react';
 
 // 2. Datos / Tipos
-import { MOCK_PRODUCTS } from '../../../mockData';
+import { useProductStore } from '../pages/productStore';
 
 // 3. Estado (Zustand)
 import { useCartStore } from '../pages/cartStore';
+import { useFlyToCartStore } from '../pages/flyToCartStore';
 import { useWishlistStore } from '../pages/wishlistStore';
 
 // 4. Componentes
@@ -19,11 +20,14 @@ import { ProductCard } from './ProductCard';
 import styles from '../css/ProductDetail.module.css';
 
 export const ProductDetail = () => {
+  const { products } = useProductStore();
   const { slug } = useParams();
   const navigate = useNavigate();
-  const product = MOCK_PRODUCTS.find(p => p.slug === slug);
+  const product = products.find(p => p.slug === slug);
   const { addItem } = useCartStore();
+  const triggerFly = useFlyToCartStore((s) => s.triggerFly);
   const { toggle, isWishlisted } = useWishlistStore();
+  const mainImageRef = useRef<HTMLImageElement>(null);
 
   const [selectedColor, setSelectedColor] = useState(product?.colors[0]);
   const [quantity, setQuantity] = useState(1);
@@ -38,14 +42,19 @@ export const ProductDetail = () => {
   }
 
   const handleAddToCart = () => {
-    if (selectedColor) {
-      for (let i = 0; i < quantity; i++) {
-        addItem(product, selectedColor);
-      }
+    if (!selectedColor || product.isSoldOut) return;
+
+    const source = mainImageRef.current;
+    if (source) {
+      triggerFly(product.images[0], source);
+    }
+
+    for (let i = 0; i < quantity; i++) {
+      addItem(product, selectedColor);
     }
   };
 
-  const relatedProducts = MOCK_PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
 
   return (
     <motion.div
@@ -59,7 +68,12 @@ export const ProductDetail = () => {
           {/* Gallery */}
           <div className={styles.gallery}>
             <div className={styles.mainImageWrapper}>
-              <img src={product.images[0]} alt={product.name} className={styles.mainImage} />
+              <img
+                ref={mainImageRef}
+                src={product.images[0]}
+                alt={product.name}
+                className={styles.mainImage}
+              />
             </div>
             <div className={styles.thumbnails}>
                {product.images.map((img, idx) => (

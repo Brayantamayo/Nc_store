@@ -67,47 +67,6 @@
   }
 }
 
-/* ── CATEGORIES SECTION ── */
-.categoriesSection {
-  padding: 6rem 0 8rem;
-  background-image: url('/images/Fondo.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  position: relative;
-  overflow: hidden;
-}
-
-.centeredHeader {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 5rem;
-}
-
-.centeredBow {
-  margin-bottom: 1rem;
-  opacity: 0.6;
-}
-
-.sectionTitleCentered {
-  text-align: center;
-  font-size: 3rem;
-  color: var(--color-text);
-  line-height: 1.1;
-}
-
-.sectionSubtitle {
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  color: var(--color-text-light);
-  margin-top: 0.8rem;
-  font-weight: 300;
-  letter-spacing: 0.05rem;
-  text-align: center;
-}
 
 /* ── CATEGORY GRID ── */
 .categoryGrid {
@@ -519,4 +478,66 @@
 
 .navBtnRight {
   right: 0.5rem;
+}
+
+/* Floating WhatsApp layout exactly like the login page */
+.whatsappFloat {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  background-color: #fff;
+  border: 1px solid rgba(232, 160, 180, 0.3);
+  border-radius: 50px;
+  box-shadow: 0 6px 20px rgba(232, 160, 180, 0.15);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.whatsappFloat:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(232, 160, 180, 0.25);
+}
+
+.whatsappIconWrapper {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #e8a0b4;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.whatsappFloat:hover .whatsappIconWrapper {
+  background-color: var(--color-primary, #c2185b);
+}
+
+.whatsappText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.whatsappTitle {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: #7d6b73;
+}
+
+.whatsappSubtitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e8a0b4;
+}
+
+.whatsappFloat:hover .whatsappSubtitle {
+  color: var(--color-primary, #c2185b);
 }

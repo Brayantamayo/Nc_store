@@ -27,7 +27,6 @@ export const useCartStore = create<CartState>()(
             items: [...items, { id: cartItemId, product, quantity: 1, selectedColor: color }],
           });
         }
-        set({ isOpen: true });
       },
 
       removeItem: (cartItemId: string) => {
