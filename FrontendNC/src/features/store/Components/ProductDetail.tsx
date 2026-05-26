@@ -11,6 +11,7 @@ import { useProductStore } from '../pages/productStore';
 // 3. Estado (Zustand)
 import { useCartStore } from '../pages/cartStore';
 import { useFlyToCartStore } from '../pages/flyToCartStore';
+import { useCartFeedbackStore } from '../pages/cartFeedbackStore';
 import { useWishlistStore } from '../pages/wishlistStore';
 
 // 4. Componentes
@@ -26,6 +27,7 @@ export const ProductDetail = () => {
   const product = products.find(p => p.slug === slug);
   const { addItem } = useCartStore();
   const triggerFly = useFlyToCartStore((s) => s.triggerFly);
+  const showSuccess = useCartFeedbackStore((s) => s.showSuccess);
   const { toggle, isWishlisted } = useWishlistStore();
   const mainImageRef = useRef<HTMLImageElement>(null);
 
@@ -52,6 +54,8 @@ export const ProductDetail = () => {
     for (let i = 0; i < quantity; i++) {
       addItem(product, selectedColor);
     }
+
+    showSuccess({ productName: product.name, quantity });
   };
 
   const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);

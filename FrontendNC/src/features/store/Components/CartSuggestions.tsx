@@ -4,6 +4,7 @@ import { Product, ColorOption } from '../../../types';
 import { useProductStore } from '../pages/productStore';
 import { useCartStore } from '../pages/cartStore';
 import { useFlyToCartStore } from '../pages/flyToCartStore';
+import { useCartFeedbackStore } from '../pages/cartFeedbackStore';
 import styles from '../css/CartDrawer.module.css';
 
 const formatPrice = (price: number) =>
@@ -13,7 +14,7 @@ const formatPrice = (price: number) =>
     maximumFractionDigits: 0,
   }).format(price);
 
-function getSuggestions(products: Product[], cartProductIds: Set<string>, limit = 5): Product[] {
+function getSuggestions(products: Product[], cartProductIds: Set<string>, limit = 4): Product[] {
   const available = products.filter((p) => !p.isSoldOut && !cartProductIds.has(p.id));
 
   const featured = available.filter((p) => p.isFeatured);
@@ -23,7 +24,6 @@ function getSuggestions(products: Product[], cartProductIds: Set<string>, limit 
 }
 
 interface CartSuggestionsProps {
-  /** Cierra el drawer al ir al detalle del producto */
   onNavigateProduct?: () => void;
 }
 
@@ -32,6 +32,7 @@ export const CartSuggestions = ({ onNavigateProduct }: CartSuggestionsProps) => 
   const items = useCartStore((s) => s.items);
   const addItem = useCartStore((s) => s.addItem);
   const triggerFly = useFlyToCartStore((s) => s.triggerFly);
+  const showSuccess = useCartFeedbackStore((s) => s.showSuccess);
 
   const cartIds = new Set(items.map((i) => i.product.id));
   const suggestions = getSuggestions(products, cartIds);
@@ -43,12 +44,17 @@ export const CartSuggestions = ({ onNavigateProduct }: CartSuggestionsProps) => 
     const color: ColorOption = product.colors[0];
     triggerFly(product.images[0], e.currentTarget);
     addItem(product, color);
+    showSuccess({ productName: product.name, quantity: 1 });
   };
 
   return (
-    <aside className={styles.suggestionsPanel} aria-label="También puedes llevar">
-      <h3 className={styles.suggestionsTitle}>También puedes llevar</h3>
-      <p className={styles.suggestionsSubtitle}>Completa tu bolsa con estas piezas</p>
+    <aside className={styles.suggestionsPanel} aria-label="Te puede gustar">
+      <div>
+        <h3 className={styles.suggestionsTitle}>Te puede gustar</h3>
+        <p className={styles.suggestionsSubtitle}>
+          Sumamos favoritos que combinan con tu seleccion.
+        </p>
+      </div>
 
       <ul className={styles.suggestionsList}>
         {suggestions.map((product) => (
@@ -73,10 +79,10 @@ export const CartSuggestions = ({ onNavigateProduct }: CartSuggestionsProps) => 
                 type="button"
                 className={styles.suggestionAddBtn}
                 onClick={(e) => handleQuickAdd(product, e)}
-                aria-label={`Añadir ${product.name} al carrito`}
+                aria-label={`Anadir ${product.name} al carrito`}
               >
                 <Plus size={14} />
-                Añadir
+                Anadir
               </button>
             </div>
           </li>

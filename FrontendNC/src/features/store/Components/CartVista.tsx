@@ -1,15 +1,22 @@
-// La barrita lateral que se abre cuando añades algo al carrito.
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
-import { useCartStore } from '../../store/pages/cartStore';
+import { X, Minus, Plus, ShoppingBag, Trash2, ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCartStore } from '../../store/pages/cartStore';
 import { CartSuggestions } from './CartSuggestions';
 import styles from '../css/CartDrawer.module.css';
 
+const formatPrice = (value: number) =>
+  new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(value);
+
 export const CartDrawer = () => {
-  const { items, isOpen, toggleCart, removeItem, updateQuantity, total } = useCartStore();
+  const { items, isOpen, toggleCart, removeItem, updateQuantity, total, clearCart, itemCount } = useCartStore();
 
   const closeDrawer = () => toggleCart(false);
+  const totalItems = itemCount();
 
   return (
     <AnimatePresence>
@@ -30,46 +37,66 @@ export const CartDrawer = () => {
             transition={{ type: 'tween', duration: 0.4 }}
           >
             <div className={styles.header}>
-              <h2 className={styles.title}>TU BOLSA ({items.length})</h2>
+              <div>
+                <p className={styles.kicker}>Tu seleccion</p>
+                <h2 className={styles.title}>Carrito ({totalItems})</h2>
+              </div>
               <button onClick={closeDrawer} className={styles.closeBtn} type="button" aria-label="Cerrar carrito">
                 <X size={24} />
               </button>
             </div>
 
             <div className={styles.drawerBody}>
+              <CartSuggestions onNavigateProduct={closeDrawer} />
+
               <div className={styles.cartMain}>
+                {items.length > 0 && (
+                  <div className={styles.summaryBanner}>
+                    <div className={styles.summaryCopy}>
+                      <Sparkles size={15} />
+                      <span>Tu bolsa esta casi lista para checkout.</span>
+                    </div>
+                    <button type="button" className={styles.clearBtn} onClick={clearCart}>
+                      Vaciar
+                    </button>
+                  </div>
+                )}
+
                 <div className={styles.content}>
                   {items.length === 0 ? (
                     <div className={styles.empty}>
                       <ShoppingBag size={48} strokeWidth={1} />
-                      <p>Tu bolsa está vacía</p>
+                      <p>Tu bolsa esta vacia</p>
+                      <span className={styles.emptyText}>
+                        Agrega tus favoritos y aqui veras el resumen antes de pagar.
+                      </span>
                       <Link to="/coleccion" onClick={closeDrawer} className={styles.emptyLink}>
-                        Ver Colección
+                        Ir a coleccion
                       </Link>
                     </div>
                   ) : (
                     <ul className={styles.itemList}>
                       {items.map((item) => (
                         <li key={item.id} className={styles.item}>
-                          <img src={item.product.images[0]} alt={item.product.name} className={styles.itemImage} />
+                          <div className={styles.itemMedia}>
+                            <img src={item.product.images[0]} alt={item.product.name} className={styles.itemImage} />
+                          </div>
+
                           <div className={styles.itemDetails}>
                             <div className={styles.itemHeader}>
-                              <h3 className={styles.itemName}>{item.product.name}</h3>
-                              <button
-                                onClick={() => removeItem(item.id)}
-                                className={styles.removeBtn}
-                                aria-label="Eliminar producto"
-                                type="button"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                              <div>
+                                <h3 className={styles.itemName}>{item.product.name}</h3>
+                                <p className={styles.itemMeta}>Color: {item.selectedColor.name}</p>
+                              </div>
+                              <p className={styles.itemUnitPrice}>{formatPrice(item.product.price)}</p>
                             </div>
-                            <p className={styles.itemMeta}>Color: {item.selectedColor.name}</p>
+
                             <div className={styles.itemFooter}>
                               <div className={styles.quantity}>
                                 <button
                                   type="button"
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  aria-label="Disminuir cantidad"
                                 >
                                   <Minus size={14} />
                                 </button>
@@ -77,17 +104,24 @@ export const CartDrawer = () => {
                                 <button
                                   type="button"
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  aria-label="Aumentar cantidad"
                                 >
                                   <Plus size={14} />
                                 </button>
                               </div>
-                              <p className={styles.itemPrice}>
-                                {new Intl.NumberFormat('es-CO', {
-                                  style: 'currency',
-                                  currency: 'COP',
-                                  maximumFractionDigits: 0,
-                                }).format(item.product.price * item.quantity)}
-                              </p>
+
+                              <div className={styles.itemActions}>
+                                <button
+                                  onClick={() => removeItem(item.id)}
+                                  className={styles.removeBtn}
+                                  aria-label="Eliminar producto"
+                                  type="button"
+                                >
+                                  <Trash2 size={15} />
+                                  Quitar
+                                </button>
+                                <p className={styles.itemPrice}>{formatPrice(item.product.price * item.quantity)}</p>
+                              </div>
                             </div>
                           </div>
                         </li>
@@ -98,25 +132,36 @@ export const CartDrawer = () => {
 
                 {items.length > 0 && (
                   <div className={styles.footer}>
-                    <div className={styles.totalRow}>
-                      <span>Total estimado</span>
-                      <span>
-                        {new Intl.NumberFormat('es-CO', {
-                          style: 'currency',
-                          currency: 'COP',
-                          maximumFractionDigits: 0,
-                        }).format(total())}
-                      </span>
+                    <div className={styles.totalBlock}>
+                      <div className={styles.totalRow}>
+                        <span>Subtotal</span>
+                        <span>{formatPrice(total())}</span>
+                      </div>
+                      <div className={styles.totalRow}>
+                        <span>Envio</span>
+                        <span>Se calcula al pagar</span>
+                      </div>
                     </div>
-                    <p className={styles.shippingInfo}>Impuestos y envío calculados al finalizar el pedido.</p>
+
+                    <p className={styles.shippingInfo}>Impuestos y envio calculados al finalizar el pedido.</p>
+
+                    <div className={styles.footerActions}>
+                      <button type="button" onClick={closeDrawer} className={styles.secondaryBtn}>
+                        Seguir comprando
+                      </button>
+                      <Link to="/carrito" onClick={closeDrawer} className={styles.ghostBtn}>
+                        Ver carrito
+                      </Link>
+                    </div>
+
                     <Link to="/carrito" onClick={closeDrawer} className={styles.checkoutBtn}>
-                      Finalizar Pedido
+                      <span>Finalizar compra</span>
+                      <span>{formatPrice(total())}</span>
+                      <ArrowRight size={16} />
                     </Link>
                   </div>
                 )}
               </div>
-
-              <CartSuggestions onNavigateProduct={closeDrawer} />
             </div>
           </motion.div>
         </>

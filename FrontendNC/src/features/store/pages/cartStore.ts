@@ -16,6 +16,7 @@ export const useCartStore = create<CartState>()(
 
         if (existingItem) {
           set({
+            isOpen: true,
             items: items.map((item) =>
               item.id === cartItemId
                 ? { ...item, quantity: item.quantity + 1 }
@@ -24,6 +25,7 @@ export const useCartStore = create<CartState>()(
           });
         } else {
           set({
+            isOpen: true,
             items: [...items, { id: cartItemId, product, quantity: 1, selectedColor: color }],
           });
         }

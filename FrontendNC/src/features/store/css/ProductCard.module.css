@@ -1,5 +1,3 @@
-/*Recién llegado CSS  Cards de la landing*/
-/* ── CARD ── */
 .card {
   display: flex;
   flex-direction: column;
@@ -7,7 +5,6 @@
   width: 100%;
   cursor: pointer;
   background: var(--color-white, #ffffff);
-  /* Sin border-radius pronunciado: esquinas casi rectas, más editorial */
   border-radius: 2px;
   overflow: hidden;
   border: 0.5px solid #e8e2dc;
@@ -18,7 +15,6 @@
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
 }
 
-/* ── IMAGE WRAPPER ── */
 .imageWrapper {
   position: relative;
   aspect-ratio: 3 / 4;
@@ -35,15 +31,13 @@
   object-fit: cover;
   object-position: center top;
   display: block;
-  transition: transform 1.1s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.45s ease;
+  transition: transform 1.1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s ease;
 }
 
 .card:hover .image {
   transform: scale(1.05);
 }
 
-/* Al aparecer imagen hover, oscurece levemente la principal */
 .imageFade {
   opacity: 0.55;
 }
@@ -58,22 +52,16 @@
   display: block;
 }
 
-/* ── OVERLAY CTA ── */
 .overlay {
   position: absolute;
   inset: 0;
   background: rgba(14, 10, 8, 0.28);
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 0 12px 14px;
   z-index: 4;
   pointer-events: none;
-}
-
-/* El quickAdd necesita pointer-events */
-.overlay button {
-  pointer-events: all;
 }
 
 .overlayView {
@@ -88,33 +76,6 @@
   text-transform: uppercase;
 }
 
-/* ── QUICK ADD ── */
-.quickAdd {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #fff;
-  color: #1a1a1a;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, color 0.2s ease;
-  flex-shrink: 0;
-}
-
-.quickAdd:hover {
-  background: #1a1a1a;
-  color: #fff;
-}
-
-.quickAdded {
-  background: #d8f0e4 !important;
-  color: #1a6640 !important;
-}
-
-/* ── BADGES ── */
 .badges {
   position: absolute;
   top: 10px;
@@ -160,7 +121,6 @@
   color: #8b4a4a;
 }
 
-/* ── WISHLIST ── */
 .wishlistBtn {
   position: absolute;
   top: 9px;
@@ -189,7 +149,6 @@
   background: #fff !important;
 }
 
-/* ── SOLD OUT OVERLAY ── */
 .soldOverlay {
   position: absolute;
   inset: 0;
@@ -197,7 +156,6 @@
   z-index: 2;
 }
 
-/* ── INFO ── */
 .info {
   padding: 11px 12px 14px;
   display: flex;
@@ -206,7 +164,6 @@
   background: #fff;
 }
 
-/* ── NOMBRE ── */
 .nameRow {
   display: flex;
   align-items: center;
@@ -231,7 +188,6 @@
   line-height: 0;
 }
 
-/* ── SWATCHES ── */
 .swatches {
   display: flex;
   gap: 5px;
@@ -265,7 +221,6 @@
   letter-spacing: 0.03em;
 }
 
-/* ── PRECIO ── */
 .priceRow {
   display: flex;
   align-items: baseline;
@@ -290,4 +245,49 @@
   font-weight: 400;
   color: #bbb;
   text-decoration: line-through;
+}
+
+.cardAddBtn {
+  margin-top: 0.45rem;
+  width: 100%;
+  min-height: 2.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(194, 24, 91, 0.18);
+  background: linear-gradient(135deg, rgba(240, 98, 146, 0.1), rgba(194, 24, 91, 0.16));
+  color: var(--color-primary);
+  transition: var(--transition-fast);
+}
+
+.cardAddBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  color: var(--color-white);
+  box-shadow: 0 12px 20px rgba(194, 24, 91, 0.18);
+}
+
+.cardAddBtn:disabled {
+  cursor: not-allowed;
+}
+
+.cardAddBtnContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cardAddBtnSuccess {
+  background: #d8f0e4;
+  border-color: #b4dec8;
+  color: #1a6640;
+}
+
+.cardAddBtnDisabled {
+  background: #f5efef;
+  border-color: #eadcdc;
+  color: #a88686;
 }
