@@ -1,8 +1,20 @@
 // src/middlewares/auth.ts
+
+/**
+ * Middleware de autenticación y autorización.
+ *
+ * Funciones:
+ * - Validar tokens de acceso.
+ * - Identificar usuarios autenticados.
+ * - Controlar permisos según roles.
+ *
+ * Middlewares:
+ * - requireAuth
+ * - requireRole
+ */
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from './errorHandler';
 
-// Extend Express request type to include custom user context
 declare global {
   namespace Express {
     interface Request {
@@ -23,7 +35,6 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 
   const token = authHeader.split(' ')[1];
 
-  // Simulated JWT validation (can be replaced with jwt.verify in production)
   if (token === 'demo-token-admin') {
     req.user = { id: 'admin-id', role: 'admin' };
     return next();
