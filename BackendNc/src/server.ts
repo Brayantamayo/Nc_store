@@ -5,7 +5,7 @@ import { env } from './config/environment';
 const PORT = env.PORT;
 
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${env.NODE_ENV} mode on http://localhost:${PORT}`);
+  console.log(`Servidor corriendo en el entorno ${env.NODE_ENV} en http://localhost:${PORT}`);
 });
 
 // Handle graceful shutdowns

@@ -1,19 +1,65 @@
-// src/app.ts
-import express from 'express';
-import cors from 'cors';
-import { routes } from './routes';
-import { errorHandler } from './middlewares/errorHandler';
+import express from 'express'
+import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
+import { routes } from './routes'
+import { notFoundHandler, errorHandler } from './middlewares/errorHandler'
 
-const app = express();
+const app = express()
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+// ─── SEGURIDAD ────────────────────────────────────────────────────────────────
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'upgrade-insecure-requests': null,
+    }
+  }
+}))
 
-// Main router mount
-app.use('/api', routes);
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowed = [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      process.env.FRONTEND_URL,
+    ]
 
-// Centralized error handling (Must be registered last)
-app.use(errorHandler);
+    if (!origin) return callback(null, true)
+    if (origin.startsWith('http://localhost:')) return callback(null, true)
+    if (allowed.includes(origin)) return callback(null, true)
 
-export default app;
+    callback(new Error('No permitido por CORS'))
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
+app.use(express.json())
+
+// ─── RATE LIMITING ────────────────────────────────────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+app.use('/api/auth/login', authLimiter)
+app.use('/api/auth/registro', authLimiter)
+app.use('/api/auth/recuperar', authLimiter)
+app.use('/api/auth/reset-password', authLimiter)
+
+// ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
+app.use(routes)
+
+// ─── RUTAS ────────────────────────────────────────────────────────────────────
+// aquí irán los módulos cuando los creemos
+
+// ─── ERRORES ─────────────────────────────────────────────────────────────────
+app.use(notFoundHandler)
+app.use(errorHandler)
+
+export default app
