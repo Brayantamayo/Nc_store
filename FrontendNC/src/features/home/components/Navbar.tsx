@@ -9,6 +9,7 @@ import { useUIStore } from '../../store/pages/uiStore';
 import { useCartStore } from '../../store/pages/cartStore';
 import { useFlyToCartStore } from '../../store/pages/flyToCartStore';
 import { useWishlistStore } from '../../store/pages/wishlistStore';
+import { useCustomerSessionStore } from '../../Login/services/customerSessionService';
 
 // 3. Componentes
 import { Bow, CoquetteUserIcon } from './Moñito';
@@ -27,6 +28,7 @@ export const Navbar = () => {
   const { toggleCart, itemCount } = useCartStore();
   const cartPulse = useFlyToCartStore((s) => s.cartPulse);
   const { items: wishlistItems } = useWishlistStore();
+  const customer = useCustomerSessionStore((state) => state.customer);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
 
@@ -127,6 +129,9 @@ export const Navbar = () => {
             <div className={styles.navIcons}>
               <Link to="/mi-cuenta" className={styles.iconBtn} aria-label="Mi Cuenta">
                 <CoquetteUserIcon size={22} color="var(--color-primary)" />
+                {customer && (
+                  <span className={styles.sessionDot} title={`Sesion activa: ${customer.email}`} />
+                )}
               </Link>
               <button className={styles.iconBtn} onClick={() => setSearchOpen(true)} aria-label="Buscar">
                 <Search size={20} />

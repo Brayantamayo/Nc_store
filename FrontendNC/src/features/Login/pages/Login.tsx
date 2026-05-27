@@ -1,32 +1,293 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { Eye, EyeOff, MessageCircle } from 'lucide-react';
-import { Bow } from '../../home/components/Moñito';
+import { useOrderStore } from '../../store/pages/orderStore';
+import { AccountAddressesSection } from '../components/AccountAddressesSection';
+import { AccountDashboardSection } from '../components/AccountDashboardSection';
+import { AccountDetailsSection } from '../components/AccountDetailsSection';
+import { AccountDownloadsSection } from '../components/AccountDownloadsSection';
+import { AccountHeader } from '../components/AccountHeader';
+import { AccountOrdersSection } from '../components/AccountOrdersSection';
+import { AccountSidebar, type AccountSection } from '../components/AccountSidebar';
+import { AuthAccessSection } from '../components/AuthAccessSection';
+import { AuthRegisterSection } from '../components/AuthRegisterSection';
 import styles from '../css/Login.module.css';
+import {
+  ACCOUNT_REGIONS,
+  useCustomerSessionStore,
+  type CustomerAddress,
+  type CustomerSession,
+} from '../services/customerSessionService';
+
+const EMAIL_REGEX = /\S+@\S+\.\S+/;
+
+const buildAddressForm = (customer: CustomerSession | null): CustomerAddress => ({
+  firstName: customer?.address.firstName ?? customer?.firstName ?? '',
+  lastName: customer?.address.lastName ?? customer?.lastName ?? '',
+  country: customer?.address.country ?? 'Colombia',
+  addressLine1: customer?.address.addressLine1 ?? '',
+  addressLine2: customer?.address.addressLine2 ?? '',
+  region: customer?.address.region ?? '',
+  city: customer?.address.city ?? '',
+  postalCode: customer?.address.postalCode ?? '',
+});
 
 export const Login = () => {
-  const navigate = useNavigate();
+  const customer = useCustomerSessionStore((state) => state.customer);
+  const login = useCustomerSessionStore((state) => state.login);
+  const registerWithEmail = useCustomerSessionStore((state) => state.registerWithEmail);
+  const updateProfile = useCustomerSessionStore((state) => state.updateProfile);
+  const updateAddress = useCustomerSessionStore((state) => state.updateAddress);
+  const logout = useCustomerSessionStore((state) => state.logout);
+  const orders = useOrderStore((state) => state.orders);
+
+  const [activeSection, setActiveSection] = useState<AccountSection>('dashboard');
   const [showPassword, setShowPassword] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const [addressForm, setAddressForm] = useState<CustomerAddress>(buildAddressForm(customer));
+  const [accountForm, setAccountForm] = useState({
+    firstName: customer?.firstName ?? '',
+    lastName: customer?.lastName ?? '',
+    displayName: customer?.displayName ?? '',
+    email: customer?.email ?? '',
+    password: customer?.password ?? '',
+  });
+
+  useEffect(() => {
+    setAddressForm(buildAddressForm(customer));
+    setAccountForm({
+      firstName: customer?.firstName ?? '',
+      lastName: customer?.lastName ?? '',
+      displayName: customer?.displayName ?? '',
+      email: customer?.email ?? '',
+      password: customer?.password ?? '',
+    });
+  }, [customer]);
+
+  useEffect(() => {
+    const cities = ACCOUNT_REGIONS[addressForm.region] ?? [];
+    if (addressForm.region && cities.length > 0 && !cities.includes(addressForm.city)) {
+      setAddressForm((prev) => ({ ...prev, city: cities[0] }));
+    }
+  }, [addressForm.region, addressForm.city]);
+
+  const customerOrders = useMemo(() => {
+    if (!customer) return [];
+    return orders.filter((order) => order.customerEmail.toLowerCase() === customer.email.toLowerCase());
+  }, [customer, orders]);
+
+  const clearError = (field: string) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      return { ...prev, [field]: '' };
+    });
+  };
+
+  const validateEmail = (value: string, field: string) => {
+    if (!value.trim()) {
+      setErrors((prev) => ({ ...prev, [field]: 'Este campo es obligatorio.' }));
+      return false;
+    }
+
+    if (!EMAIL_REGEX.test(value.trim())) {
+      setErrors((prev) => ({ ...prev, [field]: 'Ingresa un correo valido.' }));
+      return false;
+    }
+
+    clearError(field);
+    return true;
+  };
+
+  const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (loginEmail.trim() === 'admin' && loginPassword === 'admin') {
-      localStorage.setItem('nc-admin-session', 'active');
-      navigate('/admin');
-    } else {
-      alert(`Iniciando sesión con: ${loginEmail}`);
+
+    const isEmailValid = validateEmail(loginEmail, 'loginEmail');
+    if (!loginPassword.trim()) {
+      setErrors((prev) => ({ ...prev, loginPassword: 'La contrasena es obligatoria.' }));
+      return;
+    }
+
+    if (!isEmailValid) return;
+
+    const result = login(loginEmail, loginPassword);
+    if (!result.success) {
+      setErrors((prev) => ({ ...prev, auth: result.message }));
+      return;
+    }
+
+    setErrors({});
+    setFeedback('Sesion iniciada correctamente. Ya puedes navegar por las secciones de tu cuenta.');
+    setActiveSection('dashboard');
+    setLoginPassword('');
+  };
+
+  const handleRegisterSubmit = (e: FormEvent) => {
+    e.preventDefault();
+
+    const isEmailValid = validateEmail(registerEmail, 'registerEmail');
+    if (!isEmailValid) return;
+
+    const result = registerWithEmail(registerEmail);
+    if (!result.success) {
+      setErrors((prev) => ({ ...prev, registerEmail: result.message }));
+      return;
+    }
+
+    setErrors({});
+    setRegisterEmail('');
+    setFeedback(
+      result.generatedPassword
+        ? 'Tu cuenta se creo con una contrasena temporal y ya quedaste dentro de tu perfil.'
+        : 'Tu cuenta ya existia y te llevamos directo a tu perfil.'
+    );
+    setActiveSection('account');
+  };
+
+  const handleSaveAddress = (e: FormEvent) => {
+    e.preventDefault();
+    updateAddress(addressForm);
+    updateProfile({
+      firstName: addressForm.firstName || customer?.firstName || '',
+      lastName: addressForm.lastName || customer?.lastName || '',
+    });
+    setFeedback('Tu direccion de envio quedo guardada.');
+  };
+
+  const handleSaveAccount = (e: FormEvent) => {
+    e.preventDefault();
+
+    const isEmailValid = validateEmail(accountForm.email, 'accountEmail');
+    if (!accountForm.firstName.trim()) {
+      setErrors((prev) => ({ ...prev, accountFirstName: 'Ingresa tu nombre.' }));
+      return;
+    }
+
+    if (!accountForm.displayName.trim()) {
+      setErrors((prev) => ({ ...prev, accountDisplayName: 'Ingresa un nombre visible.' }));
+      return;
+    }
+
+    if (!accountForm.password.trim()) {
+      setErrors((prev) => ({ ...prev, accountPassword: 'La contrasena no puede quedar vacia.' }));
+      return;
+    }
+
+    if (!isEmailValid) return;
+
+    updateProfile({
+      firstName: accountForm.firstName.trim(),
+      lastName: accountForm.lastName.trim(),
+      displayName: accountForm.displayName.trim(),
+      email: accountForm.email.trim(),
+      password: accountForm.password.trim(),
+    });
+    setFeedback('Los detalles de tu cuenta fueron actualizados.');
+    setErrors((prev) => ({
+      ...prev,
+      accountFirstName: '',
+      accountDisplayName: '',
+      accountPassword: '',
+      accountEmail: '',
+    }));
+  };
+
+  const handleAddressFieldChange = (field: keyof CustomerAddress, value: string) => {
+    setAddressForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAccountFieldChange = (field: keyof typeof accountForm, value: string) => {
+    setAccountForm((prev) => ({ ...prev, [field]: value }));
+    if (field === 'firstName') clearError('accountFirstName');
+    if (field === 'displayName') clearError('accountDisplayName');
+    if (field === 'email') clearError('accountEmail');
+    if (field === 'password') clearError('accountPassword');
+  };
+
+  const renderAccountSection = () => {
+    if (!customer) return null;
+
+    switch (activeSection) {
+      case 'orders':
+        return <AccountOrdersSection customerOrders={customerOrders} />;
+      case 'downloads':
+        return <AccountDownloadsSection />;
+      case 'addresses':
+        return (
+          <AccountAddressesSection
+            addressForm={addressForm}
+            regions={ACCOUNT_REGIONS}
+            onChange={handleAddressFieldChange}
+            onSubmit={handleSaveAddress}
+          />
+        );
+      case 'account':
+        return (
+          <AccountDetailsSection
+            accountForm={accountForm}
+            errors={errors}
+            onChange={handleAccountFieldChange}
+            onSubmit={handleSaveAccount}
+          />
+        );
+      default:
+        return <AccountDashboardSection customer={customer} />;
     }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert(`Registrando correo: ${registerEmail}`);
-  };
+  if (!customer) {
+    return (
+      <motion.div
+        className={styles.page}
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className={styles.glowingOrbLeft} />
+        <div className={styles.glowingOrbRight} />
+
+        <div className={styles.container}>
+          <AccountHeader />
+          {feedback && <div className={styles.feedbackBanner}>{feedback}</div>}
+
+          <div className={styles.authGrid}>
+            <AuthAccessSection
+              loginEmail={loginEmail}
+              loginPassword={loginPassword}
+              showPassword={showPassword}
+              errors={errors}
+              onLoginEmailChange={(value) => {
+                setLoginEmail(value);
+                clearError('loginEmail');
+                clearError('auth');
+              }}
+              onLoginPasswordChange={(value) => {
+                setLoginPassword(value);
+                clearError('loginPassword');
+                clearError('auth');
+              }}
+              onTogglePassword={() => setShowPassword((prev) => !prev)}
+              onSubmit={handleLoginSubmit}
+            />
+
+            <AuthRegisterSection
+              registerEmail={registerEmail}
+              errors={errors}
+              onRegisterEmailChange={(value) => {
+                setRegisterEmail(value);
+                clearError('registerEmail');
+              }}
+              onSubmit={handleRegisterSubmit}
+            />
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -36,152 +297,18 @@ export const Login = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Background soft pink coquette glowing circles */}
       <div className={styles.glowingOrbLeft} />
       <div className={styles.glowingOrbRight} />
 
       <div className={styles.container}>
-        {/* Header Section */}
-        <header className={styles.header}>
-          <div className={styles.headerTopDecoration}>
-            <Bow size={20} color="var(--color-primary, #c2185b)" className={styles.headerBow} />
-          </div>
-          <div className={styles.titleContainer}>
-            <span className={styles.titleBackgroundText}>bienvenue</span>
-            <h1 className={styles.pageTitle}>MI CUENTA</h1>
-          </div>
-          <div className={styles.dividerWrapper}>
-            <span className={styles.dividerLine} />
-            <svg 
-              className={styles.sparkleIcon} 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path 
-                d="M12 2c0 5.523 4.477 10 10 10-5.523 0-10 4.477-10 10 0-5.523-4.477-10-10-10 5.523 0 10-4.477 10-10z" 
-                fill="var(--color-primary, #c2185b)"
-              />
-            </svg>
-            <span className={styles.dividerLine} />
-          </div>
-        </header>
+        <AccountHeader showBackgroundWord={false} />
+        {feedback && <div className={styles.feedbackBanner}>{feedback}</div>}
 
-        {/* Content Grid */}
-        <div className={styles.grid}>
-          {/* ACCEDER COLUMN */}
-          <section className={styles.column}>
-            <h2 className={styles.colTitle}>Acceder</h2>
-            <form onSubmit={handleLoginSubmit} className={styles.form}>
-              <div className={styles.inputGroup}>
-                <label htmlFor="loginEmail" className={styles.label}>
-                  Nombre de usuario o correo electrónico <span className={styles.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  id="loginEmail"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  className={styles.input}
-                  required
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="loginPassword" className={styles.label}>
-                  Contraseña <span className={styles.required}>*</span>
-                </label>
-                <div className={styles.passwordWrapper}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="loginPassword"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className={styles.inputPassword}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className={styles.eyeBtn}
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.rememberRow}>
-                <label className={styles.checkboxContainer}>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className={styles.checkbox}
-                  />
-                  <span className={styles.checkboxLabel}>Recuérdame</span>
-                </label>
-              </div>
-
-              <button type="submit" className={styles.submitBtn}>
-                ACCESO
-              </button>
-            </form>
-
-            <a href="#forgot" className={styles.forgotLink}>
-              ¿Olvidaste la contraseña?
-            </a>
-          </section>
-
-          {/* REGISTRARSE COLUMN */}
-          <section className={styles.column}>
-            <h2 className={styles.colTitle}>Registrarse</h2>
-            <form onSubmit={handleRegisterSubmit} className={styles.form}>
-              <div className={styles.inputGroup}>
-                <label htmlFor="registerEmail" className={styles.label}>
-                  Dirección de correo electrónico <span className={styles.required}>*</span>
-                </label>
-                <input
-                  type="email"
-                  id="registerEmail"
-                  value={registerEmail}
-                  onChange={(e) => setRegisterEmail(e.target.value)}
-                  className={styles.input}
-                  required
-                />
-              </div>
-
-              <p className={styles.infoText}>
-                Se enviará un enlace a tu dirección de correo electrónico para establecer una nueva contraseña.
-              </p>
-
-              <p className={styles.privacyText}>
-                Sus datos personales se utilizarán para respaldar su experiencia en este sitio web, para administrar el acceso a su cuenta y para otros fines descritos en nuestra <a href="#privacy" className={styles.privacyLink}>política de privacidad</a>.
-              </p>
-
-              <button type="submit" className={styles.submitBtn}>
-                REGISTRARSE
-              </button>
-            </form>
-          </section>
+        <div className={styles.accountLayout}>
+          <section className={styles.accountContent}>{renderAccountSection()}</section>
+          <AccountSidebar activeSection={activeSection} onChangeSection={setActiveSection} onLogout={logout} />
         </div>
       </div>
-
-      {/* Floating WhatsApp Support Button */}
-      <a 
-        href="https://wa.me/573226865883" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className={styles.whatsappFloat}
-      >
-        <div className={styles.whatsappIconWrapper}>
-          <MessageCircle size={22} fill="currentColor" />
-        </div>
-        <div className={styles.whatsappText}>
-          <span className={styles.whatsappTitle}>Línea de</span>
-          <span className={styles.whatsappSubtitle}>atención</span>
-        </div>
-      </a>
     </motion.div>
   );
 };

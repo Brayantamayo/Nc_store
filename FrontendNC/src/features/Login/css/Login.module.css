@@ -1,66 +1,59 @@
 .page {
   position: relative;
-  width: 100%;
   min-height: calc(100vh - 135px);
-  padding: 9.5rem 2rem 3rem; /* Compacted top/bottom padding */
-  background-color: var(--color-background, #fdf5f7);
+  padding: 9.3rem 2rem 4rem;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(248, 187, 208, 0.2), transparent 20%),
+    radial-gradient(circle at 84% 10%, rgba(240, 98, 146, 0.12), transparent 15%),
+    radial-gradient(circle at 28% 72%, rgba(255, 224, 236, 0.5), transparent 18%),
+    linear-gradient(180deg, #fffdfd 0%, #fff8fb 55%, #fffdfd 100%);
   overflow: hidden;
-  font-family: var(--font-body), sans-serif;
 }
 
-/* Glowing background orbs for coquette aesthetic */
-.glowingOrbLeft {
+.glowingOrbLeft,
+.glowingOrbRight {
   position: absolute;
-  top: 10%;
-  left: 5%;
-  width: 350px;
-  height: 350px;
-  background: radial-gradient(circle, rgba(248, 187, 208, 0.45) 0%, rgba(253, 245, 247, 0) 70%);
-  filter: blur(40px);
-  z-index: 1;
   pointer-events: none;
+  z-index: 1;
+  filter: blur(48px);
+}
+
+.glowingOrbLeft {
+  top: 12%;
+  left: 6%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(248, 187, 208, 0.42) 0%, rgba(253, 245, 247, 0) 72%);
 }
 
 .glowingOrbRight {
-  position: absolute;
-  bottom: 10%;
-  right: 5%;
-  width: 450px;
-  height: 450px;
-  background: radial-gradient(circle, rgba(240, 98, 146, 0.25) 0%, rgba(253, 245, 247, 0) 70%);
-  filter: blur(50px);
-  z-index: 1;
-  pointer-events: none;
+  right: 6%;
+  top: 8%;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(240, 98, 146, 0.18) 0%, rgba(253, 245, 247, 0) 72%);
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
   position: relative;
-  z-index: 5;
+  z-index: 2;
+  max-width: 1120px;
+  margin: 0 auto;
 }
 
-/* Header styles */
 .header {
   text-align: center;
-  margin-bottom: 2rem; /* Compacted from 5rem to reduce scroll */
-  position: relative;
+  margin-bottom: 2.2rem;
 }
 
 .headerTopDecoration {
   display: flex;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.45rem;
 }
 
 .headerBow {
-  animation: floatBow 4s ease-in-out infinite;
-  color: var(--color-primary, #c2185b);
-}
-
-@keyframes floatBow {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(8deg); }
+  color: var(--color-primary);
 }
 
 .titleContainer {
@@ -68,31 +61,24 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 0.6rem;
-  z-index: 2;
 }
 
 .titleBackgroundText {
   position: absolute;
-  font-family: var(--font-cursive), cursive;
-  font-size: clamp(3rem, 8.5vw, 6.5rem);
-  color: rgba(248, 187, 208, 0.25);
-  opacity: 0.8;
-  z-index: 1;
+  font-family: var(--font-cursive);
+  font-size: clamp(3rem, 8vw, 6rem);
+  color: rgba(248, 187, 208, 0.22);
+  transform: translateY(-0.8rem);
   pointer-events: none;
-  text-transform: lowercase;
-  margin-top: -1.2rem;
 }
 
 .pageTitle {
-  font-family: var(--font-display), serif;
-  font-size: clamp(2.2rem, 5.5vw, 3.4rem);
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
   font-weight: 500;
-  color: var(--color-primary, #c2185b); /* Rich pink coquette tone that pops beautifully */
-  letter-spacing: 0.35rem;
+  color: var(--color-primary);
+  letter-spacing: 0.18rem;
   text-transform: uppercase;
-  z-index: 2;
-  text-shadow: 0 4px 12px rgba(248, 187, 208, 0.25);
   margin: 0;
 }
 
@@ -100,271 +86,309 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
-  max-width: 400px;
-  margin: 0.8rem auto 0;
+  gap: 1rem;
+  width: min(210px, 100%);
+  margin: 0.9rem auto 0;
 }
 
 .dividerLine {
   flex: 1;
   height: 1px;
-  background-color: #f8bbd0;
+  background: rgba(240, 98, 146, 0.45);
 }
 
 .sparkleIcon {
   width: 16px;
   height: 16px;
-  color: var(--color-primary, #c2185b);
-  animation: pulse 3s infinite ease-in-out;
+  color: var(--color-primary);
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.2); opacity: 1; }
+.feedbackBanner,
+.highlightBanner,
+.statusBanner,
+.formAlert {
+  border-radius: 0;
+  padding: 1rem 1.2rem;
+  background: #c06298;
+  color: var(--color-white);
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
-/* Content columns layout */
-.grid {
+.feedbackBanner {
+  margin-bottom: 1.4rem;
+}
+
+.authGrid,
+.accountLayout {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem; /* Reduced gap */
-  align-items: start;
+  gap: 2.2rem;
 }
 
-@media (min-width: 900px) {
-  .grid {
+@media (min-width: 980px) {
+  .authGrid {
     grid-template-columns: 1fr 1fr;
-    gap: 4rem; /* Reduced gap */
-    padding: 0 2rem;
+    gap: 4rem;
+  }
+
+  .accountLayout {
+    grid-template-columns: minmax(0, 1fr) 185px;
+    gap: 2.5rem;
+    align-items: start;
   }
 }
 
-.column {
+.authColumn {
   display: flex;
   flex-direction: column;
 }
 
-.colTitle {
-  font-family: var(--font-display), serif;
-  font-size: 2rem; /* Slightly smaller title */
-  color: #4a142c;
-  margin-bottom: 1rem; /* Compacted margin */
-  font-weight: 400;
+.authTitle,
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: #2d0010;
+  margin-bottom: 1.2rem;
 }
 
-.form {
+.authForm,
+.accountForm {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem; /* Reduced gap between form fields */
-  width: 100%;
+  gap: 1rem;
 }
 
-.inputGroup {
+.fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem; /* Compacted label/input space */
+  gap: 0.35rem;
 }
 
 .label {
-  font-size: 0.85rem;
-  color: #4a142c;
-  font-weight: 400;
-  letter-spacing: 0.02rem;
+  font-size: 0.9rem;
+  color: #6c4e5d;
 }
 
 .required {
-  color: #e8a0b4;
+  color: var(--color-primary);
 }
 
-.input, .inputPassword {
+.input,
+.staticField {
   width: 100%;
-  padding: 0.75rem 1rem; /* Much more compact inputs */
-  font-size: 0.9rem;
-  font-family: var(--font-body), sans-serif;
-  color: #4a142c;
-  background-color: #f2f2f2;
-  border: 1px solid transparent;
-  border-radius: 4px;
+  min-height: 2.9rem;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid rgba(194, 24, 91, 0.14);
+  background: rgba(243, 243, 243, 0.92);
+  color: #5c4250;
+  font-size: 0.95rem;
   outline: none;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
-.input:focus, .inputPassword:focus {
-  background-color: #fff;
-  border-color: #f8bbd0;
-  box-shadow: 0 4px 12px rgba(248, 187, 208, 0.15);
+.input:focus {
+  background: var(--color-white);
+  border-color: rgba(194, 24, 91, 0.28);
+  box-shadow: 0 8px 20px rgba(194, 24, 91, 0.08);
+}
+
+.inputError {
+  border-color: #c62828;
+}
+
+.errorText {
+  font-size: 0.76rem;
+  color: #c62828;
+  font-weight: 600;
 }
 
 .passwordWrapper {
   position: relative;
-  width: 100%;
-  display: flex;
-  align-items: center;
 }
 
 .eyeBtn {
   position: absolute;
-  right: 1.2rem;
-  color: #4a142c;
-  opacity: 0.7;
-  display: flex;
+  top: 50%;
+  right: 0.85rem;
+  transform: translateY(-50%);
+  color: #8f7483;
+}
+
+.primaryBtn,
+.saveBtn,
+.inlineAction {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s ease;
+  gap: 0.45rem;
+  min-height: 2.7rem;
+  padding: 0.65rem 1.55rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  font-size: 0.74rem;
+  font-weight: 700;
 }
 
-.eyeBtn:hover {
-  opacity: 1;
+.primaryBtn {
+  align-self: flex-start;
+  color: var(--color-white);
+  background: linear-gradient(135deg, #ef91b4, var(--color-primary));
 }
 
-/* Checkbox container formatting */
-.rememberRow {
+.saveBtn {
+  align-self: flex-start;
+  color: #2d0010;
+  background: #efefef;
+}
+
+.inlineAction {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.infoText,
+.sectionCopy,
+.helpText,
+.orderCard p,
+.orderCard span {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #6f5b67;
+}
+
+.formAlert {
+  background: #bf5d85;
+}
+
+.accountContent {
+  min-height: 420px;
+}
+
+.sectionStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.sectionCopy {
+  max-width: 700px;
+}
+
+.greetingLine {
+  margin-bottom: 0.7rem;
+  font-size: 1rem;
+  color: #4a142c;
+}
+
+.accountSidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarItem {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: -0.5rem;
+  gap: 1rem;
+  padding: 1rem 0;
+  color: #2d0010;
+  border-bottom: 1px solid rgba(194, 24, 91, 0.08);
+  font-size: 0.95rem;
+  text-align: left;
 }
 
-.checkboxContainer {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.checkbox {
-  width: 15px;
-  height: 15px;
-  border: 1px solid #f8bbd0;
-  accent-color: var(--color-primary, #c2185b);
-  border-radius: 2px;
-  cursor: pointer;
-}
-
-.checkboxLabel {
-  font-size: 0.85rem;
-  color: #4a142c;
-}
-
-/* Submit buttons styled like screenshots */
-.submitBtn {
-  align-self: flex-start;
-  padding: 0.7rem 1.8rem; /* Slightly more compact */
-  font-size: 0.75rem;
+.sidebarItemActive {
+  color: var(--color-primary);
   font-weight: 700;
-  letter-spacing: 0.15rem;
-  color: white;
-  background-color: #e8a0b4;
-  border: none;
-  border-radius: 20px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 10px rgba(232, 160, 180, 0.2);
 }
 
-.submitBtn:hover {
-  transform: translateY(-2px);
-  background-color: var(--color-primary, #c2185b);
-  box-shadow: 0 8px 18px rgba(194, 24, 91, 0.25);
-}
-
-.forgotLink {
-  margin-top: 1rem; /* Compacted from 1.8rem */
-  font-size: 0.85rem;
-  color: #4a142c;
-  font-weight: 600;
-  text-decoration: none;
-  align-self: flex-start;
-  transition: color 0.2s ease;
-}
-
-.forgotLink:hover {
-  color: var(--color-primary, #c2185b);
-  text-decoration: underline;
-}
-
-.infoText {
-  font-size: 0.85rem;
-  color: #7d6b73;
-  line-height: 1.6;
-  margin-bottom: 0.5rem;
-}
-
-.privacyText {
-  font-size: 0.8rem;
-  color: #7d6b73;
-  line-height: 1.6;
-}
-
-.privacyLink {
-  color: #4a142c;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.privacyLink:hover {
-  text-decoration: underline;
-  color: var(--color-primary, #c2185b);
-}
-
-/* Floating WhatsApp layout exactly like the screenshot */
-.whatsappFloat {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 1rem 0.5rem 0.5rem;
-  background-color: #fff;
-  border: 1px solid rgba(232, 160, 180, 0.3);
-  border-radius: 50px;
-  box-shadow: 0 6px 20px rgba(232, 160, 180, 0.15);
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.whatsappFloat:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(232, 160, 180, 0.25);
-}
-
-.whatsappIconWrapper {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background-color: #e8a0b4;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s ease;
-}
-
-.whatsappFloat:hover .whatsappIconWrapper {
-  background-color: var(--color-primary, #c2185b);
-}
-
-.whatsappText {
+.ordersList {
   display: flex;
   flex-direction: column;
-  line-height: 1.1;
+  gap: 0.8rem;
 }
 
-.whatsappTitle {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: #7d6b73;
+.orderCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(194, 24, 91, 0.08);
 }
 
-.whatsappSubtitle {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #e8a0b4;
+.orderCard strong {
+  display: block;
+  color: #4a142c;
 }
 
-.whatsappFloat:hover .whatsappSubtitle {
-  color: var(--color-primary, #c2185b);
+.accountForm {
+  max-width: 700px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem 1.2rem;
+}
+
+@media (min-width: 760px) {
+  .formGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fullSpan {
+  grid-column: 1 / -1;
+}
+
+.staticField {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding-left: 0;
+  color: #4a142c;
+  font-weight: 600;
+}
+
+.helpText {
+  font-style: italic;
+}
+
+@media (max-width: 979px) {
+  .accountSidebar {
+    order: -1;
+  }
+
+  .sidebarItem {
+    padding: 0.9rem 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding: 8.6rem 1rem 3rem;
+  }
+
+  .primaryBtn,
+  .saveBtn,
+  .inlineAction {
+    width: 100%;
+  }
+
+  .statusBanner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+
+  .orderCard {
+    flex-direction: column;
+  }
 }

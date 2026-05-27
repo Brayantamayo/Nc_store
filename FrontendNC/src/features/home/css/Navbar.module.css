@@ -295,6 +295,17 @@
   box-shadow: 0 2px 5px rgba(138, 100, 118, 0.2);
 }
 
+.sessionDot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f8bbd0, var(--color-primary));
+  box-shadow: 0 0 0 3px rgba(255, 245, 248, 0.95);
+}
+
 .menuBtn {
   display: flex;
   color: var(--color-primary);
