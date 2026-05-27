@@ -6,20 +6,24 @@ interface AccountDashboardSectionProps {
   customer: CustomerSession;
 }
 
-export const AccountDashboardSection = ({ customer }: AccountDashboardSectionProps) => (
-  <div className={styles.sectionStack}>
-    <div className={styles.highlightBanner}>
-      Tu cuenta de NC Store esta utilizando una contrasena temporal. Te enviamos por correo electronico la clave inicial para que puedas ingresar.
-    </div>
+export const AccountDashboardSection = ({ customer }: AccountDashboardSectionProps) => {
+  const customerName = customer.firstName.trim() || customer.displayName.trim() || 'cliente';
 
-    <div className={styles.sectionCopy}>
-      <p className={styles.greetingLine}>
-        Hola <strong>{customer.displayName}</strong> ({customer.email})
-      </p>
-      <p>
-        Desde el escritorio de tu cuenta puedes ver tus <strong>pedidos recientes</strong>, gestionar tus
-        <strong> direcciones de envio</strong> y editar tu contrasena y los detalles de tu cuenta.
-      </p>
+  return (
+    <div className={styles.sectionStack}>
+      <div className={styles.highlightBanner}>
+        Ingreso exitoso. Ya puedes revisar tus pedidos, direcciones y detalles de la cuenta.
+      </div>
+
+      <div className={styles.sectionCopy}>
+        <p className={styles.greetingLine}>
+          Hola <strong>{customerName}</strong> ({customer.email})
+        </p>
+        <p>
+          Desde el escritorio de tu cuenta puedes ver tus <strong>pedidos recientes</strong>, gestionar tus
+          <strong> direcciones de envio</strong> y editar los detalles de tu cuenta.
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+};

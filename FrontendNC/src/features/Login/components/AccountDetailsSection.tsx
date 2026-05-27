@@ -6,7 +6,6 @@ interface AccountDetailsForm {
   lastName: string;
   displayName: string;
   email: string;
-  password: string;
 }
 
 interface AccountDetailsSectionProps {
@@ -23,10 +22,6 @@ export const AccountDetailsSection = ({
   onSubmit,
 }: AccountDetailsSectionProps) => (
   <form onSubmit={onSubmit} className={styles.accountForm}>
-    <div className={styles.highlightBanner}>
-      Tu cuenta de NC Store esta utilizando una contrasena temporal. Te enviamos por correo electronico la clave inicial para que puedas ingresar.
-    </div>
-
     <div className={styles.formGrid}>
       <div className={styles.fieldGroup}>
         <label className={styles.label}>
@@ -70,18 +65,6 @@ export const AccountDetailsSection = ({
           onChange={(e) => onChange('email', e.target.value)}
         />
         {errors.accountEmail && <span className={styles.errorText}>{errors.accountEmail}</span>}
-      </div>
-
-      <div className={`${styles.fieldGroup} ${styles.fullSpan}`}>
-        <label className={styles.label}>
-          Contrasena <span className={styles.required}>*</span>
-        </label>
-        <input
-          className={`${styles.input} ${errors.accountPassword ? styles.inputError : ''}`}
-          value={accountForm.password}
-          onChange={(e) => onChange('password', e.target.value)}
-        />
-        {errors.accountPassword && <span className={styles.errorText}>{errors.accountPassword}</span>}
       </div>
     </div>
 

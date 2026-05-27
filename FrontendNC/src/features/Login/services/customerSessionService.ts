@@ -55,26 +55,23 @@ const STORAGE_KEY = 'nc-customer-session';
 const STORAGE_VERSION = 2;
 const DEFAULT_COUNTRY = 'Colombia';
 
-const getFirstNameFromEmail = (email: string) => {
-  const rawName = email.split('@')[0] ?? 'cliente';
-  const cleaned = rawName
-    .replace(/[._-]+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(Boolean)[0] ?? 'cliente';
-
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-};
-
-const getDisplayNameFromEmail = (email: string) => {
-  const rawName = email.split('@')[0] ?? 'cliente';
-  return rawName.trim() || 'cliente';
-};
-
 const generateTemporaryPassword = (email: string) => {
   const seed = email.split('@')[0]?.replace(/[^a-zA-Z0-9]/g, '').slice(0, 5) || 'nc';
   const suffix = Math.floor(100 + Math.random() * 900);
   return `NC-${seed}${suffix}`;
+};
+
+const normalizeNameToken = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const wasGeneratedFromEmail = (value: string, email: string) => {
+  const normalizedValue = normalizeNameToken(value);
+  if (!normalizedValue) return false;
+
+  const emailAlias = email.split('@')[0] ?? '';
+  const normalizedAlias = normalizeNameToken(emailAlias);
+  const normalizedFirstAlias = normalizeNameToken(emailAlias.replace(/[._-]+/g, ' ').trim().split(' ')[0] ?? '');
+
+  return normalizedValue === normalizedAlias || normalizedValue === normalizedFirstAlias;
 };
 
 const buildEmptyAddress = (): CustomerAddress => ({
@@ -90,9 +87,9 @@ const buildEmptyAddress = (): CustomerAddress => ({
 
 const buildCustomer = (email: string): CustomerSession => ({
   email,
-  firstName: getFirstNameFromEmail(email),
+  firstName: '',
   lastName: '',
-  displayName: getDisplayNameFromEmail(email),
+  displayName: '',
   password: generateTemporaryPassword(email),
   createdAt: new Date().toISOString(),
   address: buildEmptyAddress(),
@@ -108,17 +105,14 @@ const normalizeCustomer = (value: unknown): CustomerSession | null => {
   const email = normalizeEmail(candidate.email);
   if (!email) return null;
 
+  const firstName = typeof candidate.firstName === 'string' ? candidate.firstName.trim() : '';
+  const displayName = typeof candidate.displayName === 'string' ? candidate.displayName.trim() : '';
+
   return {
     email,
-    firstName:
-      typeof candidate.firstName === 'string' && candidate.firstName.trim()
-        ? candidate.firstName.trim()
-        : getFirstNameFromEmail(email),
+    firstName: firstName && !wasGeneratedFromEmail(firstName, email) ? firstName : '',
     lastName: typeof candidate.lastName === 'string' ? candidate.lastName.trim() : '',
-    displayName:
-      typeof candidate.displayName === 'string' && candidate.displayName.trim()
-        ? candidate.displayName.trim()
-        : getDisplayNameFromEmail(email),
+    displayName: displayName && !wasGeneratedFromEmail(displayName, email) ? displayName : '',
     password:
       typeof candidate.password === 'string' && candidate.password.trim()
         ? candidate.password.trim()

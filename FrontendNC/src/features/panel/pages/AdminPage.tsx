@@ -59,13 +59,13 @@ export const AdminPage = () => {
 
     await new Promise((resolve) => setTimeout(resolve, AUTH_LOADING_MS));
 
-    if (username.trim() === 'admin' && password === 'admin') {
+    if (username.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() && password === 'admin') {
       localStorage.setItem('nc-admin-session', 'active');
       setAdminEmail(DEFAULT_ADMIN_EMAIL);
       setIsLoggingIn(false);
       setIsAuthenticated(true);
     } else {
-      setAuthError('Credenciales incorrectas. Usa admin/admin.');
+      setAuthError(`Credenciales incorrectas. Usa ${DEFAULT_ADMIN_EMAIL} / admin.`);
       setIsLoggingIn(false);
     }
   };

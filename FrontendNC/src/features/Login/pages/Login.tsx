@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import { CheckCircle2, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useOrderStore } from '../../store/pages/orderStore';
 import { AccountAddressesSection } from '../components/AccountAddressesSection';
 import { AccountDashboardSection } from '../components/AccountDashboardSection';
@@ -17,6 +19,7 @@ import {
   type CustomerAddress,
   type CustomerSession,
 } from '../services/customerSessionService';
+import { DEFAULT_ADMIN_EMAIL } from '../../panel/constants/adminProfile';
 
 const EMAIL_REGEX = /\S+@\S+\.\S+/;
 
@@ -32,6 +35,7 @@ const buildAddressForm = (customer: CustomerSession | null): CustomerAddress => 
 });
 
 export const Login = () => {
+  const navigate = useNavigate();
   const customer = useCustomerSessionStore((state) => state.customer);
   const login = useCustomerSessionStore((state) => state.login);
   const registerWithEmail = useCustomerSessionStore((state) => state.registerWithEmail);
@@ -54,7 +58,6 @@ export const Login = () => {
     lastName: customer?.lastName ?? '',
     displayName: customer?.displayName ?? '',
     email: customer?.email ?? '',
-    password: customer?.password ?? '',
   });
 
   useEffect(() => {
@@ -64,7 +67,6 @@ export const Login = () => {
       lastName: customer?.lastName ?? '',
       displayName: customer?.displayName ?? '',
       email: customer?.email ?? '',
-      password: customer?.password ?? '',
     });
   }, [customer]);
 
@@ -74,6 +76,16 @@ export const Login = () => {
       setAddressForm((prev) => ({ ...prev, city: cities[0] }));
     }
   }, [addressForm.region, addressForm.city]);
+
+  useEffect(() => {
+    if (!feedback) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setFeedback('');
+    }, 4200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [feedback]);
 
   const customerOrders = useMemo(() => {
     if (!customer) return [];
@@ -113,6 +125,11 @@ export const Login = () => {
 
     if (!isEmailValid) return;
 
+    if (loginEmail.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() && loginPassword === 'admin') {
+      navigate('/admin');
+      return;
+    }
+
     const result = login(loginEmail, loginPassword);
     if (!result.success) {
       setErrors((prev) => ({ ...prev, auth: result.message }));
@@ -120,7 +137,7 @@ export const Login = () => {
     }
 
     setErrors({});
-    setFeedback('Sesion iniciada correctamente. Ya puedes navegar por las secciones de tu cuenta.');
+    setFeedback('Ingreso exitoso como cliente. Ya puedes navegar por las secciones de tu cuenta.');
     setActiveSection('dashboard');
     setLoginPassword('');
   };
@@ -139,11 +156,7 @@ export const Login = () => {
 
     setErrors({});
     setRegisterEmail('');
-    setFeedback(
-      result.generatedPassword
-        ? 'Tu cuenta se creo con una contrasena temporal y ya quedaste dentro de tu perfil.'
-        : 'Tu cuenta ya existia y te llevamos directo a tu perfil.'
-    );
+    setFeedback(result.generatedPassword ? 'Tu cuenta fue creada y el ingreso como cliente fue exitoso.' : 'Tu cuenta ya existia y el ingreso como cliente fue exitoso.');
     setActiveSection('account');
   };
 
@@ -171,11 +184,6 @@ export const Login = () => {
       return;
     }
 
-    if (!accountForm.password.trim()) {
-      setErrors((prev) => ({ ...prev, accountPassword: 'La contrasena no puede quedar vacia.' }));
-      return;
-    }
-
     if (!isEmailValid) return;
 
     updateProfile({
@@ -183,14 +191,12 @@ export const Login = () => {
       lastName: accountForm.lastName.trim(),
       displayName: accountForm.displayName.trim(),
       email: accountForm.email.trim(),
-      password: accountForm.password.trim(),
     });
     setFeedback('Los detalles de tu cuenta fueron actualizados.');
     setErrors((prev) => ({
       ...prev,
       accountFirstName: '',
       accountDisplayName: '',
-      accountPassword: '',
       accountEmail: '',
     }));
   };
@@ -204,7 +210,6 @@ export const Login = () => {
     if (field === 'firstName') clearError('accountFirstName');
     if (field === 'displayName') clearError('accountDisplayName');
     if (field === 'email') clearError('accountEmail');
-    if (field === 'password') clearError('accountPassword');
   };
 
   const renderAccountSection = () => {
@@ -238,6 +243,31 @@ export const Login = () => {
     }
   };
 
+  const feedbackToast = (
+    <AnimatePresence>
+      {feedback && (
+        <motion.div
+          className={styles.feedbackToast}
+          initial={{ opacity: 0, y: -18, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -12, scale: 0.98 }}
+          transition={{ duration: 0.28, ease: 'easeOut' }}
+        >
+          <div className={styles.feedbackToastIcon}>
+            <CheckCircle2 size={20} />
+          </div>
+          <div className={styles.feedbackToastBody}>
+            <span className={styles.feedbackToastEyebrow}>Ingreso exitoso</span>
+            <p>{feedback}</p>
+          </div>
+          <button type="button" className={styles.feedbackToastClose} onClick={() => setFeedback('')} aria-label="Cerrar notificacion">
+            <X size={16} />
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   if (!customer) {
     return (
       <motion.div
@@ -252,7 +282,7 @@ export const Login = () => {
 
         <div className={styles.container}>
           <AccountHeader />
-          {feedback && <div className={styles.feedbackBanner}>{feedback}</div>}
+          {feedbackToast}
 
           <div className={styles.authGrid}>
             <AuthAccessSection
@@ -302,7 +332,7 @@ export const Login = () => {
 
       <div className={styles.container}>
         <AccountHeader showBackgroundWord={false} />
-        {feedback && <div className={styles.feedbackBanner}>{feedback}</div>}
+        {feedbackToast}
 
         <div className={styles.accountLayout}>
           <section className={styles.accountContent}>{renderAccountSection()}</section>

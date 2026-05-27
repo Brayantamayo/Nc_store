@@ -1,5 +1,5 @@
-import { Bow } from '../../home/components/Moñito';
 import { AlertCircle } from 'lucide-react';
+import { Bow } from '../../home/components/Moñito';
 import styles from '../css/Admin.module.css';
 
 interface AdminLoginProps {
@@ -28,7 +28,7 @@ export const AdminLogin = ({
       <div className={styles.authCard}>
         <Bow size={32} className={styles.authBow} />
         <h2>NC Panel Control</h2>
-        <p>Inicia sesión con credenciales administrativas para gestionar inventario y pedidos.</p>
+        <p>Inicia sesion con credenciales administrativas para gestionar inventario y pedidos.</p>
 
         {authError && (
           <div className={`${styles.messageBanner} ${styles.errorBanner}`}>
@@ -37,25 +37,24 @@ export const AdminLogin = ({
           </div>
         )}
 
-        <form onSubmit={onSubmit} className={styles.authForm}>
+        <form onSubmit={onSubmit} className={styles.authForm} noValidate>
           <div className={styles.formGroup}>
             <label htmlFor="username" className={styles.formLabel}>
-              Usuario administrador
+              Correo administrador
             </label>
             <input
-              type="text"
+              type="email"
               id="username"
               value={username}
               onChange={(e) => onUsernameChange(e.target.value)}
               className={styles.textInput}
-              placeholder="Usuario (ej: admin)"
+              placeholder="Correo administrador"
               disabled={isSubmitting}
-              required
             />
           </div>
           <div className={styles.formGroup}>
             <label htmlFor="password" className={styles.formLabel}>
-              Contraseña
+              Contrasena
             </label>
             <input
               type="password"
@@ -63,9 +62,8 @@ export const AdminLogin = ({
               value={password}
               onChange={(e) => onPasswordChange(e.target.value)}
               className={styles.textInput}
-              placeholder="Contraseña (ej: admin)"
+              placeholder="Contrasena (ej: admin)"
               disabled={isSubmitting}
-              required
             />
           </div>
           <button type="submit" className={styles.authBtn} disabled={isSubmitting}>
