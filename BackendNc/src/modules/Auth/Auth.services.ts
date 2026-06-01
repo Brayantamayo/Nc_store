@@ -87,7 +87,8 @@ export const registrar = async ({ email }: RegistroDto) => {
   const existe = await prisma.usuario.findUnique({ where: { email } })
   if (existe) throw new Error('Este correo ya está registrado')
 
-  const hash = await bcrypt.hash(generarPasswordTemporal(), 12)
+  const passwordTemporal = generarPasswordTemporal()
+  const hash = await bcrypt.hash(passwordTemporal, 12)
   await prisma.$transaction(async (tx) => {
     const usuario = await tx.usuario.create({ data: { email, password: hash, roleId: rol.id } })
     await tx.cliente.create({ data: { usuarioId: usuario.id } })
@@ -105,7 +106,10 @@ export const registrar = async ({ email }: RegistroDto) => {
   await enviarCorreoBienvenida(email, registro.token)
 
   limpiarRateLimit(intentosRegistro, email)
-  return { message: 'Revisa tu correo para crear tu contraseña.' }
+  return {
+    message: 'Revisa tu correo para crear tu contraseña.',
+    passwordTemporal,
+  }
 }
 
 // ─── CREAR CONTRASEÑA (link de bienvenida) ────────────────────────────────────

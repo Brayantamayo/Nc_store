@@ -3,7 +3,7 @@ import { z } from 'zod'
  
 export const createVarianteSchema = z.object({
   productoId: z
-    .number({ required_error: 'El productoId es requerido' })
+    .coerce.number({ required_error: 'El productoId es requerido' })
     .int('El productoId debe ser un entero')
     .positive('El productoId debe ser mayor a 0'),
   color: z
@@ -12,7 +12,7 @@ export const createVarianteSchema = z.object({
     .max(50, 'El color no puede superar 50 caracteres')
     .trim(),
   stock: z
-    .number()
+    .coerce.number()
     .int('El stock debe ser un número entero')
     .min(0, 'El stock no puede ser negativo')
     .default(0),
@@ -29,7 +29,7 @@ export const updateVarianteSchema = z.object({
     .trim()
     .optional(),
   stock: z
-    .number()
+    .coerce.number()
     .int('El stock debe ser un número entero')
     .min(0, 'El stock no puede ser negativo')
     .optional(),
@@ -43,7 +43,7 @@ export const updateVarianteSchema = z.object({
  
 export const ajustarStockSchema = z.object({
   cantidad: z
-    .number({ required_error: 'La cantidad es requerida' })
+    .coerce.number({ required_error: 'La cantidad es requerida' })
     .int('La cantidad debe ser un número entero')
     .refine((n) => n !== 0, { message: 'La cantidad no puede ser 0' }),
 })

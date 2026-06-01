@@ -1,139 +1,261 @@
-import { PrismaClient, Variante } from "@prisma/client";
+import { Variante } from '@prisma/client';
+import { prisma } from '../../config/db';
+import { buildPaginationMeta, PaginationParams } from '../../utils/paginar';
+import {
+  AjustarStockDto,
+  CreateVarianteDto,
+  UpdateVarianteDto,
+} from './Validaciones/Variante.Schema';
 
-const prisma = new PrismaClient();
-
-export interface CreateVarianteDto {
-productoId: number;
-color: string;
-stock?: number;
-imagenes?: string[];
-}
-
-export interface UpdateVarianteDto {
-color?: string;
-stock?: number;
-imagenes?: string[];
-}
-
-export interface AjustarStockDto {
-  cantidad: number; // positivo = sumar, negativo = restar
-}
-
-// ─── READ ────────────────────────────────────────────
-
-export const getAllVariantesByProducto = async (productoId: number): Promise<Variante[]> => {
-const producto = await prisma.producto.findUnique({ where: { id: productoId } });
-if (!producto) throw new Error(`Producto con id ${productoId} no encontrado`);
-
-return prisma.variante.findMany({
-    where: { productoId },
-    orderBy: { id: "asc" },
-});
+type VarianteConProducto = VariantBase & {
+  producto?: {
+    id: number;
+    nombre: string;
+    slug: string;
+  };
 };
 
-export const getVarianteById = async (id: number): Promise<Variante | null> => {
-return prisma.variante.findUnique({
+type VariantBase = Pick<Variante, 'id' | 'productoId' | 'color' | 'stock' | 'imagenes'>;
+
+const varianteListSelect = {
+  id: true,
+  productoId: true,
+  color: true,
+  stock: true,
+  imagenes: true,
+  producto: {
+    select: {
+      id: true,
+      nombre: true,
+      slug: true,
+    },
+  },
+} as const;
+
+const varianteDetailSelect = {
+  id: true,
+  productoId: true,
+  color: true,
+  stock: true,
+  imagenes: true,
+  producto: {
+    select: {
+      id: true,
+      nombre: true,
+      slug: true,
+      activo: true,
+      categoria: {
+        select: {
+          id: true,
+          nombre: true,
+          slug: true,
+        },
+      },
+    },
+  },
+} as const;
+
+///---Asegurar que el producto existe y está activo---///
+const ensureProductoExiste = async (productoId: number) => {
+  const producto = await prisma.producto.findUnique({
+    where: { id: productoId },
+    select: {
+      id: true,
+      nombre: true,
+      activo: true,
+    },
+  });
+
+  if (!producto) throw new Error(`Producto con id ${productoId} no encontrado`);
+  if (!producto.activo) throw new Error(`El producto "${producto.nombre}" está inactivo`);
+
+  return producto;
+};
+
+///---Obtener todas las variantes---///
+export const getAllVariantes = async (
+  pagination: PaginationParams,
+): Promise<{
+  data: VarianteConProducto[];
+  meta: ReturnType<typeof buildPaginationMeta>;
+}> => {
+  const [total, data] = await prisma.$transaction([
+    prisma.variante.count(),
+    prisma.variante.findMany({
+      orderBy: { id: 'asc' },
+      skip: pagination.skip,
+      take: pagination.take,
+      select: varianteListSelect,
+    }),
+  ]);
+
+  return {
+    data,
+    meta: buildPaginationMeta(total, pagination.page, pagination.limit),
+  };
+};
+
+
+///---Obtener variantes por producto---///
+export const getAllVariantesByProducto = async (
+  productoId: number,
+  pagination: PaginationParams,
+): Promise<{
+  data: VarianteConProducto[];
+  meta: ReturnType<typeof buildPaginationMeta>;
+}> => {
+  await ensureProductoExiste(productoId);
+
+  const [total, data] = await prisma.$transaction([
+    prisma.variante.count({ where: { productoId } }),
+    prisma.variante.findMany({
+      where: { productoId },
+      orderBy: { id: 'asc' },
+      skip: pagination.skip,
+      take: pagination.take,
+      select: varianteListSelect,
+    }),
+  ]);
+
+  return {
+    data,
+    meta: buildPaginationMeta(total, pagination.page, pagination.limit),
+  };
+};
+
+
+///---Obtener variante por ID---///
+export const getVarianteById = async (id: number) => {
+  return prisma.variante.findUnique({
     where: { id },
-    include: { producto: true },
-});
+    select: varianteDetailSelect,
+  });
 };
 
-// ─── CREATE ──────────────────────────────────────────
 
-export const createVariante = async (data: CreateVarianteDto): Promise<Variante> => {
-const producto = await prisma.producto.findUnique({ where: { id: data.productoId } });
-if (!producto) throw new Error(`Producto con id ${data.productoId} no encontrado`);
-if (!producto.activo) throw new Error(`El producto "${producto.nombre}" está inactivo`);
+///---Crear variante---///
+export const createVariante = async (data: CreateVarianteDto) => {
+  await ensureProductoExiste(data.productoId);
 
-const duplicado = await prisma.variante.findFirst({
+  const duplicado = await prisma.variante.findFirst({
     where: {
-    productoId: data.productoId,
-    color: { equals: data.color, mode: "insensitive" },
+      productoId: data.productoId,
+      color: { equals: data.color, mode: 'insensitive' },
     },
-});
+    select: { id: true },
+  });
 
-if (duplicado) {
+  if (duplicado) {
     throw new Error(`Ya existe una variante de color "${data.color}" para este producto`);
-}
+  }
 
-return prisma.variante.create({
+  return prisma.variante.create({
     data: {
-    productoId: data.productoId,
-    color: data.color,
-    stock: data.stock ?? 0,
-    imagenes: data.imagenes ?? [],
+      productoId: data.productoId,
+      color: data.color,
+      stock: data.stock ?? 0,
+      imagenes: data.imagenes ?? [],
     },
-});
+    select: varianteDetailSelect,
+  });
 };
 
-// ─── UPDATE ──────────────────────────────────────────
 
-export const updateVariante = async (
-id: number,
-data: UpdateVarianteDto
-): Promise<Variante> => {
-const variante = await prisma.variante.findUnique({ where: { id } });
-if (!variante) throw new Error(`Variante con id ${id} no encontrada`);
+///---Actualizar variante---///
+export const updateVariante = async (id: number, data: UpdateVarianteDto) => {
+  const variante = await prisma.variante.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      productoId: true,
+    },
+  });
 
-if (data.color) {
+  if (!variante) throw new Error(`Variante con id ${id} no encontrada`);
+
+  if (data.color) {
     const duplicado = await prisma.variante.findFirst({
-    where: {
+      where: {
         id: { not: id },
         productoId: variante.productoId,
-        color: { equals: data.color, mode: "insensitive" },
-    },
+        color: { equals: data.color, mode: 'insensitive' },
+      },
+      select: { id: true },
     });
 
     if (duplicado) {
-    throw new Error(`Ya existe otra variante de color "${data.color}" para este producto`);
+      throw new Error(`Ya existe otra variante de color "${data.color}" para este producto`);
     }
-}
+  }
 
-if (data.stock !== undefined && data.stock < 0) {
-    throw new Error("El stock no puede ser negativo");
-}
+  if (data.stock !== undefined && data.stock < 0) {
+    throw new Error('El stock no puede ser negativo');
+  }
 
-return prisma.variante.update({ where: { id }, data });
+  return prisma.variante.update({
+    where: { id },
+    data: {
+      color: data.color,
+      stock: data.stock,
+      imagenes: data.imagenes,
+    },
+    select: varianteDetailSelect,
+  });
 };
 
-// ─── AJUSTAR STOCK ───────────────────────────────────
 
-export const ajustarStock = async (id: number, cantidad: number): Promise<Variante> => {
-const variante = await prisma.variante.findUnique({ where: { id } });
-if (!variante) throw new Error(`Variante con id ${id} no encontrada`);
+///---Ajustar stock de una variante---///
+export const ajustarStock = async (id: number, data: AjustarStockDto) => {
+  const variante = await prisma.variante.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      stock: true,
+    },
+  });
 
-const nuevoStock = variante.stock + cantidad;
-if (nuevoStock < 0) {
+  if (!variante) throw new Error(`Variante con id ${id} no encontrada`);
+
+  const nuevoStock = variante.stock + data.cantidad;
+  if (nuevoStock < 0) {
     throw new Error(
-    `Stock insuficiente. Stock actual: ${variante.stock}, ajuste solicitado: ${cantidad}`
+      `Stock insuficiente. Stock actual: ${variante.stock}, ajuste solicitado: ${data.cantidad}`,
     );
-}
+  }
 
-return prisma.variante.update({
+  return prisma.variante.update({
     where: { id },
     data: { stock: nuevoStock },
-});
+    select: varianteDetailSelect,
+  });
 };
 
-// ─── DELETE ──────────────────────────────────────────
 
-export const deleteVariante = async (id: number): Promise<Variante> => {
-const variante = await prisma.variante.findUnique({
+///---Eliminar variante---///
+export const deleteVariante = async (id: number) => {
+  const variante = await prisma.variante.findUnique({
     where: { id },
-    include: { itemsPedido: true, itemsVenta: true },
-});
+    select: {
+      id: true,
+      itemsPedido: {
+        select: { id: true },
+        take: 1,
+      },
+      itemsVenta: {
+        select: { id: true },
+        take: 1,
+      },
+    },
+  });
 
-if (!variante) throw new Error(`Variante con id ${id} no encontrada`);
+  if (!variante) throw new Error(`Variante con id ${id} no encontrada`);
 
-const tieneMovimientos =
-    (variante as any).itemsPedido?.length > 0 ||
-    (variante as any).itemsVenta?.length > 0;
+  if (variante.itemsPedido.length > 0 || variante.itemsVenta.length > 0) {
+    throw new Error('No se puede eliminar: la variante tiene pedidos o ventas asociadas');
+  }
 
-if (tieneMovimientos) {
-    throw new Error(
-    "No se puede eliminar: la variante tiene pedidos o ventas asociadas"
-    );
-}
-
-return prisma.variante.delete({ where: { id } });
+  return prisma.variante.delete({
+    where: { id },
+    select: varianteDetailSelect,
+  });
 };

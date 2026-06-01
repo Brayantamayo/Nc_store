@@ -10,6 +10,7 @@ import {
   Heart,
   Users,
   BarChart3,
+  Sparkles,
 } from 'lucide-react';
 import { Bow } from '../../home/components/Moñito';
 import { AdminTab, useAdminPanel } from '../context/AdminPanelContext';
@@ -25,8 +26,9 @@ const menuSections: { title: string; items: MenuItem[] }[] = [
   {
     title: 'Catálogo y ventas',
     items: [
-      { id: 'productos', label: 'Inventario', icon: <Package size={18} /> },
+      { id: 'productos', label: 'Productos', icon: <Package size={18} /> },
       { id: 'categoria', label: 'Categorías', icon: <FolderTree size={18} /> },
+      { id: 'variante', label: 'Variante', icon: <Sparkles size={18} /> },
       { id: 'pedidos', label: 'Pedidos', icon: <ShoppingBag size={18} /> },
       { id: 'pagos', label: 'Pagos', icon: <CreditCard size={18} /> },
       { id: 'ventas', label: 'Ventas', icon: <BarChart3 size={18} /> },

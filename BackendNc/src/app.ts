@@ -9,9 +9,11 @@ import { notFoundHandler, errorHandler } from './middlewares/errorHandler'
 import authRoutes      from './modules/Auth/Auth.routes'
 import categoriaRoutes from './modules/Categoria/Categoria.routes'
 import varianteRoutes  from './modules/Variante/Variante.routes'  
+import productsRoutes  from './modules/Productos/products.routes'
 
 // ─── MIDDLEWARES DE AUTENTICACIÓN ─────────────────────────────────────────────
 import { soloAdmin, autenticado } from './middlewares/Auth.middleware'
+import imagenRoutes from './modules/Imagen/Imagen.routes'
 
 const app = express()
 
@@ -67,8 +69,9 @@ app.use('/api/auth', authRoutes)
 
 // ─── RUTAS PROTEGIDAS — SOLO ADMIN ───────────────────────────────────────────
 app.use('/api/categorias', ...soloAdmin, categoriaRoutes)
-app.use('/api/categorias', ...soloAdmin, categoriaRoutes)
+app.use('/api/productos',  ...soloAdmin, productsRoutes)
 app.use('/api/variantes',  ...soloAdmin, varianteRoutes)
+app.use('/api/imagenes', ...soloAdmin, imagenRoutes)  // ← agrega esto
 
 
 // ─── ERRORES ─────────────────────────────────────────────────────────────────

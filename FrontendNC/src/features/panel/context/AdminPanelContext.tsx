@@ -3,6 +3,7 @@ import { createContext, useContext, ReactNode } from 'react';
 export type AdminTab =
   | 'dashboard'
   | 'productos'
+  | 'variante'
   | 'pedidos'
   | 'categoria'
   | 'pagos'

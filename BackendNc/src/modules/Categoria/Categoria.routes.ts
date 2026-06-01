@@ -6,11 +6,11 @@ const router = Router();
 // GET    /api/categorias
 router.get("/", CategoriaController.getAll);
 
-// GET    /api/categorias/:id
-router.get("/:id(\\d+)", CategoriaController.getById);
-
 // GET    /api/categorias/slug/:slug
 router.get("/slug/:slug", CategoriaController.getBySlug);
+
+// GET    /api/categorias/:id
+router.get("/:id(\\d+)", CategoriaController.getById);
 
 // POST   /api/categorias
 router.post("/", CategoriaController.create);

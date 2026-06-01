@@ -16,19 +16,15 @@ dotenv.config();
 
 // Esquema de validación de variables de entorno
 const envSchema = z.object({
-  // Puerto del servidor
-  PORT: z.coerce.number().default(3001),
-
-  // URL de conexión a la base de datos
+  PORT:         z.coerce.number().default(3001),
   DATABASE_URL: z.string(),
+  JWT_SECRET:   z.string().min(8),
+  NODE_ENV:     z.enum(['development', 'production', 'test']).default('development'),
 
-  // Clave secreta para autenticación JWT
-  JWT_SECRET: z.string().min(8),
-
-  // Entorno de ejecución de la aplicación
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  // ─── Cloudinary ───────────────────────────────────────
+  CLOUDINARY_CLOUD_NAME: z.string(),
+  CLOUDINARY_API_KEY:    z.string(),
+  CLOUDINARY_API_SECRET: z.string(),
 });
 
 // Valida las variables de entorno contra el esquema definido

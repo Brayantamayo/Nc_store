@@ -4,6 +4,7 @@
  */
 export { ProductosPage } from './productos/pages/ProductosPage';
 export { CategoriasPage } from './categoria/pages/CategoriasPage';
+export { VariantePage } from './variante/pages/VariantePage';
 export { PagosPage } from './pagos/pages/PagosPage';
 export { PedidosPage } from './pedidos/pages/PedidosPage';
 export { FavoritosPage } from './favoritos/pages/FavoritosPage';

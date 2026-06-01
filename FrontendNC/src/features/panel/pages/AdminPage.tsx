@@ -12,6 +12,7 @@ import { ProductosPage } from '../../productos/pages/ProductosPage';
 import { PedidosPage } from '../../pedidos/pages/PedidosPage';
 import {
   CategoriasPage,
+  VariantePage,
   PagosPage,
   FavoritosPage,
   ClientesPage,
@@ -136,6 +137,8 @@ export const AdminPage = () => {
         return <PedidosPage />;
       case 'categoria':
         return <CategoriasPage />;
+      case 'variante':
+        return <VariantePage />;
       case 'pagos':
         return <PagosPage />;
       case 'favoritos':
