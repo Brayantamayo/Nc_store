@@ -1,5 +1,5 @@
 //SECCION ESCRITORIO DE LA CUENTA INICIO 
-import type { CustomerSession } from '../services/customerSessionService';
+import type { CustomerSession } from '@/shared/types/auth.types';
 import styles from '../css/Login.module.css';
 
 interface AccountDashboardSectionProps {

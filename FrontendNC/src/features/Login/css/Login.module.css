@@ -103,6 +103,15 @@
   color: var(--color-primary);
 }
 
+.headerSubtitle {
+  max-width: 720px;
+  margin: 0.9rem auto 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #6f5b67;
+  text-align: center;
+}
+
 .feedbackBanner,
 .highlightBanner,
 .statusBanner,
@@ -276,6 +285,209 @@
   position: relative;
 }
 
+.inlineRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.secondaryLink,
+.backLink {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.pageShell {
+  position: relative;
+  min-height: calc(100vh - 135px);
+  padding: 6.45rem 1rem 2.4rem;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(248, 187, 208, 0.2), transparent 20%),
+    radial-gradient(circle at 84% 10%, rgba(240, 98, 146, 0.12), transparent 15%),
+    radial-gradient(circle at 28% 72%, rgba(255, 224, 236, 0.5), transparent 18%),
+    linear-gradient(180deg, #fffdfd 0%, #fff8fb 55%, #fffdfd 100%);
+  overflow: hidden;
+}
+
+.pageCard,
+.helpCard {
+  border: 1px solid rgba(194, 24, 91, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 28px 60px rgba(121, 25, 64, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.pageCard {
+  max-width: 760px;
+  margin: 2rem auto 0;
+  padding: 1.6rem;
+}
+
+.pageGrid {
+  display: grid;
+  gap: 1.4rem;
+}
+
+@media (min-width: 920px) {
+  .pageGrid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+    align-items: start;
+  }
+}
+
+.pageCardHeader {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.pageCardTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 500;
+  color: #2d0010;
+}
+
+.pageCardText {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #6f5b67;
+}
+
+.pageCardNote {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: #8f7483;
+}
+
+.stepPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.stepPill {
+  padding: 0.42rem 0.82rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+  color: #6f5b67;
+  background: rgba(194, 24, 91, 0.06);
+}
+
+.stepPillActive {
+  color: #fff;
+  background: linear-gradient(135deg, #ef91b4, var(--color-primary));
+}
+
+.codeInputGroup {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.codeInput {
+  max-width: 220px;
+  letter-spacing: 0.4em;
+  font-size: 1.3rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.otpHelper,
+.passwordRules,
+.helpList,
+.miniNote {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #6f5b67;
+}
+
+.helpCard {
+  padding: 1.4rem;
+}
+
+.helpList {
+  padding-left: 1.2rem;
+  margin-top: 0.75rem;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.7rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 999px;
+  color: #2d0010;
+  background: rgba(194, 24, 91, 0.08);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+}
+
+.ghostBtn:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.successState {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(194, 24, 91, 0.08);
+  background: rgba(248, 187, 208, 0.18);
+}
+
+.loadingDots {
+  display: inline-flex;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.loadingDots span {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: currentColor;
+  animation: loadingPulse 0.9s infinite ease-in-out;
+}
+
+.loadingDots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.loadingDots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes loadingPulse {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+
+  40% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+}
+
 .eyeBtn {
   position: absolute;
   top: 50%;
@@ -306,15 +518,30 @@
   background: linear-gradient(135deg, #ef91b4, var(--color-primary));
 }
 
+.primaryBtn:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
 .saveBtn {
   align-self: flex-start;
   color: #2d0010;
   background: #efefef;
 }
 
+.saveBtn:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
 .inlineAction {
   color: var(--color-white);
   background: rgba(255, 255, 255, 0.18);
+}
+
+.inlineAction:disabled {
+  opacity: 0.75;
+  cursor: wait;
 }
 
 .infoText,
@@ -439,7 +666,8 @@
 }
 
 @media (max-width: 767px) {
-  .page {
+  .page,
+  .pageShell {
     padding: 6.35rem 1rem 1.85rem;
   }
 
@@ -452,7 +680,8 @@
 
   .primaryBtn,
   .saveBtn,
-  .inlineAction {
+  .inlineAction,
+  .ghostBtn {
     width: 100%;
   }
 

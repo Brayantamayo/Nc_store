@@ -28,7 +28,7 @@ export const AdminLogin = ({
       <div className={styles.authCard}>
         <Bow size={32} className={styles.authBow} />
         <h2>NC Panel Control</h2>
-        <p>Inicia sesion con credenciales administrativas para gestionar inventario y pedidos.</p>
+        <p>Inicia sesion con tu cuenta de administrador para gestionar inventario y pedidos.</p>
 
         {authError && (
           <div className={`${styles.messageBanner} ${styles.errorBanner}`}>
@@ -62,7 +62,7 @@ export const AdminLogin = ({
               value={password}
               onChange={(e) => onPasswordChange(e.target.value)}
               className={styles.textInput}
-              placeholder="Contrasena (ej: admin)"
+              placeholder="Contrasena de administrador"
               disabled={isSubmitting}
             />
           </div>

@@ -17,8 +17,11 @@ import { CartDrawer } from './features/store/Components/CartVista';
 import { FlyToCart } from './features/store/Components/FlyToCart';
 import { CartSuccessToast } from './features/store/Components/CartSuccessToast';
 import { Login } from './features/Login/pages/Login';
-import { SearchModal } from './features/home/components/SearchModal';
+import { RecoverPasswordPage } from './features/Login/pages/RecoverPasswordPage';
+import { ResetPasswordPage } from './features/Login/pages/ResetPasswordPage';
+import { CreatePasswordPage } from './features/Login/pages/CreatePasswordPage';
 import { AdminPage } from './features/panel/pages/AdminPage';
+import { SearchModal } from './features/home/components/SearchModal';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -29,32 +32,49 @@ const ScrollToTop = () => {
 };
 
 const AppContent = () => {
-  const location = useLocation();
-  const isAdmin = location.pathname === '/admin';
+  const { pathname } = useLocation();
+  const isAdminRoute = pathname.startsWith('/admin');
+
+  const routes = (
+    <AnimatePresence mode="wait">
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/coleccion" element={<Collection />} />
+        <Route path="/producto/:slug" element={<ProductDetail />} />
+        <Route path="/carrito" element={<Cart />} />
+        <Route path="/finalizar-compra" element={<CheckoutPage />} />
+        <Route path="/favoritos" element={<Wishlist />} />
+        <Route path="/mi-cuenta" element={<Login />} />
+        <Route path="/recuperar-contrasena" element={<RecoverPasswordPage />} />
+        <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
+        <Route path="/crear-password" element={<CreatePasswordPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route
+          path="/sobre-nosotros"
+          element={
+            <div className="container section">
+              <h1>Sobre NC Store</h1>
+              <p>PrÃ³ximamente...</p>
+            </div>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+
+  if (isAdminRoute) {
+    return routes;
+  }
 
   return (
     <div className="app-container">
-      {!isAdmin && <Navbar />}
+      <Navbar />
       <CartDrawer />
       <FlyToCart />
       <CartSuccessToast />
       <SearchModal />
-      <main style={isAdmin ? { paddingTop: 0, minHeight: '100vh' } : {}}>
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/coleccion" element={<Collection />} />
-            <Route path="/producto/:slug" element={<ProductDetail />} />
-            <Route path="/carrito" element={<Cart />} />
-            <Route path="/finalizar-compra" element={<CheckoutPage />} />
-            <Route path="/favoritos" element={<Wishlist />} />
-            <Route path="/mi-cuenta" element={<Login />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/sobre-nosotros" element={<div className="container section"><h1>Sobre NC Store</h1><p>Próximamente...</p></div>} />
-          </Routes>
-        </AnimatePresence>
-      </main>
-      {!isAdmin && <Footer />}
+      <main>{routes}</main>
+      <Footer />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { ZodError } from 'zod'
 
 const STATUS_MAP: Array<[string, number]> = [
   ['Ya existe',        409],
+  ['registrado',       409],
   ['no encontrad',     404],
   ['No se puede',      409],
   ['insuficiente',     409],

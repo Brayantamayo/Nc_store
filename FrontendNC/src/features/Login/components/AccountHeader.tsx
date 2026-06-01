@@ -4,9 +4,17 @@ import styles from '../css/Login.module.css';
 
 interface AccountHeaderProps {
   showBackgroundWord?: boolean;
+  title?: string;
+  backgroundWord?: string;
+  subtitle?: string;
 }
 
-export const AccountHeader = ({ showBackgroundWord = true }: AccountHeaderProps) => (
+export const AccountHeader = ({
+  showBackgroundWord = true,
+  title = 'MI CUENTA',
+  backgroundWord = 'bienvenue',
+  subtitle,
+}: AccountHeaderProps) => (
   <header className={styles.header}>
     {showBackgroundWord && (
       <div className={styles.headerTopDecoration}>
@@ -14,8 +22,8 @@ export const AccountHeader = ({ showBackgroundWord = true }: AccountHeaderProps)
       </div>
     )}
     <div className={styles.titleContainer}>
-      {showBackgroundWord && <span className={styles.titleBackgroundText}>bienvenue</span>}
-      <h1 className={styles.pageTitle}>MI CUENTA</h1>
+      {showBackgroundWord && <span className={styles.titleBackgroundText}>{backgroundWord}</span>}
+      <h1 className={styles.pageTitle}>{title}</h1>
     </div>
     <div className={styles.dividerWrapper}>
       <span className={styles.dividerLine} />
@@ -27,5 +35,6 @@ export const AccountHeader = ({ showBackgroundWord = true }: AccountHeaderProps)
       </svg>
       <span className={styles.dividerLine} />
     </div>
+    {subtitle && <p className={styles.headerSubtitle}>{subtitle}</p>}
   </header>
 );

@@ -8,6 +8,8 @@ import {
   verificarOtpSchema,
   nuevaPasswordSchema,
   resetPasswordSchema,
+  updateProfileSchema,
+  updateAddressSchema,
 } from './Validaciones/Auth.schema'
 
 // ─── REGISTRO ────────────────────────────────────────────────────────────────
@@ -55,5 +57,23 @@ export const verificarOtp = asyncHandler(async (req, res) => {
 export const nuevaPassword = asyncHandler(async (req, res) => {
   const body   = nuevaPasswordSchema.parse(req.body)
   const result = await AuthService.nuevaPassword(body)
+  res.status(200).json({ ok: true, ...result })
+})
+
+export const actualizarPerfil = asyncHandler(async (req, res) => {
+  const userId = req.usuario?.sub
+  if (!userId) throw new Error('No autenticado')
+
+  const body = updateProfileSchema.parse(req.body)
+  const result = await AuthService.actualizarPerfil(Number(userId), body)
+  res.status(200).json({ ok: true, ...result })
+})
+
+export const actualizarDireccion = asyncHandler(async (req, res) => {
+  const userId = req.usuario?.sub
+  if (!userId) throw new Error('No autenticado')
+
+  const body = updateAddressSchema.parse(req.body)
+  const result = await AuthService.actualizarDireccion(Number(userId), body)
   res.status(200).json({ ok: true, ...result })
 })

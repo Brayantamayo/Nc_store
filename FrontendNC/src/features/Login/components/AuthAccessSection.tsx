@@ -1,5 +1,6 @@
 ////INICIO DE SESION
 import { Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import styles from '../css/Login.module.css';
 
 interface AuthAccessSectionProps {
@@ -7,6 +8,7 @@ interface AuthAccessSectionProps {
   loginPassword: string;
   showPassword: boolean;
   errors: Record<string, string>;
+  isLoading?: boolean;
   onLoginEmailChange: (value: string) => void;
   onLoginPasswordChange: (value: string) => void;
   onTogglePassword: () => void;
@@ -18,6 +20,7 @@ export const AuthAccessSection = ({
   loginPassword,
   showPassword,
   errors,
+  isLoading = false,
   onLoginEmailChange,
   onLoginPasswordChange,
   onTogglePassword,
@@ -25,7 +28,7 @@ export const AuthAccessSection = ({
 }: AuthAccessSectionProps) => (
   <section className={styles.authColumn}>
     <h2 className={styles.authTitle}>Acceder</h2>
-    <form onSubmit={onSubmit} className={styles.authForm}>
+    <form onSubmit={onSubmit} className={styles.authForm} noValidate>
       <div className={styles.fieldGroup}>
         <label htmlFor="loginEmail" className={styles.label}>
           Nombre de usuario o correo electronico <span className={styles.required}>*</span>
@@ -33,6 +36,7 @@ export const AuthAccessSection = ({
         <input
           id="loginEmail"
           type="email"
+          autoComplete="email"
           value={loginEmail}
           onChange={(e) => onLoginEmailChange(e.target.value)}
           className={`${styles.input} ${errors.loginEmail ? styles.inputError : ''}`}
@@ -48,6 +52,7 @@ export const AuthAccessSection = ({
           <input
             id="loginPassword"
             type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
             value={loginPassword}
             onChange={(e) => onLoginPasswordChange(e.target.value)}
             className={`${styles.input} ${errors.loginPassword ? styles.inputError : ''}`}
@@ -66,8 +71,25 @@ export const AuthAccessSection = ({
 
       {errors.auth && <div className={styles.formAlert}>{errors.auth}</div>}
 
-      <button type="submit" className={styles.primaryBtn}>
-        ACCESO
+      <div className={styles.inlineRow}>
+        <Link to="/recuperar-contrasena" className={styles.secondaryLink}>
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </div>
+
+      <button type="submit" className={styles.primaryBtn} disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <span className={styles.loadingDots} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            INGRESANDO...
+          </>
+        ) : (
+          'ACCESO'
+        )}
       </button>
     </form>
   </section>

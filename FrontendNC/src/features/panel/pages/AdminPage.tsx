@@ -17,12 +17,13 @@ import {
   ClientesPage,
   VentasPage,
 } from '../../adminModulos';
-import { setAdminEmail, DEFAULT_ADMIN_EMAIL } from '../constants/adminProfile';
+import { authService } from '../../Login/services/AuthServices';
+import { setAdminEmail } from '../constants/adminProfile';
+import { useCustomerSessionStore } from '@/shared/contexts/customerSessionStore';
 import styles from '../css/Admin.module.css';
 
-const AUTH_LOADING_MS = 1400;
-
 export const AdminPage = () => {
+  const logoutCustomerSession = useCustomerSessionStore((s) => s.logout);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -35,8 +36,6 @@ export const AdminPage = () => {
   const [pendingNewProduct, setPendingNewProduct] = useState(false);
 
   useEffect(() => {
-    setAdminEmail(DEFAULT_ADMIN_EMAIL);
-
     const timer = window.setTimeout(() => {
       if (localStorage.getItem('nc-admin-session') === 'active') {
         setIsAuthenticated(true);
@@ -57,22 +56,34 @@ export const AdminPage = () => {
     setAuthError('');
     setIsLoggingIn(true);
 
-    await new Promise((resolve) => setTimeout(resolve, AUTH_LOADING_MS));
-
-    if (username.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() && password === 'admin') {
+    try {
+      const { usuario } = await authService.login(username, password);
+      if (String(usuario.rol ?? '').toUpperCase() !== 'ADMIN') {
+        throw new Error('Solo las cuentas con rol ADMIN pueden acceder al panel.');
+      }
+      logoutCustomerSession();
       localStorage.setItem('nc-admin-session', 'active');
-      setAdminEmail(DEFAULT_ADMIN_EMAIL);
+      setAdminEmail(usuario.email);
       setIsLoggingIn(false);
       setIsAuthenticated(true);
-    } else {
-      setAuthError(`Credenciales incorrectas. Usa ${DEFAULT_ADMIN_EMAIL} / admin.`);
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : 'Credenciales incorrectas. Verifica tu correo y contraseña de administrador.';
+      setAuthError(message);
       setIsLoggingIn(false);
     }
   };
 
   const handleLogout = () => {
+    logoutCustomerSession();
     setIsAuthenticated(false);
-    localStorage.removeItem('nc-admin-session');
+    setUsername('');
+    setPassword('');
+    setAuthError('');
+    setActiveTab('dashboard');
+    setPendingNewProduct(false);
+    setIsLoading(false);
   };
 
   if (isCheckingSession) {

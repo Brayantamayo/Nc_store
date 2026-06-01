@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import * as AuthController from './Auth.controller'
+import { autenticado } from '../../middlewares/Auth.middleware'
 
 const router = Router()
 
@@ -20,5 +21,11 @@ router.post('/verificar-otp',       AuthController.verificarOtp)
 
 // POST /api/auth/nueva-password    → guardar nueva contraseña (tras OTP)
 router.post('/nueva-password',      AuthController.nuevaPassword)
+
+// PUT /api/auth/perfil             → guardar nombre, apellido, email
+router.put('/perfil',               ...autenticado, AuthController.actualizarPerfil)
+
+// PUT /api/auth/direccion          → guardar dirección del cliente
+router.put('/direccion',            ...autenticado, AuthController.actualizarDireccion)
 
 export default router

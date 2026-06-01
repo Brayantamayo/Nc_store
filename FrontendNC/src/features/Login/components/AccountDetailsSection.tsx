@@ -11,6 +11,7 @@ interface AccountDetailsForm {
 interface AccountDetailsSectionProps {
   accountForm: AccountDetailsForm;
   errors: Record<string, string>;
+  isLoading?: boolean;
   onChange: (field: keyof AccountDetailsForm, value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
@@ -18,10 +19,11 @@ interface AccountDetailsSectionProps {
 export const AccountDetailsSection = ({
   accountForm,
   errors,
+  isLoading = false,
   onChange,
   onSubmit,
 }: AccountDetailsSectionProps) => (
-  <form onSubmit={onSubmit} className={styles.accountForm}>
+  <form onSubmit={onSubmit} className={styles.accountForm} noValidate>
     <div className={styles.formGrid}>
       <div className={styles.fieldGroup}>
         <label className={styles.label}>
@@ -68,8 +70,19 @@ export const AccountDetailsSection = ({
       </div>
     </div>
 
-    <button type="submit" className={styles.saveBtn}>
-      Guardar cambios
+    <button type="submit" className={styles.saveBtn} disabled={isLoading}>
+      {isLoading ? (
+        <>
+          <span className={styles.loadingDots} aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+          Guardando...
+        </>
+      ) : (
+        'Guardar cambios'
+      )}
     </button>
   </form>
 );

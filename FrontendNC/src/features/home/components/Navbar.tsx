@@ -9,7 +9,7 @@ import { useUIStore } from '../../store/pages/uiStore';
 import { useCartStore } from '../../store/pages/cartStore';
 import { useFlyToCartStore } from '../../store/pages/flyToCartStore';
 import { useWishlistStore } from '../../store/pages/wishlistStore';
-import { useCustomerSessionStore } from '../../Login/services/customerSessionService';
+import { useCustomerSessionStore } from '../../Login/services/AuthServices';
 
 // 3. Componentes
 import { Bow, CoquetteUserIcon } from './Moñito';
