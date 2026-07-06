@@ -16,9 +16,41 @@ export const createVarianteSchema = z.object({
     .int('El stock debe ser un número entero')
     .min(0, 'El stock no puede ser negativo')
     .default(0),
+  activo: z
+    .coerce.boolean()
+    .default(true),
   imagenes: z
     .array(z.string().url('Cada imagen debe ser una URL válida'))
     .default([]),
+})
+
+export const createManyVariantesSchema = z.object({
+  productoId: z
+    .coerce.number({ required_error: 'El productoId es requerido' })
+    .int('El productoId debe ser un entero')
+    .positive('El productoId debe ser mayor a 0'),
+  variantes: z
+    .array(
+      z.object({
+        color: z
+          .string({ required_error: 'El color es requerido' })
+          .min(2, 'El color debe tener al menos 2 caracteres')
+          .max(50, 'El color no puede superar 50 caracteres')
+          .trim(),
+        stock: z
+          .coerce.number()
+          .int('El stock debe ser un número entero')
+          .min(0, 'El stock no puede ser negativo')
+          .default(0),
+        activo: z
+          .coerce.boolean()
+          .default(true),
+        imagenes: z
+          .array(z.string().url('Cada imagen debe ser una URL válida'))
+          .default([]),
+      })
+    )
+    .min(1, 'Debes enviar al menos una variante'),
 })
  
 export const updateVarianteSchema = z.object({
@@ -32,6 +64,9 @@ export const updateVarianteSchema = z.object({
     .coerce.number()
     .int('El stock debe ser un número entero')
     .min(0, 'El stock no puede ser negativo')
+    .optional(),
+  activo: z
+    .coerce.boolean()
     .optional(),
   imagenes: z
     .array(z.string().url('Cada imagen debe ser una URL válida'))
@@ -65,5 +100,6 @@ export const productoIdParamSchema = z.object({
 // ─── TIPOS ───────────────────────────────────────────────────────────────────
 
 export type CreateVarianteDto  = z.infer<typeof createVarianteSchema>
+export type CreateManyVariantesDto = z.infer<typeof createManyVariantesSchema>
 export type UpdateVarianteDto  = z.infer<typeof updateVarianteSchema>
 export type AjustarStockDto    = z.infer<typeof ajustarStockSchema>

@@ -1,12 +1,41 @@
+import api from '@/shared/api/api';
 import { ServiceResponse } from '../../../../shared/types/serviceResponse';
-import { useOrderStore, Order, OrderStatus, OrderItem } from '../../store/pages/orderStore';
-import { Product } from '../../../types';
+import { Order, OrderStatus } from '../../store/pages/orderStore';
 
 export const pedidoService = {
-  actualizarEstado: async (orderId: string, status: OrderStatus): Promise<ServiceResponse> => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+  listar: async (): Promise<{ data: Order[] }> => {
     try {
-      useOrderStore.getState().updateOrderStatus(orderId, status);
+      const { data } = await api.get('/pedidos?limit=100');
+      const mapped: Order[] = data.data.map((p: any) => ({
+        id: String(p.id),
+        customerName: p.cliente?.nombre || p.usuario?.nombre || 'Desconocido',
+        customerEmail: p.usuario?.email || '',
+        customerPhone: '',
+        customerAddress: p.cliente?.direccion || '',
+        customerCity: p.cliente?.ciudad || '',
+        items: p.items ? p.items.map((i: any) => ({
+          productId: String(i.variante?.producto?.id),
+          productName: i.variante?.producto?.nombre || 'Producto',
+          price: Number(i.precio),
+          quantity: i.cantidad,
+          colorName: i.variante?.color || '',
+          colorHex: '#000',
+          image: i.variante?.imagenes?.[0] || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800',
+        })) : [],
+        total: Number(p.total),
+        status: p.estado,
+        createdAt: String(p.creadoEn),
+      }));
+      return { data: mapped };
+    } catch (e: unknown) {
+      console.error('Error fetching orders:', e);
+      return { data: [] };
+    }
+  },
+
+  actualizarEstado: async (orderId: string, status: OrderStatus): Promise<ServiceResponse> => {
+    try {
+      await api.patch(`/pedidos/${orderId}`, { estado: status });
       return { success: true, message: 'Estado del pedido actualizado.' };
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Error al actualizar el pedido.';
@@ -15,65 +44,12 @@ export const pedidoService = {
   },
 
   eliminar: async (orderId: string): Promise<ServiceResponse> => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
     try {
-      useOrderStore.getState().deleteOrder(orderId);
+      await api.delete(`/pedidos/${orderId}`);
       return { success: true, message: 'Pedido eliminado correctamente.' };
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Error al eliminar el pedido.';
       return { success: false, message };
     }
-  },
-
-  simularCompra: (products: Product[]): Order | null => {
-    if (products.length === 0) return null;
-
-    const firstNames = ['Camila', 'Alejandra', 'Manuela', 'Isabella', 'Sofia', 'Juliana', 'Daniela'];
-    const lastNames = ['Restrepo', 'Vásquez', 'Uribe', 'Gaviria', 'Montoya', 'Londoño', 'Cardona'];
-    const cities = ['Medellín', 'Envigado', 'Sabaneta', 'Bello', 'Itagüí'];
-    const streets = ['Calle 10', 'Carrera 43A', 'Avenida Las Vegas', 'Transversal Superior', 'Calle 50'];
-
-    const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
-    const randomCity = cities[Math.floor(Math.random() * cities.length)];
-    const randomAddress = `${streets[Math.floor(Math.random() * streets.length)]} # ${Math.floor(10 + Math.random() * 80)}-${Math.floor(10 + Math.random() * 80)}`;
-    const randomEmail = `${randomName.toLowerCase().replace(/\s+/g, '')}@gmail.com`;
-    const randomPhone = `+57 3${Math.floor(10 + Math.random() * 90)} ${Math.floor(100 + Math.random() * 900)} ${Math.floor(1000 + Math.random() * 9000)}`;
-
-    const itemsCount = Math.floor(Math.random() * 2) + 1;
-    const orderItems: OrderItem[] = [];
-    let computedTotal = 0;
-
-    for (let i = 0; i < itemsCount; i++) {
-      const prod = products[Math.floor(Math.random() * products.length)];
-      const color = prod.colors[Math.floor(Math.random() * prod.colors.length)] || { name: 'Esmalte', hex: '#E5E4E2' };
-      const qty = Math.floor(Math.random() * 2) + 1;
-
-      orderItems.push({
-        productId: prod.id,
-        productName: prod.name,
-        price: prod.price,
-        quantity: qty,
-        colorName: color.name,
-        colorHex: color.hex,
-        image: prod.images[0],
-      });
-
-      computedTotal += prod.price * qty;
-    }
-
-    const orderId = `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    return {
-      id: orderId,
-      customerName: randomName,
-      customerEmail: randomEmail,
-      customerPhone: randomPhone,
-      customerAddress: randomAddress,
-      customerCity: randomCity,
-      items: orderItems,
-      total: computedTotal,
-      status: 'Pendiente',
-      createdAt: new Date().toISOString(),
-    };
   },
 };

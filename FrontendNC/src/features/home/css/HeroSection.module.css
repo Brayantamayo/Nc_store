@@ -2,9 +2,9 @@
 .hero {
   position: relative;
   width: 100%;
-  height: calc(100vh - 135px); /* 40px announcement + 95px navbar */
+  height: calc(100vh - 90px);
   min-height: 685px;
-  margin-top: 95px; /* Compensate for fixed navbar */
+  margin-top: 0;
   overflow: hidden;
   background: #1a0008;  
 }

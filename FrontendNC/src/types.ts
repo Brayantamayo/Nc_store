@@ -1,5 +1,18 @@
-// src/types/product.ts
-export type ProductCategory = 'tote' | 'clutch' | 'crossbody' | 'mini' | 'shopper';
+export type ProductCategory =
+  | 'tote'
+  | 'clutch'
+  | 'crossbody'
+  | 'mini'
+  | 'shopper'
+  | 'bolsos'
+  | 'maquillaje'
+  | 'accesorios'
+  | 'monedero'
+  | 'cosmetiquera'
+  | 'accesorios-bolsos'
+  | 'puffer'
+  | 'combos'
+  | 'descuentos';
 
 export interface ColorOption {
   name: string;
@@ -29,12 +42,14 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedColor: ColorOption;
+  /** Stock disponible al momento de agregar. Se usa para limitar la cantidad máxima en el carrito. */
+  stock: number;
 }
 
 export interface CartState {
   items: CartItem[];
   isOpen: boolean;
-  addItem: (product: Product, color: ColorOption) => void;
+  addItem: (product: Product, color: ColorOption, stock: number) => void;
   removeItem: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   toggleCart: (open?: boolean) => void;

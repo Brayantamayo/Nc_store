@@ -26,6 +26,13 @@ imagen: z
     .string()
     .url('La imagen debe ser una URL válida')
     .optional(),
+parentId: z
+    .coerce
+    .number({ invalid_type_error: 'La categoría padre debe ser un número' })
+    .int()
+    .positive('La categoría padre debe ser mayor a 0')
+    .nullable()
+    .optional(),
 })
 
 export const updateCategoriaSchema = createCategoriaSchema.partial().refine(

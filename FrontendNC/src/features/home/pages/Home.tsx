@@ -1,11 +1,15 @@
 // 1. Librerías
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // 2. Datos / Tipos
-import { useProductStore } from '../../store/pages/productStore';
+import { categoriaService } from '../../categoria/services/categoriaService';
+import { productoService } from '../../productos/services/productoService';
+import type { CategoriaTreeItem } from '../../categoria/types';
+import type { ProductoApiItem } from '../../productos/types';
+import type { Product } from '../../../types';
 
 // 3. Componentes
 import { HeroSection } from '../components/HeroSection';
@@ -19,10 +23,77 @@ import styles from '../css/Home.module.css';
 import collectionStyles from '../css/NuevasColecions.module.css';
 import { Eye, EyeOff, MessageCircle } from 'lucide-react';
 
+const FALLBACK_COLLECTIONS = [
+  { name: 'Tote', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3' },
+  { name: 'Mini Bags', image: 'https://images.unsplash.com/photo-1591561954557-26941169b49e' },
+  { name: 'Noche', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa' },
+  { name: 'Crossbody', image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7' },
+];
 
 export const Home = () => {
-  const { products } = useProductStore();
   const trackRef = useRef<HTMLDivElement>(null);
+  const [categories, setCategories] = useState<CategoriaTreeItem[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Cargar categorías
+        const catRes = await categoriaService.arbol();
+        setCategories(catRes);
+
+        // Cargar productos (SOLO ACTIVOS)
+        const prodRes = await productoService.listarParaTienda(1, 50);
+        
+        // Transformar productos a formato Product
+        const transformedProducts: Product[] = (prodRes.data as ProductoApiItem[])
+          .map((p) => {
+            const variantes = p.variantes?.filter(v => 'activo' in v ? v.activo : true) || [];
+            const variantImages = variantes.flatMap((v) => v.imagenes) || [];
+            const images = variantImages.length > 0
+              ? variantImages
+              : ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800'];
+
+            const colors = variantes
+              ?.filter((v): v is typeof v & { color: string } => 'color' in v && !!v.color)
+              .map((v) => ({
+                name: v.color,
+                hex: '#db2777',
+              })) || [];
+
+            return {
+              id: String(p.id),
+              slug: p.slug,
+              name: p.nombre,
+              price: Number(p.precio),
+              originalPrice: p.precioOriginal ? Number(p.precioOriginal) : undefined,
+              images,
+              category: p.categoria?.slug?.toLowerCase() as any || 'general',
+              colors,
+              material: '',
+              description: p.descripcion || '',
+              isNew: false,
+              isSoldOut: variantes.length === 0 || !variantes.some(v => (v as any).stock > 0),
+              isFeatured: false,
+              tags: [],
+            };
+          })
+          .filter((p) => !p.isSoldOut);
+        
+        setProducts(transformedProducts);
+      } catch (error) {
+        console.error('Error loading home data:', error);
+        setCategories([]);
+        setProducts([]);
+      } finally {
+        setCategoriesLoading(false);
+        setProductsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const scrollTrack = (direction: 'left' | 'right') => {
     if (trackRef.current) {
@@ -31,12 +102,20 @@ export const Home = () => {
     }
   };
 
-  const collections = [
-    { name: 'Tote', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3' },
-    { name: 'Mini Bags', image: 'https://images.unsplash.com/photo-1591561954557-26941169b49e' },
-    { name: 'Noche', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa' },
-    { name: 'Crossbody', image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7' },
-  ];
+  // Use categories from DB, fallback to defaults
+  const collections = categories.length > 0 
+    ? categories.map(cat => ({
+        name: cat.nombre,
+        slug: cat.slug,
+        image: cat.imagen || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3',
+        hasChildren: cat.children.length > 0,
+      }))
+    : FALLBACK_COLLECTIONS.map(col => ({
+        name: col.name,
+        slug: col.name.toLowerCase(),
+        image: col.image,
+        hasChildren: false,
+      }));
 
   return (
     <motion.div
@@ -108,9 +187,9 @@ export const Home = () => {
     <div className={collectionStyles.beltTrack}>
       {/* duplicamos para el loop infinito */}
       {[...collections, ...collections].map((col, idx) => (
-        <Link
+          <Link
           key={idx}
-          to={`/coleccion?category=${col.name.toLowerCase()}`}
+          to={`/coleccion?category=${col.slug || col.name.toLowerCase()}`}
           className={`${collectionStyles.lookbookCard} ${idx % collections.length === 0 ? collectionStyles.lookbookHero : ''}`}
         >
           <div className={collectionStyles.lookbookImgWrap}>

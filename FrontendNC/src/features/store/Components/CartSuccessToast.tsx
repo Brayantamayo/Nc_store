@@ -1,3 +1,5 @@
+//Su función es mostrar una notificación temporal (toast) 
+// cuando un usuario agrega un producto al carrito.
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckCircle2, ShoppingBag } from 'lucide-react';

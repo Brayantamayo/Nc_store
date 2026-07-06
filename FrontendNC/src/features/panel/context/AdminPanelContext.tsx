@@ -5,13 +5,14 @@ export type AdminTab =
   | 'productos'
   | 'variante'
   | 'pedidos'
+  | 'galeria'
   | 'categoria'
   | 'pagos'
-  | 'favoritos'
   | 'clientes'
   | 'ventas'
   | 'analytics'
-  | 'settings';
+  | 'settings'
+  | 'banners';
 
 export type MessageType = 'success' | 'error';
 

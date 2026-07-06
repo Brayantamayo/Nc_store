@@ -1,39 +1,141 @@
 ///Es la pagina donde se ve un solo producto a detalle con su precio y descripcion.
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { Plus, Minus, Heart, ArrowRight, Sparkles, ShieldCheck, Truck } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Plus, Minus, Heart, ArrowRight, Sparkles, ShieldCheck, Truck, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { useProductStore } from '../pages/productStore';
 import { useCartStore } from '../pages/cartStore';
 import { useFlyToCartStore } from '../pages/flyToCartStore';
 import { useCartFeedbackStore } from '../pages/cartFeedbackStore';
 import { useWishlistStore } from '../pages/wishlistStore';
+import { productoService } from '../../productos/services/productoService';
+import type { Product } from '../../../types';
 
 import { ProductCard } from './ProductCard';
 
 import styles from '../css/ProductDetail.module.css';
 
+// Mapeo de nombres de colores a códigos hex
+const colorMap: { [key: string]: string } = {
+  negro: '#000000',
+  blanco: '#FFFFFF',
+  rosado: '#E91E8C',
+  rosa: '#E91E8C',
+  rojo: '#FF0000',
+  azul: '#0066FF',
+  verde: '#00AA00',
+  amarillo: '#FFFF00',
+  naranja: '#FF8800',
+  morado: '#9933FF',
+  gris: '#808080',
+  beige: '#D4BCA8',
+  cafe: '#8B4513',
+  marron: '#8B4513',
+};
+
+const getColorHex = (colorName: string): string => {
+  const normalized = colorName.toLowerCase().trim();
+  return colorMap[normalized] || '#808080'; // Gris por defecto
+};
+
 export const ProductDetail = () => {
-  const { products } = useProductStore();
+  const { products: storeProducts } = useProductStore();
   const { slug } = useParams();
   const navigate = useNavigate();
-  const product = products.find((p) => p.slug === slug);
   const { addItem } = useCartStore();
   const triggerFly = useFlyToCartStore((s) => s.triggerFly);
   const showSuccess = useCartFeedbackStore((s) => s.showSuccess);
   const { toggle, isWishlisted } = useWishlistStore();
   const mainImageRef = useRef<HTMLImageElement>(null);
 
-  const [selectedColor, setSelectedColor] = useState(product?.colors[0]);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [apiVariantes, setApiVariantes] = useState<Array<{ color?: string; imagenes: string[]; stock?: number }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedColor, setSelectedColor] = useState<any>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    setSelectedColor(product?.colors[0]);
+    const loadProduct = async () => {
+      if (!slug) return;
+      try {
+        const apiProduct = await productoService.obtenerPorSlug(slug);
+        
+        // Guardar los variantes originales para acceder por color
+        setApiVariantes(apiProduct.variantes || []);
+
+        // Transformar producto del API al formato Product
+        const variantImages = apiProduct.variantes?.flatMap((v) => v.imagenes) || [];
+        const images = variantImages.length > 0
+          ? variantImages
+          : ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800'];
+
+        const colors = apiProduct.variantes
+          ?.map((v) => ({
+            name: v.color,
+            hex: getColorHex(v.color),
+          })) || [];
+        
+        console.log('Variantes del API:', apiProduct.variantes);
+        console.log('Colors mapeados:', colors);
+
+        const transformedProduct: Product = {
+          id: String(apiProduct.id),
+          slug: apiProduct.slug,
+          name: apiProduct.nombre,
+          price: Number(apiProduct.precio),
+          originalPrice: apiProduct.precioOriginal ? Number(apiProduct.precioOriginal) : undefined,
+          images,
+          category: apiProduct.categoria?.slug?.toLowerCase() as any || 'general',
+          colors,
+          material: '',
+          description: apiProduct.descripcion || '',
+          isNew: false,
+          isSoldOut: !apiProduct.variantes || apiProduct.variantes.length === 0,
+          isFeatured: false,
+          tags: [],
+        };
+
+        setProduct(transformedProduct);
+        setSelectedColor(colors[0] || null);
+        setSelectedImageIndex(0);
+      } catch (error) {
+        console.error('Error loading product:', error);
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [slug]);
+
+  // Obtener imágenes del color seleccionado
+  const getColorImages = () => {
+    if (!selectedColor || apiVariantes.length === 0) {
+      return product?.images || [];
+    }
+    const variant = apiVariantes.find((v) => v.color === selectedColor.name);
+    return variant?.imagenes || product?.images || [];
+  };
+
+  const colorImages = getColorImages();
+
+  const handleColorChange = (color: any) => {
+    setSelectedColor(color);
     setSelectedImageIndex(0);
-    setQuantity(1);
-  }, [product]);
+  };
+
+  if (loading) {
+    return (
+      <div className="container section" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <p>Cargando producto...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -45,25 +147,45 @@ export const ProductDetail = () => {
   }
 
   const handleAddToCart = () => {
-    if (!selectedColor || product.isSoldOut) return;
+    if (product.isSoldOut) {
+      toast.error('Este producto esta agotado por ahora.');
+      return;
+    }
+
+    if (!selectedColor) {
+      toast.error('Selecciona un color antes de agregarlo al carrito.');
+      return;
+    }
+
+    // Check available stock
+    const variant = apiVariantes.find((v) => v.color === selectedColor.name);
+    const availableStock = variant ? variant.stock : 0;
+
+    if (quantity > availableStock) {
+      toast.error(`No hay stock suficiente por el momento. Podemos brindarte ${availableStock} unidad${availableStock === 1 ? '' : 'es'}.`);
+      if (availableStock > 0) {
+        setQuantity(availableStock);
+      }
+      return;
+    }
 
     const source = mainImageRef.current;
     if (source) {
-      triggerFly(product.images[0], source);
+      triggerFly(colorImages[0], source);
     }
 
     for (let i = 0; i < quantity; i++) {
-      addItem(product, selectedColor);
+      addItem(product, selectedColor, availableStock);
     }
 
     showSuccess({ productName: product.name, quantity });
   };
 
-  const relatedProducts = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const relatedProducts = storeProducts.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
   const activeWishlist = isWishlisted(product.id);
   const hasDiscount = Boolean(product.originalPrice && product.originalPrice > product.price);
   const amountSaved = hasDiscount ? product.originalPrice! - product.price : 0;
-  const primaryImage = product.images[selectedImageIndex] ?? product.images[0];
+  const primaryImage = colorImages[selectedImageIndex] ?? colorImages[0];
 
   return (
     <motion.div className={styles.page} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -76,18 +198,23 @@ export const ProductDetail = () => {
                   {product.isSoldOut ? 'Pieza agotada' : 'Seleccion exclusiva NC'}
                 </span>
                 <span className={styles.galleryCounter}>
-                  {String(selectedImageIndex + 1).padStart(2, '0')} / {String(product.images.length).padStart(2, '0')}
+                  {String(selectedImageIndex + 1).padStart(2, '0')} / {String(colorImages.length).padStart(2, '0')}
                 </span>
               </div>
 
-              <div className={styles.mainImageWrapper}>
+              <div 
+                className={styles.mainImageWrapper} 
+                onClick={() => setIsModalOpen(true)}
+                style={{ cursor: 'zoom-in' }}
+                title="Hacer clic para ampliar"
+              >
                 <img ref={mainImageRef} src={primaryImage} alt={product.name} className={styles.mainImage} />
               </div>
             </div>
 
-            {product.images.length > 1 && (
+            {colorImages.length > 1 && (
               <div className={styles.thumbnails}>
-                {product.images.map((img, idx) => (
+                {colorImages.map((img, idx) => (
                   <button
                     key={`${product.id}-${idx}`}
                     type="button"
@@ -170,7 +297,7 @@ export const ProductDetail = () => {
                         key={color.name}
                         type="button"
                         className={`${styles.swatch} ${selectedColor?.name === color.name ? styles.activeSwatch : ''}`}
-                        onClick={() => setSelectedColor(color)}
+                        onClick={() => handleColorChange(color)}
                         aria-label={color.name}
                         title={color.name}
                       >
@@ -255,6 +382,37 @@ export const ProductDetail = () => {
           </section>
         )}
       </div>
+
+      {/* Modal para ver imagen ampliada */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className={styles.imageModal}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsModalOpen(false)}
+          >
+            <button
+              className={styles.closeModalBtn}
+              onClick={() => setIsModalOpen(false)}
+              aria-label="Cerrar imagen"
+            >
+              <X size={32} color="#fff" />
+            </button>
+            <motion.img
+              src={primaryImage}
+              alt={product.name}
+              className={styles.modalImage}
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

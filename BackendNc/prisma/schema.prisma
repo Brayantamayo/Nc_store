@@ -7,180 +7,149 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── ROLES Y PERMISOS ───────────────────────────────
-
 model Role {
-  id          Int           @id @default(autoincrement())
-  nombre      String        @unique
-  permisos    RolePermiso[]
-  usuarios    Usuario[]
-  creadoEn    DateTime      @default(now())
+  id       Int           @id @default(autoincrement())
+  nombre   String        @unique
+  creadoEn DateTime      @default(now())
+  permisos RolePermiso[]
+  usuarios Usuario[]
 }
 
 model Permiso {
-  id          Int           @id @default(autoincrement())
-  nombre      String        @unique
-  roles       RolePermiso[]
+  id     Int           @id @default(autoincrement())
+  nombre String        @unique
+  roles  RolePermiso[]
 }
 
 model RolePermiso {
-  roleId      Int
-  permisoId   Int
-  role        Role          @relation(fields: [roleId], references: [id])
-  permiso     Permiso       @relation(fields: [permisoId], references: [id])
+  roleId    Int
+  permisoId Int
+  permiso   Permiso @relation(fields: [permisoId], references: [id])
+  role      Role    @relation(fields: [roleId], references: [id])
 
   @@id([roleId, permisoId])
 }
 
-// ─── USUARIOS ────────────────────────────────────────
-
 model Usuario {
-  id          Int       @id @default(autoincrement())
-  email       String    @unique
-  password    String
-  nombre      String?
-  apellido    String?
-  nombreVisible  String?
-  roleId      Int
-  role        Role      @relation(fields: [roleId], references: [id])
-  cliente     Cliente?
-  pedidos     Pedido[]
-  creadoEn    DateTime  @default(now())
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password      String
+  nombre        String?
+  apellido      String?
+  nombreVisible String?
+  roleId        Int
+  creadoEn      DateTime @default(now())
+  cliente       Cliente?
+  pedidos       Pedido[]
+  role          Role     @relation(fields: [roleId], references: [id])
 }
 
-// ─── CLIENTES ────────────────────────────────────────
-
 model Cliente {
-  id           Int       @id @default(autoincrement())
-  usuarioId    Int       @unique
-  usuario      Usuario   @relation(fields: [usuarioId], references: [id])
+  id           Int      @id @default(autoincrement())
+  usuarioId    Int      @unique
   direccion    String?
   direccion2   String?
   region       String?
   ciudad       String?
   codigoPostal String?
+  creadoEn     DateTime @default(now())
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id])
   pedidos      Pedido[]
-  creadoEn     DateTime  @default(now())
 }
 
-// ─── CATEGORÍAS Y PRODUCTOS ──────────────────────────
-
 model Categoria {
-  id          Int        @id @default(autoincrement())
-  nombre      String     @unique
-  slug        String     @unique
-  imagen      String?
-  productos   Producto[]
-  creadoEn    DateTime   @default(now())
+  id         Int        @id @default(autoincrement())
+  nombre     String     @unique
+  slug       String     @unique
+  imagen     String?
+  parentId   Int?
+  creadoEn   DateTime   @default(now())
+  productos  Producto[]
+  parent     Categoria? @relation("CategoriaHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children   Categoria[] @relation("CategoriaHierarchy")
+
+  @@index([parentId])
 }
 
 model Producto {
-  id          Int        @id @default(autoincrement())
-  nombre      String
-  slug        String     @unique
-  descripcion String?
-  precio      Decimal    @db.Decimal(10, 2)
-  categoriaId Int
-  categoria   Categoria  @relation(fields: [categoriaId], references: [id])
-  activo      Boolean    @default(true)
-  variantes   Variante[]
-  creadoEn    DateTime   @default(now())
+  id             Int        @id @default(autoincrement())
+  nombre         String
+  slug           String     @unique
+  descripcion    String?
+  precio         Decimal    @db.Decimal(10, 2)
+  categoriaId    Int
+  activo         Boolean    @default(true)
+  creadoEn       DateTime   @default(now())
+  precioOriginal Decimal?   @db.Decimal(10, 2)
+  categoria      Categoria  @relation(fields: [categoriaId], references: [id])
+  variantes      Variante[]
 }
 
 model Variante {
   id          Int          @id @default(autoincrement())
   productoId  Int
-  producto    Producto     @relation(fields: [productoId], references: [id])
   color       String
   stock       Int          @default(0)
   imagenes    String[]
+  activo      Boolean      @default(true)
   itemsPedido ItemPedido[]
   itemsVenta  ItemVenta[]
+  producto    Producto     @relation(fields: [productoId], references: [id])
 }
-
-// ─── PEDIDOS ─────────────────────────────────────────
 
 model Pedido {
-  id          Int          @id @default(autoincrement())
-  usuarioId   Int
-  usuario     Usuario      @relation(fields: [usuarioId], references: [id])
-  clienteId   Int
-  cliente     Cliente      @relation(fields: [clienteId], references: [id])
-  estado      EstadoPedido @default(PENDIENTE)
-  total       Decimal      @db.Decimal(10, 2)
-  items       ItemPedido[]
-  pago        Pago?
-  venta       Venta?
-  creadoEn    DateTime     @default(now())
-}
-
-enum EstadoPedido {
-  PENDIENTE
-  PAGADO
-  ENVIADO
-  ENTREGADO
-  CANCELADO
+  id        Int          @id @default(autoincrement())
+  usuarioId Int
+  clienteId Int
+  estado    EstadoPedido @default(PENDIENTE)
+  total     Decimal      @db.Decimal(10, 2)
+  creadoEn  DateTime     @default(now())
+  items     ItemPedido[]
+  pago      Pago?
+  cliente   Cliente      @relation(fields: [clienteId], references: [id])
+  usuario   Usuario      @relation(fields: [usuarioId], references: [id])
+  venta     Venta?
 }
 
 model ItemPedido {
-  id          Int      @id @default(autoincrement())
-  pedidoId    Int
-  pedido      Pedido   @relation(fields: [pedidoId], references: [id])
-  varianteId  Int
-  variante    Variante @relation(fields: [varianteId], references: [id])
-  cantidad    Int
-  precio      Decimal  @db.Decimal(10, 2)
+  id         Int      @id @default(autoincrement())
+  pedidoId   Int
+  varianteId Int
+  cantidad   Int
+  precio     Decimal  @db.Decimal(10, 2)
+  pedido     Pedido   @relation(fields: [pedidoId], references: [id])
+  variante   Variante @relation(fields: [varianteId], references: [id])
 }
-
-// ─── PAGOS ───────────────────────────────────────────
 
 model Pago {
-  id          Int        @id @default(autoincrement())
-  pedidoId    Int        @unique
-  pedido      Pedido     @relation(fields: [pedidoId], references: [id])
-  metodo      MetodoPago
-  estado      EstadoPago @default(PENDIENTE)
-  referencia  String?
-  total       Decimal    @db.Decimal(10, 2)
-  creadoEn    DateTime   @default(now())
+  id         Int        @id @default(autoincrement())
+  pedidoId   Int        @unique
+  metodo     MetodoPago
+  estado     EstadoPago @default(PENDIENTE)
+  referencia String?
+  total      Decimal    @db.Decimal(10, 2)
+  creadoEn   DateTime   @default(now())
+  pedido     Pedido     @relation(fields: [pedidoId], references: [id])
 }
-
-enum MetodoPago {
-  PSE
-  NEQUI
-  DAVIPLATA
-  WHATSAPP
-  TRANSFERENCIA
-}
-
-enum EstadoPago {
-  PENDIENTE
-  APROBADO
-  RECHAZADO
-}
-
-// ─── VENTAS ──────────────────────────────────────────
 
 model Venta {
-  id          Int        @id @default(autoincrement())
-  pedidoId    Int        @unique
-  pedido      Pedido     @relation(fields: [pedidoId], references: [id])
-  total       Decimal    @db.Decimal(10, 2)
-  items       ItemVenta[]
-  creadoEn    DateTime   @default(now())
+  id       Int         @id @default(autoincrement())
+  pedidoId Int         @unique
+  total    Decimal     @db.Decimal(10, 2)
+  creadoEn DateTime    @default(now())
+  items    ItemVenta[]
+  pedido   Pedido      @relation(fields: [pedidoId], references: [id])
 }
 
 model ItemVenta {
-  id          Int      @id @default(autoincrement())
-  ventaId     Int
-  venta       Venta    @relation(fields: [ventaId], references: [id])
-  varianteId  Int
-  variante    Variante @relation(fields: [varianteId], references: [id])
-  cantidad    Int
-  precio      Decimal  @db.Decimal(10, 2)
+  id         Int      @id @default(autoincrement())
+  ventaId    Int
+  varianteId Int
+  cantidad   Int
+  precio     Decimal  @db.Decimal(10, 2)
+  variante   Variante @relation(fields: [varianteId], references: [id])
+  venta      Venta    @relation(fields: [ventaId], references: [id])
 }
-
-// ─── OTP RECUPERACIÓN CONTRASEÑA ─────────────────────────────────────────────
 
 model PasswordResetOtp {
   id        Int      @id @default(autoincrement())
@@ -205,4 +174,47 @@ model RegistroToken {
   createdAt DateTime @default(now())
 
   @@map("registro_token")
+}
+
+model GaleriaImagen {
+  id        Int      @id @default(autoincrement())
+  url       String
+  publicId  String   @unique
+  caption   String?
+  orden     Int      @unique
+  creadoEn  DateTime @default(now())
+}
+
+model BannerSlide {
+  id        Int      @id @default(autoincrement())
+  url       String
+  publicId  String   @unique
+  titulo    String
+  subtitulo String
+  desc      String?
+  orden     Int      @unique
+  activo    Boolean  @default(true)
+  creadoEn  DateTime @default(now())
+}
+
+enum EstadoPedido {
+  PENDIENTE
+  PAGADO
+  ENVIADO
+  ENTREGADO
+  CANCELADO
+}
+
+enum MetodoPago {
+  PSE
+  NEQUI
+  DAVIPLATA
+  WHATSAPP
+  TRANSFERENCIA
+}
+
+enum EstadoPago {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
 }

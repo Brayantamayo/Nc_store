@@ -1,5 +1,5 @@
 .page {
-  padding: 138px 0 120px;
+  padding: 56px 0 120px;
   background:
     radial-gradient(circle at 12% 22%, rgba(248, 187, 208, 0.24), transparent 18%),
     radial-gradient(circle at 86% 10%, rgba(240, 98, 146, 0.12), transparent 16%),
@@ -10,7 +10,7 @@
 .pageShell {
   display: flex;
   flex-direction: column;
-  gap: 4.5rem;
+  gap: 2.25rem;
 }
 
 .header,
@@ -22,7 +22,7 @@
 }
 
 .header {
-  gap: 0.9rem;
+  gap: 0.65rem;
 }
 
 .backLink {
@@ -234,6 +234,25 @@
 .quantityCell span {
   min-width: 1ch;
   font-weight: 700;
+}
+
+.quantityInput {
+  width: 3rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(74, 20, 44, 0.9);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  -moz-appearance: textfield;
+}
+
+.quantityInput::-webkit-outer-spin-button,
+.quantityInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .toolbar {
@@ -604,7 +623,7 @@
 }
 
 .emptyPage {
-  padding: 190px 0 120px;
+  padding: 96px 0 120px;
 }
 
 .emptyStateCard,
@@ -678,7 +697,7 @@
 
 @media (max-width: 860px) {
   .page {
-    padding-top: 122px;
+    padding-top: 56px;
   }
 
   .tableHeader {
@@ -773,4 +792,34 @@
   .itemImageWrapper {
     width: 74px;
   }
+}
+
+/* ─── BANNER DE ERROR DE STOCK EN CHECKOUT ─────────────────────────────────── */
+
+.stockErrorBanner {
+  background: rgba(198, 40, 40, 0.08);
+  border: 1px solid rgba(198, 40, 40, 0.25);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  color: #c62828;
+  font-size: 0.875rem;
+  margin: 0.75rem 0;
+}
+
+.stockErrorBanner strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.stockErrorBanner ul {
+  margin: 0 0 0.5rem 1rem;
+  padding: 0;
+  line-height: 1.6;
+}
+
+.stockErrorBanner p {
+  margin: 0;
+  opacity: 0.85;
+  font-size: 0.82rem;
 }

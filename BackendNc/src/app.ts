@@ -10,6 +10,10 @@ import authRoutes      from './modules/Auth/Auth.routes'
 import categoriaRoutes from './modules/Categoria/Categoria.routes'
 import varianteRoutes  from './modules/Variante/Variante.routes'  
 import productsRoutes  from './modules/Productos/products.routes'
+import pedidosRoutes   from './modules/Pedidos/Pedidos.routes'
+import galeriaRoutes   from './modules/Galeria/Galeria.routes'
+import bannerRoutes    from './modules/Banner/Banner.routes'
+import clientesRoutes   from './modules/Clientes/Clientes.routes'
 
 // ─── MIDDLEWARES DE AUTENTICACIÓN ─────────────────────────────────────────────
 import { soloAdmin, autenticado } from './middlewares/Auth.middleware'
@@ -66,12 +70,16 @@ app.use(routes)
 
 // ─── RUTAS PÚBLICAS ───────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes)
+app.use('/api/categorias', categoriaRoutes)  // GET es público, POST/PATCH/DELETE protegidos en el router
+app.use('/api/productos',  productsRoutes)   // GET es público, POST/PATCH/DELETE protegidos en el router
+app.use('/api/variantes',  varianteRoutes)   // GET es público, POST/PATCH/DELETE protegidos en el router
+app.use('/api/pedidos',    pedidosRoutes)     // Gestión de pedidos
+app.use('/api/clientes',   clientesRoutes)    // Gestión de clientes
+app.use('/api/galeria',    galeriaRoutes)      // Galería estilo Instagram
+app.use('/api/banners',   bannerRoutes)        // Banners del carrusel de la landing
 
 // ─── RUTAS PROTEGIDAS — SOLO ADMIN ───────────────────────────────────────────
-app.use('/api/categorias', ...soloAdmin, categoriaRoutes)
-app.use('/api/productos',  ...soloAdmin, productsRoutes)
-app.use('/api/variantes',  ...soloAdmin, varianteRoutes)
-app.use('/api/imagenes', ...soloAdmin, imagenRoutes)  // ← agrega esto
+app.use('/api/imagenes', soloAdmin, imagenRoutes)  // Solo admin
 
 
 // ─── ERRORES ─────────────────────────────────────────────────────────────────

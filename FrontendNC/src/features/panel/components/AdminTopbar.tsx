@@ -1,4 +1,4 @@
-import { Search, Bell, Sun, ShoppingBag, Mail } from 'lucide-react';
+import { Search, Bell, ShoppingBag, Mail, LogOut, Package } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useOrderStore } from '../../store/pages/orderStore';
 import { useAdminPanel } from '../context/AdminPanelContext';
@@ -6,11 +6,10 @@ import { getAdminEmail } from '../constants/adminProfile';
 import styles from '../css/Admin.module.css';
 
 export const AdminTopbar = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'reports' | 'history' | 'activity'>('overview');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const { setActiveTab } = useAdminPanel();
+  const { setActiveTab, onLogout } = useAdminPanel();
   const orders = useOrderStore((s) => s.orders);
   const readOrderIds = useOrderStore((s) => s.readOrderIds);
   const markOrderNotificationRead = useOrderStore((s) => s.markOrderNotificationRead);
@@ -56,39 +55,42 @@ export const AdminTopbar = () => {
 
   return (
     <div className={styles.topbar}>
-      <div className={styles.topTabs}>
-        {(['overview', 'reports', 'history', 'activity'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveSubTab(tab)}
-            className={`${styles.topTabBtn} ${activeSubTab === tab ? styles.topTabActive : ''}`}
-          >
-            {tab === 'overview' && 'Executive Overview'}
-            {tab === 'reports' && 'Reports'}
-            {tab === 'history' && 'History'}
-            {tab === 'activity' && 'Activity'}
-          </button>
-        ))}
+
+      {/* ── Lado izquierdo: saludo ─────────────────────────── */}
+      <div className={styles.topbarLead}>
+        <span className={styles.topbarGreeting}>Panel NC Store</span>
       </div>
 
+      {/* ── Lado derecho: acciones ─────────────────────────── */}
       <div className={styles.topbarActions}>
+
+        {/* Buscador */}
         <div className={styles.topbarSearchWrapper}>
           <Search size={14} className={styles.topbarSearchIcon} />
           <input type="text" placeholder="Buscar en el panel..." className={styles.topbarSearchInput} />
         </div>
 
+        {/* Pill de pedidos */}
+        <button
+          type="button"
+          className={styles.topbarMetaPill}
+          onClick={() => setActiveTab('pedidos')}
+          aria-label="Ver pedidos"
+        >
+          <Package size={14} />
+          <span>{orders.length} pedidos</span>
+        </button>
+
+        {/* Notificaciones */}
         <div className={styles.topbarDropdownWrap} ref={notifRef}>
           <button
             type="button"
             className={styles.iconBtn}
-            aria-label="Notificaciones de compras"
+            aria-label="Notificaciones"
             aria-expanded={notificationsOpen}
-            onClick={() => {
-              setNotificationsOpen((o) => !o);
-              setProfileOpen(false);
-            }}
+            onClick={() => { setNotificationsOpen((o) => !o); setProfileOpen(false); }}
           >
-            <Bell size={18} />
+            <Bell size={17} />
             {unreadCount > 0 && (
               <span className={styles.notificationBadgeCount}>
                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -102,11 +104,10 @@ export const AdminTopbar = () => {
                 <h3>Compras recientes</h3>
                 {unreadCount > 0 && (
                   <button type="button" className={styles.dropdownLinkBtn} onClick={markAllNotificationsRead}>
-                    Marcar todas leídas
+                    Marcar leídas
                   </button>
                 )}
               </div>
-
               <div className={styles.dropdownList}>
                 {recentOrders.length === 0 ? (
                   <p className={styles.dropdownEmpty}>No hay compras registradas.</p>
@@ -125,10 +126,10 @@ export const AdminTopbar = () => {
                         </div>
                         <div className={styles.notificationBody}>
                           <span className={styles.notificationTitle}>
-                            Nueva compra · {order.customerName}
+                            {order.customerName}
                           </span>
                           <span className={styles.notificationMeta}>
-                            {order.id} · ${order.total.toLocaleString('es-CO')} · {order.status}
+                            {order.id} · ${order.total.toLocaleString('es-CO')}
                           </span>
                           <span className={styles.notificationTime}>{formatRelativeTime(order.createdAt)}</span>
                         </div>
@@ -138,16 +139,11 @@ export const AdminTopbar = () => {
                   })
                 )}
               </div>
-
               {orders.length > 0 && (
                 <button
                   type="button"
                   className={styles.dropdownFooterBtn}
-                  onClick={() => {
-                    markAllNotificationsRead();
-                    setNotificationsOpen(false);
-                    setActiveTab('pedidos');
-                  }}
+                  onClick={() => { markAllNotificationsRead(); setNotificationsOpen(false); setActiveTab('pedidos'); }}
                 >
                   Ver todos los pedidos
                 </button>
@@ -156,20 +152,17 @@ export const AdminTopbar = () => {
           )}
         </div>
 
-        <button className={styles.iconBtn} aria-label="Modo Claro" type="button">
-          <Sun size={18} />
-        </button>
+        {/* Separador */}
+        <div className={styles.topbarSeparator} />
 
+        {/* Avatar / perfil */}
         <div className={styles.topbarDropdownWrap} ref={profileRef}>
           <button
             type="button"
             className={styles.avatarBtn}
             aria-label="Perfil administrador"
             aria-expanded={profileOpen}
-            onClick={() => {
-              setProfileOpen((o) => !o);
-              setNotificationsOpen(false);
-            }}
+            onClick={() => { setProfileOpen((o) => !o); setNotificationsOpen(false); }}
           >
             <span className={styles.avatar}>NC</span>
           </button>
@@ -177,17 +170,32 @@ export const AdminTopbar = () => {
           {profileOpen && (
             <div className={`${styles.topbarDropdown} ${styles.profileDropdown}`}>
               <div className={styles.profileDropdownHeader}>
-                <span className={styles.profileLabel}>Administrador</span>
+                <div className={styles.profileAvatarLarge}>NC</div>
+                <div>
+                  <span className={styles.profileLabel}>Administrador</span>
+                  <span className={styles.profileEmailSmall}>{adminEmail}</span>
+                </div>
               </div>
+              <div className={styles.profileDropdownDivider} />
               <div className={styles.profileEmailRow}>
-                <Mail size={16} />
+                <Mail size={14} />
                 <a href={`mailto:${adminEmail}`} className={styles.profileEmail}>
                   {adminEmail}
                 </a>
               </div>
+              <div className={styles.profileDropdownDivider} />
+              <button
+                type="button"
+                className={styles.profileLogoutBtn}
+                onClick={() => { setProfileOpen(false); onLogout(); }}
+              >
+                <LogOut size={14} />
+                Cerrar sesión
+              </button>
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

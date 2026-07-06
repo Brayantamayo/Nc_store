@@ -4,6 +4,7 @@ import * as VarianteService from './Variante.services';
 import {
   ajustarStockSchema,
   createVarianteSchema,
+  createManyVariantesSchema,
   idParamSchema,
   productoIdParamSchema,
   updateVarianteSchema,
@@ -44,6 +45,14 @@ export const getById = asyncHandler(async (req, res) => {
 export const create = asyncHandler(async (req, res) => {
   const body = createVarianteSchema.parse(req.body);
   const data = await VarianteService.createVariante(body);
+
+  res.status(201).json({ ok: true, data });
+});
+
+///---Crear múltiples variantes---///
+export const createMany = asyncHandler(async (req, res) => {
+  const body = createManyVariantesSchema.parse(req.body);
+  const data = await VarianteService.createManyVariantes(body);
 
   res.status(201).json({ ok: true, data });
 });

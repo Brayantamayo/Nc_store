@@ -2,6 +2,7 @@ import { PrismaClient }   from '@prisma/client'
 import bcrypt             from 'bcryptjs'
 import jwt                from 'jsonwebtoken'
 import crypto             from 'crypto'
+import { env }            from '../../config/environment'
 import { enviarCorreoBienvenida, enviarCorreoOtp } from '../../config/Mailer'
 import type {
   RegistroDto, LoginDto, RecuperarDto, VerificarOtpDto,
@@ -10,15 +11,13 @@ import type {
 
 const prisma = new PrismaClient()
 
-const JWT_SECRET      = process.env.JWT_SECRET!
-const JWT_EXPIRES_IN  = process.env.JWT_EXPIRES_IN ?? '7d'
+const JWT_SECRET     = env.JWT_SECRET
+const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN
 const OTP_TTL_MINUTES = 15
 const TOKEN_TTL_HOURS = 24
 
-// ─── SEGURIDAD: validar que JWT_SECRET exista y sea robusto al iniciar ────────
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  throw new Error('JWT_SECRET debe tener al menos 32 caracteres')
-}
+// JWT_SECRET ya fue validado por Zod en environment.ts (mínimo 32 chars).
+// Si llegamos aquí, las variables son válidas y confiables.
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 

@@ -138,6 +138,7 @@ export const Login = () => {
         logout();
         setAdminEmail(usuario.email || DEFAULT_ADMIN_EMAIL);
         localStorage.setItem('nc-admin-session', 'active');
+        localStorage.setItem('nc-admin-token', token);
         setErrors({});
         setFeedback('Ingreso exitoso. Ya puedes acceder al panel de administración.');
         setLoginPassword('');
@@ -147,7 +148,7 @@ export const Login = () => {
       }
 
       const session = buildCustomerSession(usuario);
-      localStorage.setItem('token', token);
+      // El token de cliente vive solo en Zustand persist (nc-customer-session)
       localStorage.removeItem('nc-admin-session');
       useCustomerSessionStore.setState({ customer: session, token });
 

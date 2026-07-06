@@ -15,6 +15,13 @@ export const getAll = asyncHandler(async (req, res) => {
   res.status(200).json({ ok: true, ...data });
 });
 
+///---Obtener árbol de categorías---///
+export const getTree = asyncHandler(async (_req, res) => {
+  const data = await CategoriaService.getCategoriaTree();
+
+  res.status(200).json({ ok: true, data });
+});
+
 ///---Obtener categoría por ID---///
 export const getById = asyncHandler(async (req, res) => {
   const { id } = idParamSchema.parse(req.params);

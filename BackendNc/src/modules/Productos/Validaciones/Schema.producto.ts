@@ -39,6 +39,12 @@ export const createProductoSchema = z.object({
     .coerce
     .number({ required_error: 'El precio es requerido' })
     .positive('El precio debe ser mayor a 0'),
+  precioOriginal: z
+    .coerce
+    .number()
+    .positive('El precio original debe ser mayor a 0')
+    .optional()
+    .nullable(),
   categoriaId: z
     .coerce
     .number({ required_error: 'La categoría es requerida' })

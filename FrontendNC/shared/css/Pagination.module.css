@@ -1,0 +1,61 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 187, 208, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  color: #ad1457;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 0.55rem;
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(194, 24, 91, 0.08);
+  border-color: rgba(194, 24, 91, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.active {
+  background: linear-gradient(135deg, #f05b9a, #c2185b);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 3px 12px rgba(194, 24, 91, 0.25);
+}
+
+.active:hover {
+  background: linear-gradient(135deg, #f05b9a, #c2185b);
+  border-color: transparent;
+}
+
+.ellipsis {
+  min-width: 28px;
+  text-align: center;
+  color: #ad1457;
+  font-weight: 600;
+  user-select: none;
+}
+
+.info {
+  margin-left: 0.75rem;
+  color: rgba(74, 20, 44, 0.55);
+  font-size: 0.8rem;
+}

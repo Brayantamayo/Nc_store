@@ -1,24 +1,21 @@
 import { Router } from 'express';
 import * as ProductController from './products.controller';
+import { soloAdmin } from '../../middlewares/Auth.middleware';
 
 const router = Router();
 
-// GET    /api/productos
+// GET — PÚBLICOS (sin protección)
 router.get('/', ProductController.getAll);
-
-// GET    /api/productos/slug/:slug
 router.get('/slug/:slug', ProductController.getBySlug);
-
-// GET    /api/productos/:id
 router.get('/:id(\\d+)', ProductController.getById);
 
-// POST   /api/productos
-router.post('/', ProductController.create);
+// GET — RUTAS PARA TIENDA (filtradas)
+router.get('/store/all', ProductController.getAllForStore);
+router.get('/store/slug/:slug', ProductController.getBySlugForStore);
 
-// PATCH  /api/productos/:id
-router.patch('/:id(\\d+)', ProductController.update);
-
-// DELETE /api/productos/:id
-router.delete('/:id(\\d+)', ProductController.remove);
+// POST, PATCH, DELETE — PROTEGIDOS (solo admin)
+router.post('/', soloAdmin, ProductController.create);
+router.patch('/:id(\\d+)', soloAdmin, ProductController.update);
+router.delete('/:id(\\d+)', soloAdmin, ProductController.remove);
 
 export default router;

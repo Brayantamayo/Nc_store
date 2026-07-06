@@ -2,41 +2,82 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Bow } from './Moñito';
+import { bannerService, type BannerSlide } from '../../banner/services/bannerService';
 import styles from '../css/HeroSection.module.css';
 
-// ✅ Agrega aquí más imágenes cuando las tengas
-const HERO_SLIDES = [
+// Slides de respaldo mientras carga o si la API no tiene datos todavía
+const FALLBACK_SLIDES: BannerSlide[] = [
   {
-    image: '/images/Homesection.png',
-    title: 'Esculpe',
-    subtitle: 'Tu Propio Estilo',
+    id: 0,
+    url: '/images/Homesection.png',
+    publicId: '',
+    titulo: 'Esculpe',
+    subtitulo: 'Tu Propio Estilo',
     desc: 'Alta costura desde Medellín.',
+    orden: 1,
+    activo: true,
+    creadoEn: '',
   },
   {
-    image: '/images/Homesection1.png',
-    title: 'Nueva',
-    subtitle: 'Colección',
+    id: 1,
+    url: '/images/Homesection1.png',
+    publicId: '',
+    titulo: 'Nueva',
+    subtitulo: 'Colección',
     desc: 'Piezas únicas de feminidad y detalle.',
+    orden: 2,
+    activo: true,
+    creadoEn: '',
   },
   {
-    image: '/images/Homesection2.png',
-    title: 'Nueva',
-    subtitle: 'Colección',
+    id: 2,
+    url: '/images/Homesection2.png',
+    publicId: '',
+    titulo: 'Nueva',
+    subtitulo: 'Colección',
     desc: 'Piezas únicas de feminidad y detalle.',
+    orden: 3,
+    activo: true,
+    creadoEn: '',
   },
   {
-    image: '/images/Homesection3.png',
-    title: 'Nueva',
-    subtitle: 'Colección',  
+    id: 3,
+    url: '/images/Homesection3.png',
+    publicId: '',
+    titulo: 'Nueva',
+    subtitulo: 'Colección',
     desc: 'Piezas únicas de feminidad y detalle.',
+    orden: 4,
+    activo: true,
+    creadoEn: '',
   },
 ];
 
 export const HeroSection = () => {
+  const [slides, setSlides] = useState<BannerSlide[]>(FALLBACK_SLIDES);
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
-  const total = HERO_SLIDES.length;
 
+  // Cargar banners activos desde la API
+  useEffect(() => {
+    bannerService
+      .listarActivos()
+      .then((data) => {
+        if (data.length > 0) setSlides(data);
+      })
+      .catch(() => {
+        // Si falla la API, los slides de respaldo siguen visibles
+      });
+  }, []);
+
+  const total = slides.length;
+
+  // Reiniciar índice si los slides cambian y el índice queda fuera de rango
+  useEffect(() => {
+    setCurrent((prev) => (prev >= total ? 0 : prev));
+  }, [total]);
+
+  // Auto-avance
   useEffect(() => {
     const timer = setInterval(() => {
       setDirection(1);
@@ -60,14 +101,14 @@ export const HeroSection = () => {
     setCurrent((prev) => (prev + 1) % total);
   };
 
-  const slide = HERO_SLIDES[current];
+  const slide = slides[current];
 
   return (
     <section className={styles.hero}>
       {/* Imágenes */}
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
-          key={current}
+          key={slide.id + '-' + current}
           className={styles.slideWrapper}
           custom={direction}
           variants={{
@@ -81,8 +122,8 @@ export const HeroSection = () => {
           transition={{ duration: 0.85, ease: [0.76, 0, 0.24, 1] }}
         >
           <img
-            src={slide.image}
-            alt={slide.subtitle}
+            src={slide.url}
+            alt={slide.subtitulo}
             className={styles.slideImg}
           />
           <div className={styles.gradientOverlay} />
@@ -93,7 +134,7 @@ export const HeroSection = () => {
       <div className={styles.content}>
         <AnimatePresence mode="wait">
           <motion.div
-            key={current + '-text'}
+            key={slide.id + '-text-' + current}
             className={styles.textBlock}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -105,10 +146,10 @@ export const HeroSection = () => {
               <span>HECHO CON AMOR • EST. 2024</span>
             </div>
             <h1 className={styles.title}>
-              <span className={styles.cursive}>{slide.title}</span>
-              <span className={styles.bold}>{slide.subtitle}</span>
+              <span className={styles.cursive}>{slide.titulo}</span>
+              <span className={styles.bold}>{slide.subtitulo}</span>
             </h1>
-            <p className={styles.desc}>{slide.desc}</p>
+            {slide.desc && <p className={styles.desc}>{slide.desc}</p>}
             <a href="#catalogo" className={styles.cta}>
               EXPLORAR COLECCIÓN
             </a>
@@ -126,7 +167,7 @@ export const HeroSection = () => {
 
       {/* Indicadores */}
       <div className={styles.indicators}>
-        {HERO_SLIDES.map((_, i) => (
+        {slides.map((_, i) => (
           <button
             key={i}
             className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}

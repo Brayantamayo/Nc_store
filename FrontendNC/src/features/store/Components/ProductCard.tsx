@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Plus, Eye, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { Product } from '../../../types';
 import { useWishlistStore } from '../pages/wishlistStore';
 import { useCartStore } from '../pages/cartStore';
@@ -13,9 +14,10 @@ import styles from '../css/ProductCard.module.css';
 interface ProductCardProps {
   product: Product;
   index?: number;
+  variant?: 'default' | 'collection';
 }
 
-export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
+export const ProductCard = ({ product, index = 0, variant = 'default' }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [selectedColor, setSelectedColor] = useState(0);
@@ -29,11 +31,14 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (product.isSoldOut) return;
+    if (product.isSoldOut) {
+      toast.error('Este producto esta agotado.');
+      return;
+    }
 
     const source = imageRef.current ?? e.currentTarget;
     triggerFly(product.images[0], source);
-    addItem(product, product.colors[selectedColor]);
+    addItem(product, product.colors[selectedColor], 99);
     showSuccess({ productName: product.name, quantity: 1 });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1800);
@@ -42,9 +47,11 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const activeWishlist = isWishlisted(product.id);
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
 
+  const isCollection = variant === 'collection';
+
   return (
     <motion.article
-      className={styles.card}
+      className={`${styles.card} ${isCollection ? styles.cardCollection : ''}`}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -98,7 +105,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             </span>
           )}
           {product.isSoldOut && <span className={styles.badgeSoldOut}>AGOTADO</span>}
-          {hasDiscount && !product.isSoldOut && <span className={styles.badgeSale}>OFERTA</span>}
+          {hasDiscount && !product.isSoldOut && <span className={styles.badgeSale}>DESCUENTO</span>}
         </div>
 
         <motion.button
@@ -154,27 +161,38 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         )}
 
         <div className={styles.priceRow}>
-          <p className={`${styles.price} ${product.isSoldOut ? styles.priceSoldOut : ''}`}>
-            {new Intl.NumberFormat('es-CO', {
-              style: 'currency',
-              currency: 'COP',
-              maximumFractionDigits: 0,
-            }).format(product.price)}
-          </p>
-          {hasDiscount && (
-            <p className={styles.originalPrice}>
+          {hasDiscount ? (
+            <>
+              <p className={styles.price}>
+                {new Intl.NumberFormat('es-CO', {
+                  style: 'currency',
+                  currency: 'COP',
+                  maximumFractionDigits: 0,
+                }).format(product.price)}
+              </p>
+              <p className={styles.originalPrice}>
+                Antes: {new Intl.NumberFormat('es-CO', {
+                  style: 'currency',
+                  currency: 'COP',
+                  maximumFractionDigits: 0,
+                }).format(product.originalPrice!)}
+              </p>
+              <span className={styles.discountLabel}>Descuento</span>
+            </>
+          ) : (
+            <p className={`${styles.price} ${product.isSoldOut ? styles.priceSoldOut : ''}`}>
               {new Intl.NumberFormat('es-CO', {
                 style: 'currency',
                 currency: 'COP',
                 maximumFractionDigits: 0,
-              }).format(product.originalPrice!)}
+              }).format(product.price)}
             </p>
           )}
         </div>
 
         <motion.button
           type="button"
-          className={`${styles.cardAddBtn} ${addedToCart ? styles.cardAddBtnSuccess : ''} ${
+          className={`${styles.cardAddBtn} ${isCollection ? styles.cardAddBtnCollection : ''} ${addedToCart ? styles.cardAddBtnSuccess : ''} ${
             product.isSoldOut ? styles.cardAddBtnDisabled : ''
           }`}
           onClick={handleQuickAdd}
@@ -208,15 +226,15 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               </motion.span>
             ) : (
               <motion.span
-                key="add"
+                key="default"
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.18 }}
                 className={styles.cardAddBtnContent}
               >
-                <Plus size={15} strokeWidth={2.1} />
-                ANADIR AL CARRITO
+                <Plus size={14} />
+                AGREGAR AL CARRITO
               </motion.span>
             )}
           </AnimatePresence>

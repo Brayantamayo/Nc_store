@@ -5,7 +5,7 @@ import { CreateProductoDto, UpdateProductoDto } from './Validaciones/Schema.prod
 
 type ProductoListItem = Pick<
   Producto,
-  'id' | 'nombre' | 'slug' | 'descripcion' | 'precio' | 'categoriaId' | 'activo' | 'creadoEn'
+  'id' | 'nombre' | 'slug' | 'descripcion' | 'precio' | 'precioOriginal' | 'categoriaId' | 'activo' | 'creadoEn'
 > & {
   categoria: {
     id: number;
@@ -23,6 +23,7 @@ const productListSelect = {
   slug: true,
   descripcion: true,
   precio: true,
+  precioOriginal: true,
   categoriaId: true,
   activo: true,
   creadoEn: true,
@@ -36,6 +37,15 @@ const productListSelect = {
   _count: {
     select: {
       variantes: true,
+    },
+  },
+  variantes: {
+    select: {
+      id: true,
+      color: true,
+      stock: true,
+      activo: true,
+      imagenes: true,
     },
   },
 } as const;
@@ -96,6 +106,40 @@ export const getAllProductos = async (
   };
 };
 
+//---Obtener productos activos para tienda (filtra activos y variantes con stock)---///
+export const getProductosForStore = async (
+  pagination: PaginationParams,
+): Promise<{
+  data: ProductoListItem[];
+  meta: ReturnType<typeof buildPaginationMeta>;
+}> => {
+  const whereClause = {
+    activo: true,
+    variantes: {
+      some: {
+        activo: true,
+        stock: { gt: 0 },
+      },
+    },
+  };
+
+  const [total, data] = await prisma.$transaction([
+    prisma.producto.count({ where: whereClause }),
+    prisma.producto.findMany({
+      where: whereClause,
+      orderBy: { creadoEn: 'desc' },
+      skip: pagination.skip,
+      take: pagination.take,
+      select: productListSelect,
+    }),
+  ]);
+
+  return {
+    data,
+    meta: buildPaginationMeta(total, pagination.page, pagination.limit),
+  };
+};
+
 //---Obtener producto por ID---///
 export const getProductoById = async (id: number) => {
   return prisma.producto.findUnique({
@@ -109,6 +153,35 @@ export const getProductoBySlug = async (slug: string) => {
   return prisma.producto.findUnique({
     where: { slug },
     select: productDetailSelect,
+  });
+};
+
+//---Obtener producto por Slug para tienda (solo si está activo)---///
+export const getProductoBySlugForStore = async (slug: string) => {
+  return prisma.producto.findFirst({
+    where: { 
+      slug,
+      activo: true,
+    },
+    select: {
+      ...productDetailSelect,
+      variantes: {
+        select: {
+          id: true,
+          color: true,
+          stock: true,
+          activo: true,
+          imagenes: true,
+        },
+        where: {
+          activo: true,
+          stock: { gt: 0 },
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      },
+    },
   });
 };
 
@@ -131,6 +204,7 @@ export const createProducto = async (data: CreateProductoDto) => {
       slug: data.slug,
       descripcion: data.descripcion,
       precio: data.precio,
+      precioOriginal: data.precioOriginal,
       categoriaId: data.categoriaId,
       activo: data.activo ?? true,
     },
@@ -166,6 +240,13 @@ export const updateProducto = async (id: number, data: UpdateProductoDto) => {
     }
   }
 
+  if (data.activo === false) {
+    await prisma.variante.updateMany({
+      where: { productoId: id },
+      data: { activo: false },
+    });
+  }
+
   return prisma.producto.update({
     where: { id },
     data: {
@@ -173,6 +254,7 @@ export const updateProducto = async (id: number, data: UpdateProductoDto) => {
       slug: data.slug,
       descripcion: data.descripcion,
       precio: data.precio,
+      precioOriginal: data.precioOriginal,
       categoriaId: data.categoriaId,
       activo: data.activo,
     },

@@ -5,14 +5,16 @@
   width: 100%;
   cursor: pointer;
   background: var(--color-white, #ffffff);
-  border-radius: 2px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 0.5px solid #e8e2dc;
-  transition: box-shadow 0.35s ease;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(194, 24, 91, 0.1);
 }
 
 .imageWrapper {
@@ -112,8 +114,8 @@
 }
 
 .badgeSale {
-  background: #1a1a1a;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-white);
 }
 
 .badgeSoldOut {
@@ -248,20 +250,21 @@
 }
 
 .cardAddBtn {
-  margin-top: 0.45rem;
+  margin-top: 0.6rem;
   width: 100%;
-  min-height: 2.7rem;
+  min-height: 2.8rem;
   border-radius: 999px;
-  border: 1px solid rgba(194, 24, 91, 0.18);
-  background: linear-gradient(135deg, rgba(240, 98, 146, 0.1), rgba(194, 24, 91, 0.16));
+  border: none;
+  background: rgba(194, 24, 91, 0.08);
   color: var(--color-primary);
-  transition: var(--transition-fast);
+  transition: all 0.3s ease;
 }
 
 .cardAddBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  background: linear-gradient(135deg, #c2185b 0%, #ff80ab 100%);
   color: var(--color-white);
-  box-shadow: 0 12px 20px rgba(194, 24, 91, 0.18);
+  box-shadow: 0 8px 20px rgba(194, 24, 91, 0.25);
+  transform: scale(1.02);
 }
 
 .cardAddBtn:disabled {
@@ -290,4 +293,92 @@
   background: #f5efef;
   border-color: #eadcdc;
   color: #a88686;
+}
+
+.discountLabel {
+  font-family: var(--font-body);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-secondary);
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 0.5px solid var(--color-border);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: auto;
+}
+
+/* ── COLLECTION VARIANT ─────────────────────────────────────────────────────── */
+
+.cardCollection {
+  border-radius: 16px;
+  border: 1px solid rgba(194, 24, 91, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 15px rgba(194, 24, 91, 0.05);
+}
+
+.cardCollection:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(194, 24, 91, 0.1);
+  border-color: rgba(194, 24, 91, 0.14);
+}
+
+.cardCollection .imageWrapper {
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(160deg, rgba(252, 228, 236, 0.35), rgba(255, 255, 255, 0.9));
+}
+
+.cardCollection .imageWrapper::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.cardCollection:hover .imageWrapper::before {
+  opacity: 1;
+}
+
+.cardCollection .info {
+  padding: 11px 12px 14px;
+  background: linear-gradient(180deg, rgba(255, 253, 254, 0.98), rgba(252, 228, 236, 0.28));
+  gap: 6px;
+}
+
+.cardCollection .name {
+  font-size: 1rem;
+}
+
+.cardCollection .price {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.cardCollection .cardAddBtnCollection {
+  opacity: 0;
+  transform: translateY(4px);
+  margin-top: 0.25rem;
+  min-height: 2.5rem;
+}
+
+.cardCollection:hover .cardAddBtnCollection,
+.cardCollection .cardAddBtnCollection:focus-visible,
+.cardCollection .cardAddBtnSuccess,
+.cardCollection .cardAddBtnDisabled {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 767px) {
+  .cardCollection .cardAddBtnCollection {
+    opacity: 1;
+    transform: none;
+  }
 }

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
+import { env } from '../config/environment'
 
 // ─── TIPOS ───────────────────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ export const verificarToken = (
   const token = authHeader.split(' ')[1]
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as unknown as JwtPayload
+    const payload = jwt.verify(token, env.JWT_SECRET) as unknown as JwtPayload
     req.usuario   = payload
     next()
   } catch (err) {

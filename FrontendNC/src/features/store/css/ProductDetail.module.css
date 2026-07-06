@@ -1,5 +1,5 @@
 .page {
-  padding: 140px 0 90px;
+  padding: 40px 0 90px;
   background:
     radial-gradient(circle at top left, rgba(244, 209, 223, 0.45), transparent 28%),
     radial-gradient(circle at 90% 18%, rgba(255, 241, 228, 0.8), transparent 22%),
@@ -8,8 +8,8 @@
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
-  gap: 2.5rem;
+  grid-template-columns: minmax(0, 0.8fr) minmax(360px, 1.2fr);
+  gap: 3rem;
   align-items: start;
 }
 
@@ -23,10 +23,10 @@
 }
 
 .galleryFrame {
-  border: 1px solid rgba(194, 24, 91, 0.12);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 247, 250, 0.96));
-  box-shadow: 0 28px 60px rgba(132, 31, 74, 0.12);
-  padding: 1rem;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
 }
 
 .galleryHeader {
@@ -63,9 +63,11 @@
 }
 
 .mainImageWrapper {
-  aspect-ratio: 4 / 4.45;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   background: linear-gradient(180deg, #f9f0f4, #f2e6eb);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(132, 31, 74, 0.08);
 }
 
 .mainImage {
@@ -110,11 +112,11 @@
 }
 
 .infoShell {
-  border: 1px solid rgba(194, 24, 91, 0.11);
-  background: rgba(255, 251, 253, 0.88);
-  box-shadow: 0 28px 54px rgba(145, 43, 84, 0.1);
-  padding: 1.5rem;
-  backdrop-filter: blur(14px);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  backdrop-filter: none;
 }
 
 .infoTop {
@@ -136,9 +138,12 @@
 .name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.8rem, 4vw, 4.8rem);
-  line-height: 0.95;
-  color: #c2185b;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1.1;
+  background: linear-gradient(135deg, #c2185b 0%, #ff80ab 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0px 4px 20px rgba(194, 24, 91, 0.15);
 }
 
 .wishlistBtn {
@@ -198,9 +203,10 @@
 
 .price {
   margin: 0;
-  font-size: clamp(2rem, 2.8vw, 2.8rem);
+  font-size: clamp(1.6rem, 2.2vw, 2rem);
   font-weight: 700;
-  color: #3c1122;
+  color: #c2185b;
+  letter-spacing: -0.02em;
 }
 
 .originalPrice {
@@ -219,16 +225,16 @@
 
 .descriptionCard {
   margin-bottom: 1.5rem;
-  padding: 1.1rem 1.15rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(251, 240, 245, 0.95));
-  border-left: 3px solid rgba(194, 24, 91, 0.3);
+  padding: 0;
+  background: transparent;
+  border-left: none;
 }
 
 .descriptionCard p {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.05rem;
   line-height: 1.8;
-  color: #6a4556;
+  color: #5a4b52;
 }
 
 .purchasePanel {
@@ -238,9 +244,12 @@
 }
 
 .selectorCard {
-  padding: 1rem 1.05rem;
-  border: 1px solid rgba(194, 24, 91, 0.1);
-  background: rgba(255, 255, 255, 0.86);
+  padding: 1.2rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(194, 24, 91, 0.05);
+  backdrop-filter: blur(8px);
 }
 
 .selectorHeader {
@@ -299,8 +308,11 @@
   display: inline-grid;
   grid-template-columns: 44px minmax(54px, auto) 44px;
   align-items: center;
-  border: 1px solid rgba(194, 24, 91, 0.18);
-  background: rgba(255, 251, 253, 0.95);
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 10px rgba(194, 24, 91, 0.05);
+  overflow: hidden;
 }
 
 .quantity button,
@@ -333,19 +345,21 @@
 .addBtn {
   min-height: 58px;
   padding: 1rem 1.2rem;
-  background: linear-gradient(135deg, #250610, #c2185b 70%, #ef9fbe);
+  background: linear-gradient(135deg, #c2185b 0%, #880e4f 100%);
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.18rem;
+  letter-spacing: 0.2rem;
   text-transform: uppercase;
-  box-shadow: 0 18px 34px rgba(132, 31, 74, 0.22);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  border-radius: 50px;
+  box-shadow: 0 10px 20px rgba(194, 24, 91, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .addBtn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 22px 40px rgba(132, 31, 74, 0.26);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(194, 24, 91, 0.3);
+  background: linear-gradient(135deg, #d81b60 0%, #ad1457 100%);
 }
 
 .addBtn:disabled {
@@ -372,9 +386,17 @@
   gap: 0.85rem;
   align-items: flex-start;
   padding: 1rem;
-  border: 1px solid rgba(194, 24, 91, 0.1);
-  background: rgba(255, 255, 255, 0.72);
-  color: #88264f;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  color: #c2185b;
+  box-shadow: 0 4px 16px rgba(194, 24, 91, 0.03);
+  transition: transform 0.2s ease;
+}
+
+.detailCard:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .detailCard svg {
@@ -454,7 +476,7 @@
 
 @media (max-width: 767px) {
   .page {
-    padding: 118px 0 70px;
+    padding: 30px 0 70px;
   }
 
   .galleryFrame,
@@ -482,4 +504,52 @@
   .thumbWrapper {
     aspect-ratio: 1 / 1;
   }
+}
+
+/* ── MODAL IMAGEN ── */
+.imageModal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 0, 5, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  cursor: zoom-out;
+}
+
+.closeModalBtn {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10000;
+}
+
+.closeModalBtn:hover {
+  background: #c2185b;
+  border-color: transparent;
+  transform: scale(1.1) rotate(90deg);
+}
+
+.modalImage {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  cursor: default;
 }

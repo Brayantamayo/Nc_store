@@ -42,6 +42,27 @@ export const getBySlug = asyncHandler(async (req, res) => {
   res.status(200).json({ ok: true, data });
 });
 
+///---Obtener todos los productos para tienda (solo activos)---///
+export const getAllForStore = asyncHandler(async (req, res) => {
+  const pagination = paginar(req.query);
+  const data = await ProductService.getProductosForStore(pagination);
+
+  res.status(200).json({ ok: true, ...data });
+});
+
+//---Obtener producto por Slug para tienda (solo si está activo)---///
+export const getBySlugForStore = asyncHandler(async (req, res) => {
+  const { slug } = slugParamSchema.parse(req.params);
+  const data = await ProductService.getProductoBySlugForStore(slug);
+
+  if (!data || data.variantes.length === 0) {
+    res.status(404).json({ ok: false, message: 'Producto no encontrado' });
+    return;
+  }
+
+  res.status(200).json({ ok: true, data });
+});
+
 ///---Crear producto---///
 export const create = asyncHandler(async (req, res) => {
   const body = createProductoSchema.parse(req.body);

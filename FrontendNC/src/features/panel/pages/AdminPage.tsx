@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { AdminPanelProvider, AdminTab } from '../context/AdminPanelContext';
-import { AdminLogin } from '../components/AdminLogin';
-import { AdminLoadingScreen } from '../components/AdminLoadingScreen';
 import { AdminSidebar } from '../components/AdminSidebar';
 import { AdminTopbar } from '../components/AdminTopbar';
 import { DashboardPage } from './DashboardPage';
@@ -14,110 +12,29 @@ import {
   CategoriasPage,
   VariantePage,
   PagosPage,
-  FavoritosPage,
+  GaleriaPage,
   ClientesPage,
   VentasPage,
+  BannersPage,
 } from '../../adminModulos';
-import { authService } from '../../Login/services/AuthServices';
-import { setAdminEmail } from '../constants/adminProfile';
-import { useCustomerSessionStore } from '@/shared/contexts/customerSessionStore';
+import { useAdminAuth } from '../hooks/useAdminAuth';
 import styles from '../css/Admin.module.css';
 
+/**
+ * Panel de administración.
+ * La autenticación y protección de ruta la maneja AdminGuard + useAdminAuth.
+ * Este componente SOLO se renderiza cuando hay sesión válida.
+ */
 export const AdminPage = () => {
-  const logoutCustomerSession = useCustomerSessionStore((s) => s.logout);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiMessage, setApiMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const { logout } = useAdminAuth();
+
+  const [activeTab, setActiveTab]               = useState<AdminTab>('dashboard');
+  const [isLoading, setIsLoading]               = useState(false);
   const [pendingNewProduct, setPendingNewProduct] = useState(false);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (localStorage.getItem('nc-admin-session') === 'active') {
-        setIsAuthenticated(true);
-      }
-      setIsCheckingSession(false);
-    }, 900);
-
-    return () => window.clearTimeout(timer);
-  }, []);
-
   const showMessage = (text: string, type: 'success' | 'error') => {
-    setApiMessage({ text, type });
-    setTimeout(() => setApiMessage(null), 4000);
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError('');
-    setIsLoggingIn(true);
-
-    try {
-      const { usuario } = await authService.login(username, password);
-      if (String(usuario.rol ?? '').toUpperCase() !== 'ADMIN') {
-        throw new Error('Solo las cuentas con rol ADMIN pueden acceder al panel.');
-      }
-      logoutCustomerSession();
-      localStorage.setItem('nc-admin-session', 'active');
-      setAdminEmail(usuario.email);
-      setIsLoggingIn(false);
-      setIsAuthenticated(true);
-    } catch (error) {
-      const message = error instanceof Error
-        ? error.message
-        : 'Credenciales incorrectas. Verifica tu correo y contraseña de administrador.';
-      setAuthError(message);
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleLogout = () => {
-    logoutCustomerSession();
-    setIsAuthenticated(false);
-    setUsername('');
-    setPassword('');
-    setAuthError('');
-    setActiveTab('dashboard');
-    setPendingNewProduct(false);
-    setIsLoading(false);
-  };
-
-  if (isCheckingSession) {
-    return <AdminLoadingScreen message="Cargando panel..." />;
-  }
-
-  if (isLoggingIn) {
-    return <AdminLoadingScreen message="Iniciando sesión..." />;
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <AdminLogin
-        username={username}
-        password={password}
-        authError={authError}
-        isSubmitting={isLoggingIn}
-        onUsernameChange={setUsername}
-        onPasswordChange={setPassword}
-        onSubmit={handleLogin}
-      />
-    );
-  }
-
-  const panelValue = {
-    activeTab,
-    setActiveTab,
-    showMessage,
-    isLoading,
-    setIsLoading,
-    onLogout: handleLogout,
-    pendingNewProduct,
-    setPendingNewProduct,
+    if (type === 'success') toast.success(text);
+    else toast.error(text);
   };
 
   const renderTab = () => {
@@ -131,29 +48,30 @@ export const AdminPage = () => {
             }}
           />
         );
-      case 'productos':
-        return <ProductosPage />;
-      case 'pedidos':
-        return <PedidosPage />;
-      case 'categoria':
-        return <CategoriasPage />;
-      case 'variante':
-        return <VariantePage />;
-      case 'pagos':
-        return <PagosPage />;
-      case 'favoritos':
-        return <FavoritosPage />;
-      case 'clientes':
-        return <ClientesPage />;
-      case 'ventas':
-        return <VentasPage />;
-      case 'analytics':
-        return <AnalyticsPage />;
-      case 'settings':
-        return <SettingsPage />;
-      default:
-        return null;
+      case 'productos':  return <ProductosPage />;
+      case 'pedidos':    return <PedidosPage />;
+      case 'galeria':    return <GaleriaPage />;
+      case 'banners':    return <BannersPage />;
+      case 'categoria':  return <CategoriasPage />;
+      case 'variante':   return <VariantePage />;
+      case 'pagos':      return <PagosPage />;
+      case 'clientes':   return <ClientesPage />;
+      case 'ventas':     return <VentasPage />;
+      case 'analytics':  return <AnalyticsPage />;
+      case 'settings':   return <SettingsPage />;
+      default:           return null;
     }
+  };
+
+  const panelValue = {
+    activeTab,
+    setActiveTab,
+    showMessage,
+    isLoading,
+    setIsLoading,
+    onLogout: logout,
+    pendingNewProduct,
+    setPendingNewProduct,
   };
 
   return (
@@ -161,24 +79,9 @@ export const AdminPage = () => {
       <div className={styles.page}>
         <div className={styles.glowingOrb1} />
         <div className={styles.glowingOrb2} />
-
         <AdminSidebar />
-
         <main className={styles.mainContent}>
           <AdminTopbar />
-
-          {apiMessage && (
-            <div
-              className={`${styles.messageBanner} ${
-                apiMessage.type === 'success' ? styles.successBanner : styles.errorBanner
-              }`}
-              style={{ marginBottom: '1.5rem' }}
-            >
-              <AlertCircle size={18} />
-              <span>{apiMessage.text}</span>
-            </div>
-          )}
-
           <div className={styles.tabContent}>{renderTab()}</div>
         </main>
       </div>
@@ -186,5 +89,5 @@ export const AdminPage = () => {
   );
 };
 
-/** Alias para compatibilidad con rutas existentes */
+/** Alias para compatibilidad */
 export const Admin = AdminPage;

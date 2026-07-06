@@ -18,7 +18,12 @@ dotenv.config();
 const envSchema = z.object({
   PORT:         z.coerce.number().default(3001),
   DATABASE_URL: z.string(),
-  JWT_SECRET:   z.string().min(8),
+
+  // JWT_SECRET debe tener al menos 32 caracteres para ser criptográficamente seguro
+  JWT_SECRET:      z.string().min(32, 'JWT_SECRET debe tener al menos 32 caracteres'),
+  // Duración del JWT — acepta formato jsonwebtoken: "7d", "1h", "30m", etc.
+  JWT_EXPIRES_IN:  z.string().default('7d'),
+
   NODE_ENV:     z.enum(['development', 'production', 'test']).default('development'),
 
   // ─── Cloudinary ───────────────────────────────────────
@@ -42,3 +47,6 @@ if (!parsed.success) {
 
 // Exporta las variables validadas y tipadas
 export const env = parsed.data;
+
+// Tipos útiles derivados del schema
+export type Env = typeof env;

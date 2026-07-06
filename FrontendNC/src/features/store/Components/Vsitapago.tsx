@@ -1,12 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, CheckCircle, Minus, Plus, ShieldCheck, Ticket, Trash2, Truck, WalletCards } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Minus, Plus, ShieldCheck, Trash2, Truck, WalletCards } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useCartStore } from '../../store/pages/cartStore';
 import { useOrderStore, Order, OrderItem } from '../../store/pages/orderStore';
+import { productoService } from '../../productos/services/productoService';
+import { varianteService } from '../../variante/services/varianteService';
 import styles from '../css/Cart.module.css';
 
 const SHIPPING_FEE = 14500;
+const WHATSAPP_NUMBER = '573226865883';
 
 const IDENTIFICATION_TYPES = ['Cedula de ciudadania', 'Cedula de extranjeria', 'Pasaporte', 'NIT'];
 
@@ -40,7 +44,13 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const OrderSuccessView = ({ generatedOrderId }: { generatedOrderId: string }) => (
+const OrderSuccessView = ({
+  generatedOrderId,
+  whatsappUrl,
+}: {
+  generatedOrderId: string;
+  whatsappUrl: string;
+}) => (
   <div className={styles.emptyPage}>
     <div className="container">
       <div className={styles.successView}>
@@ -48,13 +58,16 @@ const OrderSuccessView = ({ generatedOrderId }: { generatedOrderId: string }) =>
         <p className={styles.sectionKicker}>Pedido confirmado</p>
         <h1 className={styles.successTitle}>Gracias por tu compra</h1>
         <p className={styles.successText}>
-          Tu pedido ya quedo registrado. Vamos a contactarte con la confirmacion del pago y los detalles del envio.
+          Tu pedido ya quedo registrado. Enseguida te llevamos a WhatsApp para confirmar el pago y los detalles del envio.
         </p>
         <div className={styles.orderIdBadge}>ID DEL PEDIDO: {generatedOrderId}</div>
         <p className={styles.successMeta}>
-          Si agregaste notas o elegiste acompanamiento por WhatsApp, nuestro equipo las revisara contigo.
+          Estamos redirigiendote a WhatsApp {WHATSAPP_NUMBER} para continuar la atencion de tu compra.
         </p>
-        <Link to="/coleccion" className={styles.primaryAction}>
+        <a href={whatsappUrl} className={styles.primaryAction}>
+          Abrir WhatsApp ahora
+        </a>
+        <Link to="/coleccion" className={styles.secondaryAction}>
           Seguir explorando
         </Link>
       </div>
@@ -91,20 +104,10 @@ const EmptyCartState = ({
 
 export const Cart = () => {
   const { items, removeItem, updateQuantity, total } = useCartStore();
-  const [couponCode, setCouponCode] = useState('');
   const [cartNotice, setCartNotice] = useState('');
 
   const subtotal = total();
   const grandTotal = subtotal + SHIPPING_FEE;
-
-  const handleApplyCoupon = () => {
-    if (!couponCode.trim()) {
-      setCartNotice('Escribe un codigo para revisarlo.');
-      return;
-    }
-
-    setCartNotice(`Recibimos el codigo "${couponCode.trim()}". Podemos conectarlo luego cuando tengas la logica de cupones.`);
-  };
 
   const handleRefreshCart = () => {
     setCartNotice('Tu carrito ya esta actualizado con las cantidades actuales.');
@@ -184,8 +187,36 @@ export const Cart = () => {
                     <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Restar">
                       <Minus size={14} />
                     </button>
-                    <span>{item.quantity}</span>
-                    <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Sumar">
+                    <input
+                      type="number"
+                      min={1}
+                      max={item.stock}
+                      value={item.quantity}
+                      className={styles.quantityInput}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (isNaN(val) || val < 1) return;
+                        if (val > item.stock) {
+                          toast.error(`Solo hay ${item.stock} unidad${item.stock === 1 ? '' : 'es'} disponibles de ${item.product.name}.`);
+                          updateQuantity(item.id, item.stock);
+                          return;
+                        }
+                        updateQuantity(item.id, val);
+                      }}
+                      aria-label="Cantidad"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (item.quantity >= item.stock) {
+                          toast.error(`Solo hay ${item.stock} unidad${item.stock === 1 ? '' : 'es'} disponibles de ${item.product.name}.`);
+                          return;
+                        }
+                        updateQuantity(item.id, item.quantity + 1);
+                      }}
+                      aria-label="Sumar"
+                      disabled={item.quantity >= item.stock}
+                    >
                       <Plus size={14} />
                     </button>
                   </div>
@@ -197,24 +228,6 @@ export const Cart = () => {
           </div>
 
           <div className={styles.toolbar}>
-            <div className={styles.couponBlock}>
-              <label htmlFor="coupon" className={styles.srOnly}>
-                Codigo de cupon
-              </label>
-              <input
-                id="coupon"
-                type="text"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                placeholder="Codigo de cupon"
-                className={styles.couponInput}
-              />
-              <button type="button" onClick={handleApplyCoupon} className={styles.secondaryAction}>
-                <Ticket size={16} />
-                Aplicar cupon
-              </button>
-            </div>
-
             <button type="button" onClick={handleRefreshCart} className={styles.secondaryAction}>
               Actualizar carrito
             </button>
@@ -269,6 +282,7 @@ export const CheckoutPage = () => {
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [generatedOrderId, setGeneratedOrderId] = useState('');
+  const [whatsappUrl, setWhatsappUrl] = useState('');
   const [identificationType, setIdentificationType] = useState(IDENTIFICATION_TYPES[0]);
   const [identificationNumber, setIdentificationNumber] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -295,6 +309,32 @@ export const CheckoutPage = () => {
       setCustomerCity(cityOptions[0] ?? '');
     }
   }, [cityOptions, customerCity]);
+
+  useEffect(() => {
+    if (!isSuccess || !whatsappUrl) return undefined;
+
+    const timer = window.setTimeout(() => {
+      window.location.href = whatsappUrl;
+    }, 3200);
+
+    return () => window.clearTimeout(timer);
+  }, [isSuccess, whatsappUrl]);
+
+  const buildWhatsAppUrl = (order: Order) => {
+    const messageLines = [
+      'Hola, ya hice mi pedido en NC Store y quiero continuar la confirmacion.',
+      `Pedido: ${order.id}`,
+      `Nombre: ${order.customerName}`,
+      `Telefono: ${order.customerPhone}`,
+      `Correo: ${order.customerEmail}`,
+      `Direccion: ${order.customerAddress}`,
+      `Total: ${formatCurrency(order.total)}`,
+      `Notas: ${orderNotes.trim() || 'Sin notas adicionales'}`,
+      'Por favor, ayudenme con el siguiente paso.',
+    ];
+
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(messageLines.join('\n'))}`;
+  };
 
   const clearError = (field: string) => {
     setErrors((prev) => {
@@ -332,10 +372,61 @@ export const CheckoutPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePlaceOrder = (e: FormEvent) => {
+  const handlePlaceOrder = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) return;
+
+    // ── Validar stock en tiempo real antes de confirmar ──────────────────────
+    try {
+      const stockErrors: string[] = [];
+
+      for (const item of items) {
+        const prodDetail = await productoService.obtenerPorId(Number(item.product.id));
+        const matchedVariant = prodDetail.variantes?.find(
+          (v) => v.color.toLowerCase().trim() === item.selectedColor.name.toLowerCase().trim()
+        );
+
+        if (!matchedVariant) {
+          stockErrors.push(`La cantidad pedida de "${item.product.name} (${item.selectedColor.name})" no puede ser mayor a 0.`);
+          continue;
+        }
+
+        if (matchedVariant.stock < item.quantity) {
+          if (matchedVariant.stock === 0) {
+            stockErrors.push(`La cantidad pedida de "${item.product.name} (${item.selectedColor.name})" no puede ser mayor a 0.`);
+          } else {
+            stockErrors.push(
+              `La cantidad pedida de "${item.product.name} (${item.selectedColor.name})" no puede ser mayor a ${matchedVariant.stock}.`
+            );
+          }
+        }
+      }
+
+      if (stockErrors.length > 0) {
+        // Mostrar cada error como toast independiente para no sacar al usuario de la página
+        stockErrors.forEach((msg) => toast.error(msg, { duration: 6000 }));
+        return;
+      }
+    } catch {
+      toast.error('No pudimos verificar el stock. Intenta de nuevo.');
+      return;
+    }
+
+    // ── Descontar stock en la BD ─────────────────────────────────────────────
+    try {
+      for (const item of items) {
+        const prodDetail = await productoService.obtenerPorId(Number(item.product.id));
+        const matchedVariant = prodDetail.variantes?.find(
+          (v) => v.color.toLowerCase().trim() === item.selectedColor.name.toLowerCase().trim()
+        );
+        if (matchedVariant) {
+          await varianteService.ajustarStock(matchedVariant.id, -item.quantity);
+        }
+      }
+    } catch (err) {
+      console.error('Error al actualizar el stock:', err);
+    }
 
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const orderId = `ORD-2026-${randomNum}`;
@@ -374,13 +465,14 @@ export const CheckoutPage = () => {
 
     addOrder(newOrder);
     setGeneratedOrderId(orderId);
+    setWhatsappUrl(buildWhatsAppUrl(newOrder));
     setIsSuccess(true);
     clearCart();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (isSuccess) {
-    return <OrderSuccessView generatedOrderId={generatedOrderId} />;
+    return <OrderSuccessView generatedOrderId={generatedOrderId} whatsappUrl={whatsappUrl} />;
   }
 
   if (items.length === 0) {

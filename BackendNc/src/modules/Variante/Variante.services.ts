@@ -4,6 +4,7 @@ import { buildPaginationMeta, PaginationParams } from '../../utils/paginar';
 import {
   AjustarStockDto,
   CreateVarianteDto,
+  CreateManyVariantesDto,
   UpdateVarianteDto,
 } from './Validaciones/Variante.Schema';
 
@@ -15,13 +16,14 @@ type VarianteConProducto = VariantBase & {
   };
 };
 
-type VariantBase = Pick<Variante, 'id' | 'productoId' | 'color' | 'stock' | 'imagenes'>;
+type VariantBase = Pick<Variante, 'id' | 'productoId' | 'color' | 'stock' | 'activo' | 'imagenes'>;
 
 const varianteListSelect = {
   id: true,
   productoId: true,
   color: true,
   stock: true,
+  activo: true,
   imagenes: true,
   producto: {
     select: {
@@ -37,6 +39,7 @@ const varianteDetailSelect = {
   productoId: true,
   color: true,
   stock: true,
+  activo: true,
   imagenes: true,
   producto: {
     select: {
@@ -149,15 +152,65 @@ export const createVariante = async (data: CreateVarianteDto) => {
     throw new Error(`Ya existe una variante de color "${data.color}" para este producto`);
   }
 
+  const stock = data.stock ?? 0;
+  const activo = stock <= 0 ? false : (data.activo ?? true);
+
   return prisma.variante.create({
     data: {
       productoId: data.productoId,
       color: data.color,
-      stock: data.stock ?? 0,
+      stock,
+      activo,
       imagenes: data.imagenes ?? [],
     },
     select: varianteDetailSelect,
   });
+};
+
+
+///---Crear múltiples variantes---///
+export const createManyVariantes = async (data: CreateManyVariantesDto) => {
+  const { productoId, variantes } = data;
+  await ensureProductoExiste(productoId);
+
+  // 1. Validar duplicados dentro del mismo payload
+  const colores = variantes.map(v => v.color.trim().toLowerCase());
+  const uniqueColores = new Set(colores);
+  if (uniqueColores.size !== colores.length) {
+    throw new Error('No puedes enviar colores duplicados en el mismo formulario');
+  }
+
+  // 2. Validar duplicados contra la base de datos
+  const duplicadosExistentes = await prisma.variante.findMany({
+    where: {
+      productoId,
+      color: { in: variantes.map(v => v.color.trim()), mode: 'insensitive' },
+    },
+    select: { color: true },
+  });
+
+  if (duplicadosExistentes.length > 0) {
+    const listColores = duplicadosExistentes.map(v => `"${v.color}"`).join(', ');
+    throw new Error(`Ya existe una variante de color para este producto: ${listColores}`);
+  }
+
+  // 3. Crear todas las variantes en una transacción
+  return prisma.$transaction(
+    variantes.map(v => {
+      const stock = v.stock ?? 0;
+      const activo = stock <= 0 ? false : (v.activo ?? true);
+      return prisma.variante.create({
+        data: {
+          productoId,
+          color: v.color.trim(),
+          stock,
+          activo,
+          imagenes: v.imagenes ?? [],
+        },
+        select: varianteDetailSelect,
+      });
+    })
+  );
 };
 
 
@@ -192,11 +245,17 @@ export const updateVariante = async (id: number, data: UpdateVarianteDto) => {
     throw new Error('El stock no puede ser negativo');
   }
 
+  let isActivo = data.activo;
+  if (data.stock !== undefined && data.stock <= 0) {
+    isActivo = false;
+  }
+
   return prisma.variante.update({
     where: { id },
     data: {
       color: data.color,
       stock: data.stock,
+      activo: isActivo,
       imagenes: data.imagenes,
     },
     select: varianteDetailSelect,
@@ -225,7 +284,10 @@ export const ajustarStock = async (id: number, data: AjustarStockDto) => {
 
   return prisma.variante.update({
     where: { id },
-    data: { stock: nuevoStock },
+    data: { 
+      stock: nuevoStock,
+      activo: nuevoStock <= 0 ? false : undefined,
+    },
     select: varianteDetailSelect,
   });
 };

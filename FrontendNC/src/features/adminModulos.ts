@@ -7,6 +7,7 @@ export { CategoriasPage } from './categoria/pages/CategoriasPage';
 export { VariantePage } from './variante/pages/VariantePage';
 export { PagosPage } from './pagos/pages/PagosPage';
 export { PedidosPage } from './pedidos/pages/PedidosPage';
-export { FavoritosPage } from './favoritos/pages/FavoritosPage';
+export { GaleriaPage } from './galeria/pages/GaleriaPage';
 export { ClientesPage } from './clientes/pages/ClientesPage';
 export { VentasPage } from './ventas/pages/VentasPage';
+export { BannersPage } from './banner/pages/BannersPage';

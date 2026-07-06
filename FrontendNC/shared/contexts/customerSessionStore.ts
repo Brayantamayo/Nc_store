@@ -53,7 +53,10 @@ export const useCustomerSessionStore = create<CustomerSessionState>()(
           const data = await authService.login(email, password)
           const session = buildSession(data.usuario)
 
-          localStorage.setItem('token', data.token)
+          // Una sola fuente de verdad: el token vive en el estado de Zustand
+          // (persist lo serializa a localStorage bajo 'nc-customer-session').
+          // NO se escribe localStorage('token') por separado para evitar
+          // inconsistencias entre el estado y el storage directo.
           localStorage.removeItem('nc-admin-session')
           set({ customer: session, token: data.token })
 
@@ -121,7 +124,7 @@ export const useCustomerSessionStore = create<CustomerSessionState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('token')
+        // Limpiar el estado de Zustand (persist se encarga de borrar nc-customer-session del localStorage)
         localStorage.removeItem('nc-admin-session')
         set({ customer: null, token: null })
       },
