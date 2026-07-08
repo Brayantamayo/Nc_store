@@ -24,17 +24,29 @@ export const pedidoItemSchema = z.object({
     .number({ required_error: 'La cantidad es requerida' })
     .int('La cantidad debe ser un entero')
     .positive('La cantidad debe ser mayor a 0'),
+  detallesCombo: z.any().optional(),
 });
 
 export const createPedidoSchema = z.object({
   usuarioId: z.coerce
-    .number({ required_error: 'El usuarioId es requerido' })
+    .number({ invalid_type_error: 'El usuarioId debe ser un entero' })
     .int('El usuarioId debe ser un entero')
-    .positive('El usuarioId debe ser mayor a 0'),
+    .positive('El usuarioId debe ser mayor a 0')
+    .optional(),
   clienteId: z.coerce
-    .number({ required_error: 'El clienteId es requerido' })
+    .number({ invalid_type_error: 'El clienteId debe ser un entero' })
     .int('El clienteId debe ser un entero')
-    .positive('El clienteId debe ser mayor a 0'),
+    .positive('El clienteId debe ser mayor a 0')
+    .optional(),
+  guestEmail: z.string().email('Correo inválido').optional(),
+  guestName: z.string().min(1, 'El nombre es requerido').optional(),
+  guestLastName: z.string().optional(),
+  guestPhone: z.string().optional(),
+  guestAddressLine1: z.string().optional(),
+  guestAddressLine2: z.string().optional(),
+  guestCity: z.string().optional(),
+  guestRegion: z.string().optional(),
+  guestPostalCode: z.string().optional(),
   estado: estadoPedidoEnum.optional(),
   items: z
     .array(pedidoItemSchema)

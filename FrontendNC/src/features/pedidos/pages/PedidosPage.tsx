@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useOrderStore, Order, OrderStatus } from '../../store/pages/orderStore';
 import { useAdminPanel } from '../../panel/context/AdminPanelContext';
@@ -20,6 +20,7 @@ export const PedidosPage = () => {
   const { orders } = useOrderStore();
   const { setIsLoading, isLoading } = useAdminPanel();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [pdfOrder, setPdfOrder] = useState<Order | null>(null);
 
   const handleOrderStatusChange = async (orderId: string, status: OrderStatus) => {
     setIsLoading(true);
@@ -83,7 +84,7 @@ export const PedidosPage = () => {
                   <th>Cliente</th>
                   <th>Total COP</th>
                   <th>Estado envío</th>
-                  <th>Detalles</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -106,7 +107,6 @@ export const PedidosPage = () => {
                     </td>
                     <td>
                       <label className={`${styles.ordersStatusWrap} ${statusMeta[order.status]}`}>
-                        <span className={styles.ordersStatusBadge}>{order.status}</span>
                         <select
                           value={order.status}
                           onChange={(e) => handleOrderStatusChange(order.id, e.target.value as OrderStatus)}
@@ -132,6 +132,15 @@ export const PedidosPage = () => {
                           aria-label={`Ver detalles de ${order.id}`}
                         >
                           <Eye size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPdfOrder(order)}
+                          className={styles.iconBtnAction}
+                          title="Descargar PDF"
+                          aria-label={`Descargar PDF de ${order.id}`}
+                        >
+                          <Download size={14} />
                         </button>
                         <button
                           type="button"
@@ -171,6 +180,18 @@ export const PedidosPage = () => {
             onStatusChange={handleOrderStatusChange}
             onDelete={handleDeleteOrder}
           />
+        )}
+
+        {pdfOrder && (
+          <div style={{ position: 'absolute', top: '-9999px', opacity: 0, pointerEvents: 'none' }}>
+            <PedidoDetailModal
+              order={pdfOrder}
+              onClose={() => setPdfOrder(null)}
+              onStatusChange={() => {}}
+              onDelete={() => {}}
+              autoDownloadPdf={true}
+            />
+          </div>
         )}
       </AnimatePresence>
     </>

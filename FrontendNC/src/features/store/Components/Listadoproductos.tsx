@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Filter, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, X, SlidersHorizontal } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { productoService } from '../../productos/services/productoService';
 import { categoriaService } from '../../categoria/services/categoriaService';
@@ -47,6 +47,8 @@ const SPECIAL_CATEGORIES: Record<string, CategoryMetadata> = {
   },
 };
 
+type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc';
+
 const getColorHex = (colorName: string): string => {
   const normalized = colorName.toLowerCase().trim();
   return colorMap[normalized] || '#808080';
@@ -60,11 +62,23 @@ const collectSlugs = (category: CategoriaTreeItem): string[] => {
   return slugs;
 };
 
+const hasDescendantSlug = (category: CategoriaTreeItem, slug: string): boolean => {
+  const target = slug.toLowerCase();
+  return category.children.some((child) => {
+    if (child.slug.toLowerCase() === target) {
+      return true;
+    }
+    return hasDescendantSlug(child, target);
+  });
+};
+
 export const Collection = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const categoryParam = (searchParams.get('category') || 'all').toLowerCase();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>('default');
 
   const [dbProducts, setDbProducts] = useState<ProductoApiItem[]>([]);
   const [dbCategories, setDbCategories] = useState<CategoriaTreeItem[]>([]);
@@ -159,10 +173,7 @@ export const Collection = () => {
 
     if (categoryParam === 'descuentos') {
       result = result.filter((p) => !!(p.originalPrice && p.originalPrice > p.price));
-      return result;
-    }
-
-    if (categoryParam !== 'all') {
+    } else if (categoryParam !== 'all') {
       const activeCategory = categoryBySlug.get(categoryParam);
       if (activeCategory) {
         const accepted = new Set(collectSlugs(activeCategory));
@@ -172,14 +183,41 @@ export const Collection = () => {
       }
     }
 
+    // Ordenamiento
+    if (sortBy === 'price-asc') {
+      result = [...result].sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+      result = [...result].sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'name-asc') {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
     return result;
-  }, [categoryBySlug, categoryParam, mappedProducts, searchQuery]);
+  }, [categoryBySlug, categoryParam, mappedProducts, searchQuery, sortBy]);
 
   const clearSearch = () => {
     setSearchParams({});
   };
 
   const activeDbCategory = categoryBySlug.get(categoryParam);
+
+  useEffect(() => {
+    if (!activeDbCategory) {
+      return;
+    }
+
+    const parentsToOpen = rootCategories.filter((category) => {
+      return category.slug.toLowerCase() === categoryParam || hasDescendantSlug(category, categoryParam);
+    });
+
+    if (parentsToOpen.length > 0) {
+      setExpandedCategories((current) => {
+        const next = new Set(current);
+        parentsToOpen.forEach((category) => next.add(category.slug.toLowerCase()));
+        return Array.from(next);
+      });
+    }
+  }, [activeDbCategory, categoryParam, rootCategories]);
 
   const currentMeta = useMemo(() => {
     const meta = SPECIAL_CATEGORIES[categoryParam] || SPECIAL_CATEGORIES.all;
@@ -197,39 +235,102 @@ export const Collection = () => {
     return { name, description, image };
   }, [activeDbCategory, categoryParam]);
 
-  const renderCategoryButton = (slug: string, label: string) => (
-    <button
-      key={slug}
-      className={`${styles.catBtn} ${categoryParam === slug ? styles.active : ''}`}
-      onClick={() => setSearchParams({ category: slug })}
-    >
-      {label}
-    </button>
+  const toggleCategoryExpansion = (slug: string) => {
+    setExpandedCategories((current) =>
+      current.includes(slug)
+        ? current.filter((item) => item !== slug)
+        : [...current, slug],
+    );
+  };
+
+  // Renderiza categoría en el sidebar lateral desktop
+  const renderSidebarCategory = (category: CategoriaTreeItem, level = 0) => (
+    <div key={category.id} className={styles.categoryNode} style={{ marginLeft: level > 0 ? '0.25rem' : 0 }}>
+      <div className={styles.categoryRow}>
+        <button
+          className={`${styles.sidebarOpt} ${categoryParam === category.slug.toLowerCase() ? styles.activeOpt : ''}`}
+          onClick={() => {
+            setSearchParams({ category: category.slug.toLowerCase() });
+            if (category.children.length > 0) {
+              toggleCategoryExpansion(category.slug.toLowerCase());
+            }
+          }}
+          style={{
+            width: '100%',
+            textAlign: 'left',
+            paddingLeft: level > 0 ? '1rem' : undefined,
+          }}
+        >
+          <span className={styles.categoryLabel}>
+            {category.nombre}
+          </span>
+        </button>
+        {category.children.length > 0 && (
+          <button
+            type="button"
+            className={`${styles.categoryCaret} ${expandedCategories.includes(category.slug.toLowerCase()) ? styles.categoryCaretOpen : ''}`}
+            onClick={() => toggleCategoryExpansion(category.slug.toLowerCase())}
+            aria-label={
+              expandedCategories.includes(category.slug.toLowerCase())
+                ? `Cerrar subcategorías de ${category.nombre}`
+                : `Abrir subcategorías de ${category.nombre}`
+            }
+          >
+            {expandedCategories.includes(category.slug.toLowerCase()) ? (
+              <ChevronDown size={14} />
+            ) : (
+              <ChevronRight size={14} />
+            )}
+          </button>
+        )}
+      </div>
+      <AnimatePresence initial={false}>
+        {category.children.length > 0 && expandedCategories.includes(category.slug.toLowerCase()) && (
+          <motion.div
+            className={styles.childList}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
+            {category.children.map((child) => renderSidebarCategory(child, level + 1))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 
-  const renderSidebarCategory = (category: CategoriaTreeItem, level = 0) => (
-    <div key={category.id} style={{ marginLeft: level > 0 ? '0.75rem' : 0 }}>
+  // Sidebar content (shared between desktop panel and mobile drawer)
+  const sidebarContent = (
+    <>
       <button
-        className={`${styles.sidebarOpt} ${categoryParam === category.slug.toLowerCase() ? styles.activeOpt : ''}`}
+        className={`${styles.sidebarOpt} ${categoryParam === 'all' ? styles.activeOpt : ''}`}
         onClick={() => {
-          setSearchParams({ category: category.slug.toLowerCase() });
+          setSearchParams({});
           setIsFilterOpen(false);
         }}
-        style={{
-          width: '100%',
-          textAlign: 'left',
-          paddingLeft: level > 0 ? '1.15rem' : undefined,
+      >
+        Ver todo
+      </button>
+
+      {rootCategories.map((category) => (
+        <div key={category.id}>
+          {renderSidebarCategory(category)}
+        </div>
+      ))}
+
+      <div className={styles.sidebarDivider} />
+
+      <button
+        className={`${styles.sidebarOpt} ${categoryParam === 'descuentos' ? styles.activeOpt : ''}`}
+        onClick={() => {
+          setSearchParams({ category: 'descuentos' });
+          setIsFilterOpen(false);
         }}
       >
-        {category.nombre}
-        {category.children.length > 0 ? ` (${category.children.length})` : ''}
+        Descuentos
       </button>
-      {category.children.length > 0 && (
-        <div style={{ marginTop: '0.35rem', marginBottom: '0.5rem' }}>
-          {category.children.map((child) => renderSidebarCategory(child, level + 1))}
-        </div>
-      )}
-    </div>
+    </>
   );
 
   if (isLoading) {
@@ -247,6 +348,7 @@ export const Collection = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
+      {/* ── HERO ── */}
       <section className={styles.hero}>
         <div
           className={styles.heroImage}
@@ -283,66 +385,125 @@ export const Collection = () => {
         <div className={styles.heroCurve} aria-hidden="true" />
       </section>
 
+      {/* ── CONTENT ── */}
       <div className={`container ${styles.contentShell}`}>
-        <div className={styles.introBlock}>
-          <p className={styles.introKicker}>
-            {searchQuery ? 'Resultados' : 'Curaduría coquette'}
-          </p>
-          <h2 className={styles.introTitle}>
-            {searchQuery ? (
-              <span className={styles.searchResultTitle}>
-                "{searchQuery}"
-                <button onClick={clearSearch} className={styles.clearSearchBtn} title="Limpiar búsqueda">
-                  <X size={16} />
-                </button>
-              </span>
-            ) : (
-              currentMeta.name
-            )}
-          </h2>
-          <div className={styles.sparkleDivider} aria-hidden="true">
-            <span />
-            <i />
-            <span />
-          </div>
-          <p className={styles.introCount}>
-            {filteredProducts.length} {filteredProducts.length === 1 ? 'pieza encontrada' : 'piezas encontradas'}
-          </p>
-        </div>
 
-        <header className={styles.header}>
-          <button className={styles.filterToggle} onClick={() => setIsFilterOpen(true)}>
-            Filtros <Filter size={16} />
-          </button>
-        </header>
-
+        {/* Mobile: pills de categorías */}
         <div className={styles.categoriesBar}>
           {categories.map((cat) => {
             const label = cat === 'all'
               ? 'Ver todo'
               : (categoryBySlug.get(cat)?.nombre || cat);
-            return renderCategoryButton(cat, label);
+            return (
+              <button
+                key={cat}
+                className={`${styles.catBtn} ${categoryParam === cat ? styles.active : ''}`}
+                onClick={() => setSearchParams(cat === 'all' ? {} : { category: cat })}
+              >
+                {label}
+              </button>
+            );
           })}
         </div>
 
-        <div className={styles.grid}>
-          {filteredProducts.length === 0 ? (
-            <div className={styles.emptyState}>
-              <h3>Sin piezas por ahora</h3>
-              <p>
-                {searchQuery
-                  ? 'No encontramos productos con esa búsqueda. Prueba otro término o explora otra categoría.'
-                  : 'Esta categoría aún no tiene productos disponibles. Mientras tanto, explora el resto de la colección.'}
-              </p>
+        {/* Mobile: controles (filtro + orden) */}
+        <div className={styles.mobileControls}>
+          <button
+            className={styles.filterToggle}
+            onClick={() => setIsFilterOpen(true)}
+          >
+            <SlidersHorizontal size={15} />
+            Filtrar
+          </button>
+          <select
+            className={styles.sortSelect}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            aria-label="Ordenar productos"
+          >
+            <option value="default">Orden predeterminado</option>
+            <option value="price-asc">Precio: menor a mayor</option>
+            <option value="price-desc">Precio: mayor a menor</option>
+            <option value="name-asc">Nombre: A–Z</option>
+          </select>
+        </div>
+
+        {/* ── LAYOUT PRINCIPAL ── */}
+        <div className={styles.catalogLayout}>
+
+          {/* Sidebar desktop */}
+          <aside className={styles.sidebar}>
+            <div className={styles.sidebarPanel}>
+              <p className={styles.sidebarTitle}>Categorías</p>
+              <div className={styles.sidebarOptions}>
+                {sidebarContent}
+              </div>
             </div>
-          ) : (
-            filteredProducts.map((product, idx) => (
-              <ProductCard key={product.id} product={product} index={idx} variant="collection" />
-            ))
-          )}
+          </aside>
+
+          {/* Catálogo */}
+          <div className={styles.catalogMain}>
+            {/* Header del catálogo */}
+            <div className={styles.catalogHeader}>
+              <div className={styles.catalogHeaderLeft}>
+                <p className={styles.collectionEyebrow}>
+                  {searchQuery ? 'Resultados de búsqueda' : 'Curaduría coquette'}
+                </p>
+                <div className={styles.collectionTitleRow}>
+                  <h2 className={styles.collectionTitle}>
+                    {searchQuery ? (
+                      <span className={styles.searchResultTitle}>
+                        "{searchQuery}"
+                        <button onClick={clearSearch} className={styles.clearSearchBtn} title="Limpiar búsqueda">
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ) : (
+                      currentMeta.name
+                    )}
+                  </h2>
+                  <p className={styles.collectionCount}>
+                    {filteredProducts.length} {filteredProducts.length === 1 ? 'pieza encontrada' : 'piezas encontradas'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de orden — solo desktop */}
+              <select
+                className={`${styles.sortSelect} ${styles.sortSelectDesktop}`}
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                aria-label="Ordenar productos"
+              >
+                <option value="default">Orden predeterminado</option>
+                <option value="price-asc">Precio: menor a mayor</option>
+                <option value="price-desc">Precio: mayor a menor</option>
+                <option value="name-asc">Nombre: A–Z</option>
+              </select>
+            </div>
+
+            {/* Grid de productos */}
+            <div className={styles.grid}>
+              {filteredProducts.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <h3>Sin piezas por ahora</h3>
+                  <p>
+                    {searchQuery
+                      ? 'No encontramos productos con esa búsqueda. Prueba otro término o explora otra categoría.'
+                      : 'Esta categoría aún no tiene productos disponibles. Mientras tanto, explora el resto de la colección.'}
+                  </p>
+                </div>
+              ) : (
+                filteredProducts.map((product, idx) => (
+                  <ProductCard key={product.id} product={product} index={idx} variant="collection" />
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* ── MOBILE FILTER DRAWER ── */}
       <AnimatePresence>
         {isFilterOpen && (
           <>
@@ -358,41 +519,17 @@ export const Collection = () => {
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'tween', duration: 0.4 }}
+              transition={{ type: 'tween', duration: 0.35 }}
             >
               <div className={styles.sidebarHeader}>
                 <h2>FILTRAR</h2>
-                <button onClick={() => setIsFilterOpen(false)}><X size={24} /></button>
+                <button onClick={() => setIsFilterOpen(false)}><X size={22} /></button>
               </div>
               <div className={styles.sidebarContent}>
                 <div className={styles.filterSection}>
                   <h3>Categoría</h3>
                   <div className={styles.sidebarOptions}>
-                    <button
-                      className={`${styles.sidebarOpt} ${categoryParam === 'all' ? styles.activeOpt : ''}`}
-                      onClick={() => {
-                        setSearchParams({});
-                        setIsFilterOpen(false);
-                      }}
-                    >
-                      Todas
-                    </button>
-
-                    {rootCategories.map((category) => (
-                      <div key={category.id}>
-                        {renderSidebarCategory(category)}
-                      </div>
-                    ))}
-
-                    <button
-                      className={`${styles.sidebarOpt} ${categoryParam === 'descuentos' ? styles.activeOpt : ''}`}
-                      onClick={() => {
-                        setSearchParams({ category: 'descuentos' });
-                        setIsFilterOpen(false);
-                      }}
-                    >
-                      Descuentos
-                    </button>
+                    {sidebarContent}
                   </div>
                 </div>
               </div>

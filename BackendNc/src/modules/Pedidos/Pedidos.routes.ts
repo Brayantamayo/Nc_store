@@ -4,7 +4,7 @@ import { soloAdmin } from '../../middlewares/Auth.middleware';
 
 const router = Router();
 
-router.post('/', soloAdmin, PedidoController.create);
+router.post('/', PedidoController.create);
 router.get('/', soloAdmin, PedidoController.getAll);
 router.get('/:id(\\d+)', soloAdmin, PedidoController.getById);
 router.patch('/:id(\\d+)', soloAdmin, PedidoController.update);

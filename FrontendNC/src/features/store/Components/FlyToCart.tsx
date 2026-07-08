@@ -1,3 +1,4 @@
+///Componente que muestra la imagen de la vista de carro volando hacia el carrito
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFlyToCartStore } from '../pages/flyToCartStore';

@@ -45,16 +45,19 @@ model Usuario {
 }
 
 model Cliente {
-  id           Int      @id @default(autoincrement())
-  usuarioId    Int      @unique
-  direccion    String?
-  direccion2   String?
-  region       String?
-  ciudad       String?
-  codigoPostal String?
-  creadoEn     DateTime @default(now())
-  usuario      Usuario  @relation(fields: [usuarioId], references: [id])
-  pedidos      Pedido[]
+  id                 Int      @id @default(autoincrement())
+  usuarioId          Int      @unique
+  tipoIdentificacion String?
+  nroIdentificacion  String?
+  telefono           String?
+  direccion          String?
+  direccion2         String?
+  region             String?
+  ciudad             String?
+  codigoPostal       String?
+  creadoEn           DateTime @default(now())
+  usuario            Usuario  @relation(fields: [usuarioId], references: [id])
+  pedidos            Pedido[]
 }
 
 model Categoria {
@@ -81,6 +84,8 @@ model Producto {
   activo         Boolean    @default(true)
   creadoEn       DateTime   @default(now())
   precioOriginal Decimal?   @db.Decimal(10, 2)
+  esCombo        Boolean    @default(false)
+  opcionesCombo  Json?
   categoria      Categoria  @relation(fields: [categoriaId], references: [id])
   variantes      Variante[]
 }
@@ -91,6 +96,7 @@ model Variante {
   color       String
   stock       Int          @default(0)
   imagenes    String[]
+  opcionComboNombre String?
   activo      Boolean      @default(true)
   itemsPedido ItemPedido[]
   itemsVenta  ItemVenta[]
@@ -117,6 +123,7 @@ model ItemPedido {
   varianteId Int
   cantidad   Int
   precio     Decimal  @db.Decimal(10, 2)
+  detallesCombo Json?
   pedido     Pedido   @relation(fields: [pedidoId], references: [id])
   variante   Variante @relation(fields: [varianteId], references: [id])
 }
@@ -147,6 +154,7 @@ model ItemVenta {
   varianteId Int
   cantidad   Int
   precio     Decimal  @db.Decimal(10, 2)
+  detallesCombo Json?
   variante   Variante @relation(fields: [varianteId], references: [id])
   venta      Venta    @relation(fields: [ventaId], references: [id])
 }

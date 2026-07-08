@@ -19,6 +19,9 @@ export interface UpdateProfileResponse {
     lastName: string
     displayName: string
     email: string
+    tipoIdentificacion?: string
+    nroIdentificacion?: string
+    telefono?: string
   }
 }
 
@@ -73,6 +76,9 @@ export const authService = {
     lastName: string
     displayName: string
     email: string
+    tipoIdentificacion?: string
+    nroIdentificacion?: string
+    telefono?: string
   }): Promise<UpdateProfileResponse> => {
     const { data } = await api.put('/auth/perfil', payload)
     return data

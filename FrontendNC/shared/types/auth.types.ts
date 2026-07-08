@@ -1,5 +1,5 @@
-// ─── TIPOS DE AUTENTICACIÓN ──────────────────────────────────────────────────
-// Fuente única de verdad para las interfaces de Auth en todo el frontend.
+﻿// TIPOS DE AUTENTICACION
+// Fuente unica de verdad para las interfaces de Auth en todo el frontend.
 
 /** Usuario devuelto por el backend en /auth/login */
 export interface AuthUser {
@@ -9,6 +9,7 @@ export interface AuthUser {
   apellido:      string | null
   nombreVisible: string | null
   rol:           string
+  clienteId:     number | null
   cliente:       CustomerAddress | null
 }
 
@@ -18,7 +19,7 @@ export interface LoginResponse {
   usuario: AuthUser
 }
 
-/** Dirección de envío del cliente */
+/** Direccion de envio del cliente */
 export interface CustomerAddress {
   firstName:    string
   lastName:     string
@@ -28,11 +29,15 @@ export interface CustomerAddress {
   region:       string
   city:         string
   postalCode:   string
+  tipoIdentificacion?: string
+  nroIdentificacion?:  string
+  telefono?:           string
 }
 
-/** Sesión activa del cliente en el frontend */
+/** Sesion activa del cliente en el frontend */
 export interface CustomerSession {
   id:          number
+  clienteId:   number | null
   email:       string
   firstName:   string
   lastName:    string
@@ -40,4 +45,7 @@ export interface CustomerSession {
   rol:         string
   createdAt:   string
   address:     CustomerAddress
+  tipoIdentificacion?: string
+  nroIdentificacion?:  string
+  telefono?:           string
 }

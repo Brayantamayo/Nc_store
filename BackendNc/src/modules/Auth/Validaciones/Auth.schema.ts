@@ -125,6 +125,9 @@ export const updateProfileSchema = z.object({
       .refine((v) => !/\s{2,}/.test(v), 'El nombre visible no debe tener espacios dobles')
   ),
   email: emailSchema('El correo es requerido'),
+  tipoIdentificacion: z.string().trim().max(80).optional().default(''),
+  nroIdentificacion:  z.string().trim().max(80).optional().default(''),
+  telefono:           z.string().trim().max(40).optional().default(''),
 })
 
 export const updateAddressSchema = z.object({

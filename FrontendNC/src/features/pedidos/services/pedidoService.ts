@@ -8,11 +8,19 @@ export const pedidoService = {
       const { data } = await api.get('/pedidos?limit=100');
       const mapped: Order[] = data.data.map((p: any) => ({
         id: String(p.id),
-        customerName: p.cliente?.nombre || p.usuario?.nombre || 'Desconocido',
-        customerEmail: p.usuario?.email || '',
-        customerPhone: '',
-        customerAddress: p.cliente?.direccion || '',
-        customerCity: p.cliente?.ciudad || '',
+        customerName: p.cliente?.nombre || p.usuario?.nombre || p.guestName || 'Desconocido',
+        customerLastName: p.cliente?.apellido || p.usuario?.apellido || p.guestLastName || '',
+        customerEmail: p.usuario?.email || p.guestEmail || '',
+        customerPhone: p.cliente?.telefono || p.guestPhone || '',
+        customerIdType: p.cliente?.tipoIdentificacion || p.guestIdType || '',
+        customerIdNumber: p.cliente?.numeroIdentificacion || p.guestIdNumber || '',
+        customerCountry: p.cliente?.pais || p.guestCountry || 'Colombia',
+        customerAddress: p.cliente?.direccion || p.guestAddressLine1 || '',
+        customerAddress2: p.cliente?.direccion2 || p.guestAddressLine2 || '',
+        customerCity: p.cliente?.ciudad || p.guestCity || '',
+        customerDepartment: p.cliente?.departamento || p.guestRegion || '',
+        customerPostalCode: p.cliente?.codigoPostal || p.guestPostalCode || '',
+        orderNotes: p.notas || p.orderNotes || '',
         items: p.items ? p.items.map((i: any) => ({
           productId: String(i.variante?.producto?.id),
           productName: i.variante?.producto?.nombre || 'Producto',
@@ -39,6 +47,33 @@ export const pedidoService = {
       return { success: true, message: 'Estado del pedido actualizado.' };
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Error al actualizar el pedido.';
+      return { success: false, message };
+    }
+  },
+
+  crear: async (payload: {
+    usuarioId?: number;
+    clienteId?: number;
+    guestEmail?: string;
+    guestName?: string;
+    guestLastName?: string;
+    guestPhone?: string;
+    guestAddressLine1?: string;
+    guestAddressLine2?: string;
+    guestCity?: string;
+    guestRegion?: string;
+    guestPostalCode?: string;
+    guestIdType?: string;
+    guestIdNumber?: string;
+    guestCountry?: string;
+    orderNotes?: string;
+    items: { varianteId: number; cantidad: number }[];
+  }): Promise<ServiceResponse & { pedidoId?: number }> => {
+    try {
+      const { data } = await api.post('/pedidos', payload);
+      return { success: true, message: 'Pedido creado correctamente.', pedidoId: data.data?.id };
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Error al crear el pedido.';
       return { success: false, message };
     }
   },

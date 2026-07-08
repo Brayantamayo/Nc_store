@@ -179,6 +179,7 @@ export const login = async ({ email, password }: LoginDto) => {
       apellido:      usuario.apellido,
       nombreVisible: usuario.nombreVisible,
       rol:           usuario.role.nombre,
+      clienteId:     usuario.cliente?.id ?? null,
       cliente: usuario.cliente
         ? {
             firstName:    usuario.nombre        ?? '',
@@ -189,6 +190,9 @@ export const login = async ({ email, password }: LoginDto) => {
             region:       usuario.cliente.region       ?? '',
             city:         usuario.cliente.ciudad       ?? '',
             postalCode:   usuario.cliente.codigoPostal ?? '',
+            tipoIdentificacion: usuario.cliente.tipoIdentificacion ?? '',
+            nroIdentificacion:  usuario.cliente.nroIdentificacion  ?? '',
+            telefono:           usuario.cliente.telefono           ?? '',
           }
         : null,
     },
@@ -200,7 +204,10 @@ export const login = async ({ email, password }: LoginDto) => {
 export const actualizarPerfil = async (userId: number, dto: UpdateProfileDto) => {
   if (!Number.isInteger(userId) || userId <= 0) throw new Error('ID de usuario inválido')
 
-  const usuarioExistente = await prisma.usuario.findUnique({ where: { id: userId } })
+  const usuarioExistente = await prisma.usuario.findUnique({
+    where: { id: userId },
+    include: { cliente: true },
+  })
   if (!usuarioExistente) throw new Error('Usuario no encontrado')
 
   const emailActualizado = dto.email.toLowerCase().trim()
@@ -209,23 +216,42 @@ export const actualizarPerfil = async (userId: number, dto: UpdateProfileDto) =>
     if (existeEmail && existeEmail.id !== userId) throw new Error('Ya existe otra cuenta con ese correo')
   }
 
-  const usuario = await prisma.usuario.update({
-    where: { id: userId },
-    data: {
-      nombre:        dto.firstName.trim(),
-      apellido:      dto.lastName?.trim() ?? '',
-      nombreVisible: dto.displayName.trim(),
-      email:         emailActualizado,
-    },
-  })
+  const [usuario, cliente] = await prisma.$transaction([
+    prisma.usuario.update({
+      where: { id: userId },
+      data: {
+        nombre:        dto.firstName.trim(),
+        apellido:      dto.lastName?.trim() ?? '',
+        nombreVisible: dto.displayName.trim(),
+        email:         emailActualizado,
+      },
+    }),
+    prisma.cliente.upsert({
+      where: { usuarioId: userId },
+      update: {
+        tipoIdentificacion: dto.tipoIdentificacion ?? '',
+        nroIdentificacion:  dto.nroIdentificacion ?? '',
+        telefono:           dto.telefono ?? '',
+      },
+      create: {
+        usuarioId: userId,
+        tipoIdentificacion: dto.tipoIdentificacion ?? '',
+        nroIdentificacion:  dto.nroIdentificacion ?? '',
+        telefono:           dto.telefono ?? '',
+      },
+    })
+  ])
 
   return {
     message: 'Los datos de la cuenta se guardaron correctamente.',
     profile: {
-      firstName:   usuario.nombre        ?? '',
-      lastName:    usuario.apellido      ?? '',
-      displayName: usuario.nombreVisible ?? '',
-      email:       usuario.email,
+      firstName:          usuario.nombre        ?? '',
+      lastName:           usuario.apellido      ?? '',
+      displayName:        usuario.nombreVisible ?? '',
+      email:              usuario.email,
+      tipoIdentificacion: cliente.tipoIdentificacion ?? '',
+      nroIdentificacion:  cliente.nroIdentificacion  ?? '',
+      telefono:           cliente.telefono           ?? '',
     },
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+﻿import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckCircle2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -54,41 +54,47 @@ const buildAddressForm = (customer: CustomerSession | null): CustomerAddress => 
 
 export const Login = () => {
   const navigate = useNavigate();
-  const customer        = useCustomerSessionStore((s) => s.customer);
-  const login           = useCustomerSessionStore((s) => s.login);
+  const customer          = useCustomerSessionStore((s) => s.customer);
+  const login             = useCustomerSessionStore((s) => s.login);
   const registerWithEmail = useCustomerSessionStore((s) => s.registerWithEmail);
-  const updateProfile   = useCustomerSessionStore((s) => s.updateProfile);
-  const updateAddress   = useCustomerSessionStore((s) => s.updateAddress);
-  const logout          = useCustomerSessionStore((s) => s.logout);
-  const orders          = useOrderStore((s) => s.orders);
+  const updateProfile     = useCustomerSessionStore((s) => s.updateProfile);
+  const updateAddress     = useCustomerSessionStore((s) => s.updateAddress);
+  const logout            = useCustomerSessionStore((s) => s.logout);
+  const orders            = useOrderStore((s) => s.orders);
 
-  const [activeSection, setActiveSection] = useState<AccountSection>('dashboard');
-  const [showPassword,  setShowPassword]  = useState(false);
-  const [loginEmail,    setLoginEmail]    = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [feedback,      setFeedback]      = useState('');
-  const [errors,        setErrors]        = useState<Record<string, string>>({});
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [activeSection,   setActiveSection]   = useState<AccountSection>('dashboard');
+  const [showPassword,    setShowPassword]    = useState(false);
+  const [loginEmail,      setLoginEmail]      = useState('');
+  const [loginPassword,   setLoginPassword]   = useState('');
+  const [registerEmail,   setRegisterEmail]   = useState('');
+  const [feedback,        setFeedback]        = useState('');
+  const [errors,          setErrors]          = useState<Record<string, string>>({});
+  const [isLoggingIn,     setIsLoggingIn]     = useState(false);
+  const [isRegistering,   setIsRegistering]   = useState(false);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
   const [isSavingAccount, setIsSavingAccount] = useState(false);
 
   const [addressForm, setAddressForm] = useState<CustomerAddress>(buildAddressForm(customer));
   const [accountForm, setAccountForm] = useState({
-    firstName:   customer?.firstName   ?? '',
-    lastName:    customer?.lastName    ?? '',
-    displayName: customer?.displayName ?? '',
-    email:       customer?.email       ?? '',
+    firstName:          customer?.firstName          ?? '',
+    lastName:           customer?.lastName           ?? '',
+    displayName:        customer?.displayName        ?? '',
+    email:              customer?.email              ?? '',
+    tipoIdentificacion: customer?.tipoIdentificacion ?? '',
+    nroIdentificacion:  customer?.nroIdentificacion  ?? '',
+    telefono:           customer?.telefono           ?? '',
   });
 
   useEffect(() => {
     setAddressForm(buildAddressForm(customer));
     setAccountForm({
-      firstName:   customer?.firstName   ?? '',
-      lastName:    customer?.lastName    ?? '',
-      displayName: customer?.displayName ?? '',
-      email:       customer?.email       ?? '',
+      firstName:          customer?.firstName          ?? '',
+      lastName:           customer?.lastName           ?? '',
+      displayName:        customer?.displayName        ?? '',
+      email:              customer?.email              ?? '',
+      tipoIdentificacion: customer?.tipoIdentificacion ?? '',
+      nroIdentificacion:  customer?.nroIdentificacion  ?? '',
+      telefono:           customer?.telefono           ?? '',
     });
   }, [customer]);
 
@@ -119,14 +125,14 @@ export const Login = () => {
       return false;
     }
     if (!EMAIL_REGEX.test(value.trim())) {
-      setErrors((prev) => ({ ...prev, [field]: 'Ingresa un correo válido.' }));
+      setErrors((prev) => ({ ...prev, [field]: 'Ingresa un correo valido.' }));
       return false;
     }
     clearError(field);
     return true;
   };
 
-  // ─── LOGIN ─────────────────────────────────────────────────────────────────
+  // LOGIN
   const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
@@ -140,7 +146,7 @@ export const Login = () => {
         localStorage.setItem('nc-admin-session', 'active');
         localStorage.setItem('nc-admin-token', token);
         setErrors({});
-        setFeedback('Ingreso exitoso. Ya puedes acceder al panel de administración.');
+        setFeedback('Ingreso exitoso. Ya puedes acceder al panel de administracion.');
         setLoginPassword('');
         setLoginEmail('');
         navigate('/admin');
@@ -148,7 +154,6 @@ export const Login = () => {
       }
 
       const session = buildCustomerSession(usuario);
-      // El token de cliente vive solo en Zustand persist (nc-customer-session)
       localStorage.removeItem('nc-admin-session');
       useCustomerSessionStore.setState({ customer: session, token });
 
@@ -160,15 +165,14 @@ export const Login = () => {
     } catch (error) {
       const message = error instanceof Error
         ? error.message
-        : 'No pudimos iniciar sesión. Revisa tus datos e intenta de nuevo.';
+        : 'No pudimos iniciar sesion. Revisa tus datos e intenta de nuevo.';
       setErrors((prev) => ({ ...prev, auth: message }));
     } finally {
       setIsLoggingIn(false);
     }
   };
 
-  // ─── REGISTRO ──────────────────────────────────────────────────────────────
-  // ✅ Corregido: registerWithEmail es async — necesita await
+  // REGISTRO
   const handleRegisterSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validateEmail(registerEmail, 'registerEmail')) return;
@@ -186,7 +190,7 @@ export const Login = () => {
         if (loginResult.success) {
           setErrors({});
           setRegisterEmail('');
-          setFeedback('Cuenta creada. Ya entraste al �rea del cliente.');
+          setFeedback('Cuenta creada. Ya entraste al area del cliente.');
           navigate('/mi-cuenta');
           return;
         }
@@ -194,13 +198,13 @@ export const Login = () => {
 
       setErrors({});
       setRegisterEmail('');
-      setFeedback('Cuenta creada. Revisa tu correo para crear tu contrase�a inicial.');
+      setFeedback('Cuenta creada. Revisa tu correo para crear tu contrasena inicial.');
     } finally {
       setIsRegistering(false);
     }
   };
 
-  // ─── DIRECCIÓN ─────────────────────────────────────────────────────────────
+  // DIRECCION
   const handleSaveAddress = async (e: FormEvent) => {
     e.preventDefault();
     setIsSavingAddress(true);
@@ -214,23 +218,26 @@ export const Login = () => {
       }
 
       setErrors((prev) => ({ ...prev, address: '' }));
-      setFeedback('Tu direcci�n de env�o qued� guardada.');
+      setFeedback('Tu direccion de envio quedo guardada.');
     } finally {
       setIsSavingAddress(false);
     }
   };
 
-  // --- DATOS DE CUENTA ───────────────────────────────────────────────────────
+  // DATOS DE CUENTA
   const handleSaveAccount = async (e: FormEvent) => {
     e.preventDefault();
     setIsSavingAccount(true);
 
     try {
       const result = await updateProfile({
-        firstName: accountForm.firstName.trim(),
-        lastName: accountForm.lastName.trim(),
-        displayName: accountForm.displayName.trim(),
-        email: accountForm.email.trim(),
+        firstName:          accountForm.firstName.trim(),
+        lastName:           accountForm.lastName.trim(),
+        displayName:        accountForm.displayName.trim(),
+        email:              accountForm.email.trim(),
+        tipoIdentificacion: accountForm.tipoIdentificacion.trim(),
+        nroIdentificacion:  accountForm.nroIdentificacion.trim(),
+        telefono:           accountForm.telefono.trim(),
       });
 
       if (!result.success) {
@@ -269,7 +276,7 @@ export const Login = () => {
     if (field === 'email')       clearError('accountEmail');
   };
 
-  // ─── SECCIÓN ACTIVA ────────────────────────────────────────────────────────
+  // SECCION ACTIVA
   const renderAccountSection = () => {
     if (!customer) return null;
     switch (activeSection) {
@@ -298,7 +305,7 @@ export const Login = () => {
     }
   };
 
-  // ─── TOAST ─────────────────────────────────────────────────────────────────
+  // TOAST
   const feedbackToast = (
     <AnimatePresence>
       {feedback && (
@@ -311,14 +318,14 @@ export const Login = () => {
         >
           <div className={styles.feedbackToastIcon}><CheckCircle2 size={20} /></div>
           <div className={styles.feedbackToastBody}>
-            <span className={styles.feedbackToastEyebrow}>Éxito</span>
+            <span className={styles.feedbackToastEyebrow}>Exito</span>
             <p>{feedback}</p>
           </div>
           <button
             type="button"
             className={styles.feedbackToastClose}
             onClick={() => setFeedback('')}
-            aria-label="Cerrar notificación"
+            aria-label="Cerrar notificacion"
           >
             <X size={16} />
           </button>
@@ -327,7 +334,7 @@ export const Login = () => {
     </AnimatePresence>
   );
 
-  // ─── RENDER ────────────────────────────────────────────────────────────────
+  // RENDER
   if (!customer) {
     return (
       <motion.div
@@ -388,5 +395,3 @@ export const Login = () => {
     </motion.div>
   );
 };
-
-

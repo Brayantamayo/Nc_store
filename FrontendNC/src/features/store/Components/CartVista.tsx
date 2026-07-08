@@ -231,13 +231,23 @@ export const CartDrawer = () => {
                             <div className={styles.itemTop}>
                               <div className={styles.itemMeta}>
                                 <h3 className={styles.itemName}>{item.product.name}</h3>
-                                <span className={styles.itemColor}>
-                                  <span
-                                    className={styles.colorDot}
-                                    style={{ background: item.selectedColor.hex ?? '#c2185b' }}
-                                  />
-                                  {item.selectedColor.name}
-                                </span>
+                                {item.detallesCombo ? (
+                                  <div className={styles.itemColor} style={{ flexDirection: 'column', alignItems: 'flex-start', fontSize: '0.75rem', gap: '2px', marginTop: '2px' }}>
+                                    {Object.entries(item.detallesCombo).map(([opt, color]) => (
+                                      <span key={opt} style={{ display: 'block' }}>
+                                        <strong style={{ fontWeight: 600 }}>{opt}:</strong> {color}
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className={styles.itemColor}>
+                                    <span
+                                      className={styles.colorDot}
+                                      style={{ background: item.selectedColor.hex ?? '#c2185b' }}
+                                    />
+                                    {item.selectedColor.name}
+                                  </span>
+                                )}
                               </div>
                               <button
                                 type="button"

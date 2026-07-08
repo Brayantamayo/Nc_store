@@ -24,20 +24,20 @@ export const varianteService = {
     return data.data;
   },
 
-  crear: async (payload: { productoId: number; color: string; stock: number; imagenes: string[]; activo?: boolean }) => {
+  crear: async (payload: { productoId: number; color: string; stock: number; imagenes: string[]; activo?: boolean; opcionComboNombre?: string | null }) => {
     const { data } = await api.post<VarianteResponse<VarianteDetailItem>>('/variantes', payload);
     return data.data;
   },
 
   crearMasivo: async (payload: {
     productoId: number;
-    variantes: { color: string; stock: number; imagenes: string[]; activo?: boolean }[];
+    variantes: { color: string; stock: number; imagenes: string[]; activo?: boolean; opcionComboNombre?: string | null }[];
   }) => {
     const { data } = await api.post<VarianteResponse<VarianteDetailItem[]>>('/variantes/bulk', payload);
     return data.data;
   },
 
-  actualizar: async (id: number, payload: { color?: string; stock?: number; imagenes?: string[]; activo?: boolean }) => {
+  actualizar: async (id: number, payload: { color?: string; stock?: number; imagenes?: string[]; activo?: boolean; opcionComboNombre?: string | null }) => {
     const { data } = await api.patch<VarianteResponse<VarianteDetailItem>>(`/variantes/${id}`, payload);
     return data.data;
   },

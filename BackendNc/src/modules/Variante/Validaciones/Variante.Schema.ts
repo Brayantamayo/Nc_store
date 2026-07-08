@@ -22,6 +22,7 @@ export const createVarianteSchema = z.object({
   imagenes: z
     .array(z.string().url('Cada imagen debe ser una URL válida'))
     .default([]),
+  opcionComboNombre: z.string().optional().nullable(),
 })
 
 export const createManyVariantesSchema = z.object({
@@ -48,6 +49,7 @@ export const createManyVariantesSchema = z.object({
         imagenes: z
           .array(z.string().url('Cada imagen debe ser una URL válida'))
           .default([]),
+        opcionComboNombre: z.string().optional().nullable(),
       })
     )
     .min(1, 'Debes enviar al menos una variante'),
@@ -71,6 +73,7 @@ export const updateVarianteSchema = z.object({
   imagenes: z
     .array(z.string().url('Cada imagen debe ser una URL válida'))
     .optional(),
+  opcionComboNombre: z.string().optional().nullable(),
 }).refine(
   (d) => Object.keys(d).length > 0,
   { message: 'Debes enviar al menos un campo para actualizar' }

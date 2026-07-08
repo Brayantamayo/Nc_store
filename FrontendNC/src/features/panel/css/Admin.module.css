@@ -383,7 +383,6 @@
   min-height: 100vh;
   padding: 1.25rem 1.25rem 1.5rem;
   position: relative;
-  z-index: 1;
 }
 
 .topbar {
@@ -1743,7 +1742,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: 9999;
   padding: 1.5rem;
 }
 

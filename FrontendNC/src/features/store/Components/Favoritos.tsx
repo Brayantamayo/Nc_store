@@ -1,3 +1,4 @@
+// Componente que muestra la lista de productos favoritos del usuario
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { useWishlistStore } from '../../store/pages/wishlistStore';

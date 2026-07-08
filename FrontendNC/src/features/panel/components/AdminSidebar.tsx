@@ -191,10 +191,6 @@ export const AdminSidebar = () => {
       {/* ── Footer ────────────────────────────────────────────────── */}
       <div className={styles.sidebarDivider} />
       <div className={styles.sidebarFooter}>
-        <Link to="/" className={styles.sidebarFooterBtn}>
-          <ArrowLeft size={15} />
-          Volver a la Tienda
-        </Link>
         <button
           type="button"
           className={styles.sidebarLogoutBtn}

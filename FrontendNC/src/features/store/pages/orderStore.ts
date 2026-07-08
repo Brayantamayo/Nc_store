@@ -9,6 +9,7 @@ export interface OrderItem {
   colorName: string;
   colorHex: string;
   image: string;
+  detallesCombo?: Record<string, string>;
 }
 
 export type OrderStatus = 'Pendiente' | 'Procesando' | 'Enviado' | 'Entregado' | 'Cancelado';
@@ -16,10 +17,18 @@ export type OrderStatus = 'Pendiente' | 'Procesando' | 'Enviado' | 'Entregado' |
 export interface Order {
   id: string;
   customerName: string;
+  customerLastName?: string;
   customerEmail: string;
   customerPhone: string;
+  customerIdType?: string;
+  customerIdNumber?: string;
+  customerCountry?: string;
   customerAddress: string;
+  customerAddress2?: string;
   customerCity: string;
+  customerDepartment?: string;
+  customerPostalCode?: string;
+  orderNotes?: string;
   items: OrderItem[];
   total: number;
   status: OrderStatus;

@@ -5,8 +5,9 @@ import { CreateProductoDto, UpdateProductoDto } from './Validaciones/Schema.prod
 
 type ProductoListItem = Pick<
   Producto,
-  'id' | 'nombre' | 'slug' | 'descripcion' | 'precio' | 'precioOriginal' | 'categoriaId' | 'activo' | 'creadoEn'
+  'id' | 'nombre' | 'slug' | 'descripcion' | 'precio' | 'precioOriginal' | 'categoriaId' | 'activo' | 'creadoEn' | 'esCombo'
 > & {
+  opcionesCombo: any; // Prisma Json type
   categoria: {
     id: number;
     nombre: string;
@@ -27,6 +28,8 @@ const productListSelect = {
   categoriaId: true,
   activo: true,
   creadoEn: true,
+  esCombo: true,
+  opcionesCombo: true,
   categoria: {
     select: {
       id: true,
@@ -46,6 +49,7 @@ const productListSelect = {
       stock: true,
       activo: true,
       imagenes: true,
+      opcionComboNombre: true,
     },
   },
 } as const;
@@ -58,6 +62,7 @@ const productDetailSelect = {
       color: true,
       stock: true,
       imagenes: true,
+      opcionComboNombre: true,
     },
     take: 10,
     orderBy: {
@@ -207,6 +212,8 @@ export const createProducto = async (data: CreateProductoDto) => {
       precioOriginal: data.precioOriginal,
       categoriaId: data.categoriaId,
       activo: data.activo ?? true,
+      esCombo: data.esCombo ?? false,
+      opcionesCombo: data.opcionesCombo ?? undefined,
     },
     select: productDetailSelect,
   });
@@ -257,6 +264,8 @@ export const updateProducto = async (id: number, data: UpdateProductoDto) => {
       precioOriginal: data.precioOriginal,
       categoriaId: data.categoriaId,
       activo: data.activo,
+      esCombo: data.esCombo,
+      opcionesCombo: data.opcionesCombo ?? undefined,
     },
     select: productDetailSelect,
   });

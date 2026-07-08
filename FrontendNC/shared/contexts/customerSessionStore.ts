@@ -19,6 +19,7 @@ const buildEmptyAddress = (): CustomerAddress => ({
 
 const buildSession = (usuario: AuthUser): CustomerSession => ({
   id:          usuario.id,
+  clienteId:   usuario.clienteId ?? null,
   email:       usuario.email,
   firstName:   usuario.nombre ?? '',
   lastName:    usuario.apellido ?? '',
@@ -26,6 +27,9 @@ const buildSession = (usuario: AuthUser): CustomerSession => ({
   rol:         usuario.rol,
   createdAt:   new Date().toISOString(),
   address:     usuario.cliente ?? buildEmptyAddress(),
+  tipoIdentificacion: usuario.cliente?.tipoIdentificacion ?? '',
+  nroIdentificacion:  usuario.cliente?.nroIdentificacion  ?? '',
+  telefono:           usuario.cliente?.telefono           ?? '',
 })
 
 // ─── STORE ───────────────────────────────────────────────────────────────────
@@ -36,7 +40,15 @@ interface CustomerSessionState {
 
   login:             (email: string, password: string) => Promise<{ success: boolean; message: string; customer?: CustomerSession }>
   registerWithEmail: (email: string) => Promise<{ success: boolean; message: string; passwordTemporal?: string }>
-  updateProfile:     (payload: { firstName: string; lastName: string; displayName: string; email: string }) => Promise<{ success: boolean; message: string }>
+  updateProfile:     (payload: {
+    firstName: string
+    lastName: string
+    displayName: string
+    email: string
+    tipoIdentificacion?: string
+    nroIdentificacion?: string
+    telefono?: string
+  }) => Promise<{ success: boolean; message: string }>
   updateAddress:     (address: CustomerAddress) => Promise<{ success: boolean; message: string }>
   logout:            () => void
   isLoggedIn:        () => boolean
@@ -90,6 +102,9 @@ export const useCustomerSessionStore = create<CustomerSessionState>()(
                 lastName: data.profile.lastName,
                 displayName: data.profile.displayName,
                 email: data.profile.email,
+                tipoIdentificacion: data.profile.tipoIdentificacion ?? '',
+                nroIdentificacion: data.profile.nroIdentificacion ?? '',
+                telefono: data.profile.telefono ?? '',
               },
             })
           }

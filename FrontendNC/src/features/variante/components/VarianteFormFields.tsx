@@ -16,6 +16,9 @@ export const VarianteFormFields = ({
   onChange,
 }: VarianteFormFieldsProps) => {
   const isBulk = !!form.variantes;
+  const selectedProduct = products.find(p => String(p.id) === String(form.productoId));
+  const isCombo = selectedProduct?.esCombo;
+  const opcionesCombo = selectedProduct?.opcionesCombo || [];
 
   const handleVariantChange = (index: number, updatedItem: Partial<VarianteItemForm>) => {
     if (!form.variantes) return;
@@ -117,6 +120,22 @@ export const VarianteFormFields = ({
                   />
                 </div>
 
+                {isCombo && (
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Artículo del Combo</label>
+                    <select
+                      className={styles.selectInput}
+                      value={variant.opcionComboNombre || ''}
+                      onChange={(e) => handleVariantChange(index, { opcionComboNombre: e.target.value || undefined })}
+                    >
+                      <option value="">Aplica a todo el combo (General)</option>
+                      {opcionesCombo.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Stock</label>
                   <input
@@ -172,6 +191,22 @@ export const VarianteFormFields = ({
               required
             />
           </div>
+
+          {isCombo && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Artículo del Combo</label>
+              <select
+                className={styles.selectInput}
+                value={form.opcionComboNombre || ''}
+                onChange={(e) => onChange({ opcionComboNombre: e.target.value || undefined })}
+              >
+                <option value="">Aplica a todo el combo (General)</option>
+                {opcionesCombo.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Stock</label>

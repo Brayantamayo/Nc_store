@@ -2,6 +2,8 @@ import { Pedido, Prisma } from '@prisma/client';
 import { prisma } from '../../config/db';
 import { buildPaginationMeta, PaginationParams } from '../../utils/paginar';
 import { CreatePedidoDto, UpdatePedidoDto } from './Validaciones/Pedido.schema';
+import * as bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 type PedidoListado = Pick<
   Pedido,
@@ -217,7 +219,79 @@ export const getPedidoById = async (id: number) => {
 };
 
 export const createPedido = async (data: CreatePedidoDto) => {
-  await ensureClienteBelongsToUsuario(data.usuarioId, data.clienteId);
+  let finalUsuarioId = data.usuarioId;
+  let finalClienteId = data.clienteId;
+
+  // Flujo de "Guest Checkout"
+  if (!finalUsuarioId || !finalClienteId) {
+    if (!data.guestEmail) {
+      throw new Error('Debes enviar un usuarioId o un correo de invitado para crear el pedido');
+    }
+
+    const email = data.guestEmail.toLowerCase().trim();
+    let usuario = await prisma.usuario.findUnique({
+      where: { email },
+      include: { cliente: true },
+    });
+
+    if (usuario) {
+      finalUsuarioId = usuario.id;
+      if (usuario.cliente) {
+        finalClienteId = usuario.cliente.id;
+      } else {
+        const nuevoCliente = await prisma.cliente.create({
+          data: {
+            usuarioId: usuario.id,
+            direccion: data.guestAddressLine1 || '',
+            direccion2: data.guestAddressLine2 || '',
+            ciudad: data.guestCity || '',
+            region: data.guestRegion || '',
+            codigoPostal: data.guestPostalCode || '',
+            telefono: data.guestPhone || '',
+          },
+        });
+        finalClienteId = nuevoCliente.id;
+      }
+    } else {
+      const rol = await prisma.role.findUnique({ where: { nombre: 'CLIENTE' } });
+      if (!rol) throw new Error('Rol CLIENTE no configurado en la base de datos');
+
+      const passwordTemporal = crypto.randomUUID().slice(0, 8);
+      const hash = await bcrypt.hash(passwordTemporal, 12);
+
+      const nuevoUsuario = await prisma.usuario.create({
+        data: {
+          email,
+          password: hash,
+          roleId: rol.id,
+          nombre: data.guestName || '',
+          apellido: data.guestLastName || '',
+          cliente: {
+            create: {
+              direccion: data.guestAddressLine1 || '',
+              direccion2: data.guestAddressLine2 || '',
+              ciudad: data.guestCity || '',
+              region: data.guestRegion || '',
+              codigoPostal: data.guestPostalCode || '',
+              telefono: data.guestPhone || '',
+            },
+          },
+        },
+        include: { cliente: true },
+      });
+
+      finalUsuarioId = nuevoUsuario.id;
+      finalClienteId = nuevoUsuario.cliente!.id;
+    }
+  }
+
+  // Si a pesar del flujo no tenemos los IDs, arrojamos error.
+  if (!finalUsuarioId || !finalClienteId) {
+    throw new Error('No se pudo establecer el cliente para el pedido');
+  }
+
+  // Verificamos propiedad
+  await ensureClienteBelongsToUsuario(finalUsuarioId, finalClienteId);
   ensureUniqueVariantIds(data.items);
 
   const variantIds = data.items.map((item) => item.varianteId);
@@ -269,6 +343,7 @@ export const createPedido = async (data: CreatePedidoDto) => {
       cantidad: item.cantidad,
       precio: Number(variante.producto.precio),
       stockRestante: variante.stock - item.cantidad,
+      detallesCombo: (item as any).detallesCombo,
     };
   });
 
@@ -280,8 +355,8 @@ export const createPedido = async (data: CreatePedidoDto) => {
   return prisma.$transaction(async (tx) => {
     const pedido = await tx.pedido.create({
       data: {
-        usuarioId: data.usuarioId,
-        clienteId: data.clienteId,
+        usuarioId: finalUsuarioId,
+        clienteId: finalClienteId,
         estado: data.estado ?? 'PENDIENTE',
         total,
       },
@@ -298,6 +373,7 @@ export const createPedido = async (data: CreatePedidoDto) => {
             varianteId: item.varianteId,
             cantidad: item.cantidad,
             precio: item.precio,
+            detallesCombo: item.detallesCombo ?? null,
           },
         }),
       ),

@@ -1,3 +1,6 @@
+//esta vista implementa todo el proceso de compra: desde revisar el carrito, 
+// modificar cantidades y ver el total, hasta completar el formulario, validar el stock, 
+// crear el pedido y enviar al cliente a WhatsApp para confirmar el pago.
 import { useEffect, useState, type FormEvent } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, CheckCircle, Minus, Plus, ShieldCheck, Trash2, Truck, WalletCards } from 'lucide-react';
@@ -6,10 +9,13 @@ import { toast } from 'sonner';
 import { useCartStore } from '../../store/pages/cartStore';
 import { useOrderStore, Order, OrderItem } from '../../store/pages/orderStore';
 import { productoService } from '../../productos/services/productoService';
-import { varianteService } from '../../variante/services/varianteService';
+
+import { pedidoService } from '../../pedidos/services/pedidoService';
+import { useCustomerSessionStore } from '@/shared/contexts/customerSessionStore';
 import styles from '../css/Cart.module.css';
 
 const SHIPPING_FEE = 14500;
+const FREE_SHIPPING_THRESHOLD = 300000;
 const WHATSAPP_NUMBER = '573226865883';
 
 const IDENTIFICATION_TYPES = ['Cedula de ciudadania', 'Cedula de extranjeria', 'Pasaporte', 'NIT'];
@@ -57,17 +63,17 @@ const OrderSuccessView = ({
         <CheckCircle size={64} className={styles.successIcon} />
         <p className={styles.sectionKicker}>Pedido confirmado</p>
         <h1 className={styles.successTitle}>Gracias por tu compra</h1>
-        <p className={styles.successText}>
-          Tu pedido ya quedo registrado. Enseguida te llevamos a WhatsApp para confirmar el pago y los detalles del envio.
-        </p>
-        <div className={styles.orderIdBadge}>ID DEL PEDIDO: {generatedOrderId}</div>
-        <p className={styles.successMeta}>
-          Estamos redirigiendote a WhatsApp {WHATSAPP_NUMBER} para continuar la atencion de tu compra.
-        </p>
-        <a href={whatsappUrl} className={styles.primaryAction}>
+        <div className={styles.orderIdBadge} style={{ marginBottom: '0.5rem' }}>ID DEL PEDIDO: {generatedOrderId}</div>
+        
+        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryAction} style={{ width: '100%', maxWidth: '300px' }}>
           Abrir WhatsApp ahora
         </a>
-        <Link to="/coleccion" className={styles.secondaryAction}>
+
+        <p className={styles.successText} style={{ marginTop: '0.5rem', fontSize: '0.95rem' }}>
+          Tu pedido ya quedó registrado. Confírmalo en WhatsApp para coordinar el pago y envío.
+        </p>
+
+        <Link to="/coleccion" className={styles.secondaryAction} style={{ marginTop: '1rem' }}>
           Seguir explorando
         </Link>
       </div>
@@ -107,7 +113,9 @@ export const Cart = () => {
   const [cartNotice, setCartNotice] = useState('');
 
   const subtotal = total();
-  const grandTotal = subtotal + SHIPPING_FEE;
+  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shippingCost = isFreeShipping ? 0 : SHIPPING_FEE;
+  const grandTotal = subtotal + shippingCost;
 
   const handleRefreshCart = () => {
     setCartNotice('Tu carrito ya esta actualizado con las cantidades actuales.');
@@ -239,7 +247,11 @@ export const Cart = () => {
             <div className={styles.summaryIntro}>
               <div className={styles.infoPill}>
                 <Truck size={16} />
-                <span>Tarifa fija de envio: {formatCurrency(SHIPPING_FEE)}</span>
+                {isFreeShipping ? (
+                  <span>🎉 ¡Envio <strong>GRATIS</strong> en compras desde {formatCurrency(FREE_SHIPPING_THRESHOLD)}!</span>
+                ) : (
+                  <span>Tarifa fija de envio: {formatCurrency(SHIPPING_FEE)} · Gratis desde {formatCurrency(FREE_SHIPPING_THRESHOLD)}</span>
+                )}
               </div>
               <div className={styles.infoPill}>
                 <ShieldCheck size={16} />
@@ -257,7 +269,14 @@ export const Cart = () => {
                 </div>
                 <div className={styles.summaryRow}>
                   <span>Envio</span>
-                  <strong>{formatCurrency(SHIPPING_FEE)}</strong>
+                  {isFreeShipping ? (
+                    <span>
+                      <span style={{ textDecoration: 'line-through', opacity: 0.5, marginRight: '0.5rem' }}>{formatCurrency(SHIPPING_FEE)}</span>
+                      <strong style={{ color: '#2e7d32' }}>GRATIS</strong>
+                    </span>
+                  ) : (
+                    <strong>{formatCurrency(SHIPPING_FEE)}</strong>
+                  )}
                 </div>
                 <div className={`${styles.summaryRow} ${styles.totalRow}`}>
                   <span>Total</span>
@@ -279,6 +298,7 @@ export const Cart = () => {
 export const CheckoutPage = () => {
   const { items, total, clearCart } = useCartStore();
   const { addOrder } = useOrderStore();
+  const customer = useCustomerSessionStore((s) => s.customer);
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [generatedOrderId, setGeneratedOrderId] = useState('');
@@ -299,8 +319,12 @@ export const CheckoutPage = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const country = 'Colombia';
+
   const subtotal = total();
-  const grandTotal = subtotal + SHIPPING_FEE;
+  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shippingCost = isFreeShipping ? 0 : SHIPPING_FEE;
+  const grandTotal = subtotal + shippingCost;
   const departmentOptions = Object.keys(CITY_OPTIONS_BY_DEPARTMENT);
   const cityOptions = CITY_OPTIONS_BY_DEPARTMENT[department] ?? [];
 
@@ -311,14 +335,10 @@ export const CheckoutPage = () => {
   }, [cityOptions, customerCity]);
 
   useEffect(() => {
-    if (!isSuccess || !whatsappUrl) return undefined;
-
-    const timer = window.setTimeout(() => {
-      window.location.href = whatsappUrl;
-    }, 3200);
-
-    return () => window.clearTimeout(timer);
-  }, [isSuccess, whatsappUrl]);
+    if (!cityOptions.includes(customerCity)) {
+      setCustomerCity(cityOptions[0] ?? '');
+    }
+  }, [cityOptions, customerCity]);
 
   const buildWhatsAppUrl = (order: Order) => {
     const messageLines = [
@@ -413,20 +433,47 @@ export const CheckoutPage = () => {
       return;
     }
 
-    // ── Descontar stock en la BD ─────────────────────────────────────────────
-    try {
-      for (const item of items) {
-        const prodDetail = await productoService.obtenerPorId(Number(item.product.id));
-        const matchedVariant = prodDetail.variantes?.find(
-          (v) => v.color.toLowerCase().trim() === item.selectedColor.name.toLowerCase().trim()
-        );
-        if (matchedVariant) {
-          await varianteService.ajustarStock(matchedVariant.id, -item.quantity);
-        }
-      }
-    } catch (err) {
-      console.error('Error al actualizar el stock:', err);
+    const toastId = toast.loading('Registrando tu pedido...');
+
+    // ── Crear pedido en la BD (esto también descuenta el stock) ─────────────────────────────────────────────
+    const apiOrderItems = items.map(item => ({
+      varianteId: item.selectedColor.varianteId as number, // Ya nos aseguramos de pasarlo al carrito
+      cantidad: item.quantity,
+      detallesCombo: item.detallesCombo
+    }));
+
+    const payload: any = {
+      items: apiOrderItems,
+    };
+
+    if (customer?.id && customer?.clienteId) {
+       payload.usuarioId = customer.id;
+       payload.clienteId = customer.clienteId;
+    } else {
+       payload.guestEmail = customerEmail.trim();
+       payload.guestName = firstName.trim();
+       payload.guestLastName = lastName.trim();
+       payload.guestPhone = customerPhone.trim();
+       payload.guestAddressLine1 = addressLine1.trim();
+       payload.guestAddressLine2 = addressLine2.trim();
+       payload.guestCity = customerCity;
+       payload.guestRegion = department;
+       payload.guestPostalCode = postalCode.trim();
+       payload.guestIdType = identificationType;
+       payload.guestIdNumber = identificationNumber;
+       payload.guestCountry = country;
+       payload.orderNotes = orderNotes;
     }
+
+    const response = await pedidoService.crear(payload);
+
+    if (!response.success) {
+       toast.dismiss(toastId);
+       toast.error(response.message || 'Error al crear el pedido.');
+       return;
+    }
+
+    toast.dismiss(toastId);
 
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const orderId = `ORD-2026-${randomNum}`;
@@ -439,24 +486,24 @@ export const CheckoutPage = () => {
       colorName: item.selectedColor.name,
       colorHex: item.selectedColor.hex,
       image: item.product.images[0],
+      detallesCombo: item.detallesCombo,
     }));
 
     const newOrder: Order = {
       id: orderId,
-      customerName: `${firstName.trim()} ${lastName.trim()}`.trim(),
+      customerName: firstName.trim(),
+      customerLastName: lastName.trim(),
       customerEmail: customerEmail.trim(),
       customerPhone: customerPhone.trim(),
-      customerAddress: [
-        addressLine1.trim(),
-        addressLine2.trim(),
-        customerCity,
-        department,
-        postalCode.trim(),
-        'Colombia',
-      ]
-        .filter(Boolean)
-        .join(', '),
-      customerCity,
+      customerIdType: identificationType,
+      customerIdNumber: identificationNumber,
+      customerCountry: country,
+      customerAddress: addressLine1.trim(),
+      customerAddress2: addressLine2.trim(),
+      customerCity: customerCity,
+      customerDepartment: department,
+      customerPostalCode: postalCode.trim(),
+      orderNotes: orderNotes,
       items: orderItems,
       total: grandTotal,
       status: 'Pendiente',
@@ -464,7 +511,7 @@ export const CheckoutPage = () => {
     };
 
     addOrder(newOrder);
-    setGeneratedOrderId(orderId);
+    setGeneratedOrderId(response.pedidoId ? String(response.pedidoId) : orderId);
     setWhatsappUrl(buildWhatsAppUrl(newOrder));
     setIsSuccess(true);
     clearCart();
@@ -509,16 +556,7 @@ export const CheckoutPage = () => {
             </div>
           </div>
 
-          <div className={styles.checkoutNotices}>
-            <div className={styles.noticeCard}>
-              <span>Compra guiada</span>
-              <p>Revisamos tus datos y luego te acompanamos para concretar el pago con calma.</p>
-            </div>
-            <div className={styles.noticeCard}>
-              <span>Cupones y promos</span>
-              <p>La estructura ya queda lista para conectar descuentos reales mas adelante.</p>
-            </div>
-          </div>
+
 
           <form onSubmit={handlePlaceOrder} className={styles.checkoutGrid}>
             <div className={styles.billingColumn}>
@@ -764,7 +802,14 @@ export const CheckoutPage = () => {
                   </div>
                   <div className={styles.summaryRow}>
                     <span>Envio</span>
-                    <strong>{formatCurrency(SHIPPING_FEE)}</strong>
+                    {isFreeShipping ? (
+                      <span>
+                        <span style={{ textDecoration: 'line-through', opacity: 0.5, marginRight: '0.5rem' }}>{formatCurrency(SHIPPING_FEE)}</span>
+                        <strong style={{ color: '#2e7d32' }}>GRATIS</strong>
+                      </span>
+                    ) : (
+                      <strong>{formatCurrency(SHIPPING_FEE)}</strong>
+                    )}
                   </div>
                   <div className={`${styles.summaryRow} ${styles.totalRow}`}>
                     <span>Total</span>

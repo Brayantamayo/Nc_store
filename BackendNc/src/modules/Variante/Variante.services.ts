@@ -25,6 +25,7 @@ const varianteListSelect = {
   stock: true,
   activo: true,
   imagenes: true,
+  opcionComboNombre: true,
   producto: {
     select: {
       id: true,
@@ -41,6 +42,7 @@ const varianteDetailSelect = {
   stock: true,
   activo: true,
   imagenes: true,
+  opcionComboNombre: true,
   producto: {
     select: {
       id: true,
@@ -162,6 +164,7 @@ export const createVariante = async (data: CreateVarianteDto) => {
       stock,
       activo,
       imagenes: data.imagenes ?? [],
+      opcionComboNombre: data.opcionComboNombre,
     },
     select: varianteDetailSelect,
   });
@@ -206,6 +209,7 @@ export const createManyVariantes = async (data: CreateManyVariantesDto) => {
           stock,
           activo,
           imagenes: v.imagenes ?? [],
+          opcionComboNombre: v.opcionComboNombre,
         },
         select: varianteDetailSelect,
       });
@@ -257,6 +261,7 @@ export const updateVariante = async (id: number, data: UpdateVarianteDto) => {
       stock: data.stock,
       activo: isActivo,
       imagenes: data.imagenes,
+      opcionComboNombre: data.opcionComboNombre,
     },
     select: varianteDetailSelect,
   });

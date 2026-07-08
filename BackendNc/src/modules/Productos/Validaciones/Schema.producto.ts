@@ -51,6 +51,8 @@ export const createProductoSchema = z.object({
     .int('La categoría debe ser un entero')
     .positive('La categoría debe ser mayor a 0'),
   activo: z.coerce.boolean().default(true),
+  esCombo: z.coerce.boolean().default(false),
+  opcionesCombo: z.array(z.string()).optional().nullable(),
 });
 
 export const updateProductoSchema = createProductoSchema.partial().refine(

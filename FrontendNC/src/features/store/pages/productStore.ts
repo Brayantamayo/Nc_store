@@ -40,6 +40,8 @@ const toProduct = (p: ProductoApiItem): Product => {
       .map((v) => ({
         name: v.color,
         hex: colorMap[v.color.toLowerCase().trim()] || '#db2777',
+        varianteId: (v as any).id,
+        opcionComboNombre: (v as any).opcionComboNombre,
       })),
     material: '',
     description: p.descripcion || '',

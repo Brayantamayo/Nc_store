@@ -1,3 +1,5 @@
+//Componente que muestra la tarjeta de producto con imagen, nombre, 
+// precio y botones de agregar al carrito y favoritos
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Plus, Eye, Check } from 'lucide-react';

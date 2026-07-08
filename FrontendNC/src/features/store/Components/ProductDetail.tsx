@@ -1,8 +1,9 @@
-///Es la pagina donde se ve un solo producto a detalle con su precio y descripcion.
+///Es la pagina donde se ve un solo 
+// producto a detalle con su precio y descripcion.
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Minus, Heart, ArrowRight, Sparkles, ShieldCheck, Truck, X } from 'lucide-react';
+import { Plus, Minus, Heart, ArrowRight, ArrowLeft, Sparkles, ShieldCheck, Truck, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useProductStore } from '../pages/productStore';
@@ -11,7 +12,8 @@ import { useFlyToCartStore } from '../pages/flyToCartStore';
 import { useCartFeedbackStore } from '../pages/cartFeedbackStore';
 import { useWishlistStore } from '../pages/wishlistStore';
 import { productoService } from '../../productos/services/productoService';
-import type { Product } from '../../../types';
+import type { ColorOption, Product } from '../../../types';
+import type { ProductoDetailItem } from '../../productos/types';
 
 import { ProductCard } from './ProductCard';
 
@@ -51,32 +53,36 @@ export const ProductDetail = () => {
   const mainImageRef = useRef<HTMLImageElement>(null);
 
   const [product, setProduct] = useState<Product | null>(null);
-  const [apiVariantes, setApiVariantes] = useState<Array<{ color?: string; imagenes: string[]; stock?: number }>>([]);
+  const [apiVariantes, setApiVariantes] = useState<ProductoDetailItem['variantes']>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedColor, setSelectedColor] = useState<any>(null);
+  const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [comboSelections, setComboSelections] = useState<Record<string, string>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [relatedStartIndex, setRelatedStartIndex] = useState(0);
 
   useEffect(() => {
     const loadProduct = async () => {
       if (!slug) return;
       try {
-        const apiProduct = await productoService.obtenerPorSlug(slug);
-        
-        // Guardar los variantes originales para acceder por color
-        setApiVariantes(apiProduct.variantes || []);
+        const apiProduct = await productoService.obtenerPorSlugParaTienda(slug);
+        const availableVariantes = apiProduct.variantes.filter((v) => v.stock > 0);
+
+        // Guardar solo las variantes disponibles para mantener la vista consistente con la tienda
+        setApiVariantes(availableVariantes);
 
         // Transformar producto del API al formato Product
-        const variantImages = apiProduct.variantes?.flatMap((v) => v.imagenes) || [];
+        const variantImages = availableVariantes.flatMap((v) => v.imagenes) || [];
         const images = variantImages.length > 0
           ? variantImages
           : ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800'];
 
-        const colors = apiProduct.variantes
+        const colors = availableVariantes
           ?.map((v) => ({
             name: v.color,
             hex: getColorHex(v.color),
+            varianteId: v.id,
           })) || [];
         
         console.log('Variantes del API:', apiProduct.variantes);
@@ -94,9 +100,11 @@ export const ProductDetail = () => {
           material: '',
           description: apiProduct.descripcion || '',
           isNew: false,
-          isSoldOut: !apiProduct.variantes || apiProduct.variantes.length === 0,
+          isSoldOut: availableVariantes.length === 0,
           isFeatured: false,
           tags: [],
+          esCombo: apiProduct.esCombo ?? false,
+          opcionesCombo: apiProduct.opcionesCombo ?? [],
         };
 
         setProduct(transformedProduct);
@@ -123,11 +131,75 @@ export const ProductDetail = () => {
   };
 
   const colorImages = getColorImages();
+  const currentVariant = selectedColor
+    ? apiVariantes.find((v) => v.color === selectedColor.name)
+    : undefined;
+  const currentStock = currentVariant?.stock ?? 0;
+
+  useEffect(() => {
+    if (currentStock <= 0) return;
+    setQuantity((current) => Math.min(Math.max(1, current), currentStock));
+  }, [currentStock, selectedColor]);
 
   const handleColorChange = (color: any) => {
     setSelectedColor(color);
     setSelectedImageIndex(0);
   };
+
+  const handleQuantityChange = (value: string) => {
+    if (value === '') {
+      setQuantity(0);
+      return;
+    }
+    const parsed = Number(value);
+
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+
+    if (currentStock > 0) {
+      setQuantity(Math.min(Math.max(0, parsed), currentStock));
+      return;
+    }
+
+    setQuantity(Math.max(0, parsed));
+  };
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate('/coleccion');
+  };
+
+  const relatedProducts = storeProducts
+    .filter((p) => p.category === product?.category && p.id !== product?.id)
+    .slice(0, 4);
+  const curatedProducts = product
+    ? (relatedProducts.length > 0
+      ? relatedProducts
+      : storeProducts.filter((p) => p.id !== product.id).slice(0, 4))
+    : [];
+  const activeWishlist = product ? isWishlisted(product.id) : false;
+  const hasDiscount = Boolean(product && product.originalPrice && product.originalPrice > product.price);
+  const amountSaved = hasDiscount && product ? product.originalPrice! - product.price : 0;
+  const primaryImage = colorImages[selectedImageIndex] ?? colorImages[0];
+  const rotatingProducts = curatedProducts.length > 0 ? curatedProducts : [];
+  const visibleRelatedProducts = rotatingProducts.length <= 4
+    ? rotatingProducts
+    : Array.from({ length: 4 }, (_, index) => rotatingProducts[(relatedStartIndex + index) % rotatingProducts.length]);
+
+  useEffect(() => {
+    if (rotatingProducts.length <= 4) return undefined;
+
+    const interval = window.setInterval(() => {
+      setRelatedStartIndex((current) => (current + 1) % rotatingProducts.length);
+    }, 10000);
+
+    return () => window.clearInterval(interval);
+  }, [rotatingProducts.length]);
 
   if (loading) {
     return (
@@ -152,16 +224,25 @@ export const ProductDetail = () => {
       return;
     }
 
-    if (!selectedColor) {
+    if (!product.esCombo && !selectedColor) {
       toast.error('Selecciona un color antes de agregarlo al carrito.');
       return;
     }
 
-    // Check available stock
-    const variant = apiVariantes.find((v) => v.color === selectedColor.name);
-    const availableStock = variant ? variant.stock : 0;
+    if (product.esCombo && product.opcionesCombo) {
+      const unselected = product.opcionesCombo.filter(opt => !comboSelections[opt]);
+      if (unselected.length > 0) {
+        toast.error(`Selecciona el color para: ${unselected.join(', ')}`);
+        return;
+      }
+    }
 
-    if (quantity > availableStock) {
+    // Check available stock
+    const availableStock = currentStock;
+
+    const purchaseQty = quantity <= 0 ? 1 : quantity;
+
+    if (purchaseQty > availableStock) {
       toast.error(`No hay stock suficiente por el momento. Podemos brindarte ${availableStock} unidad${availableStock === 1 ? '' : 'es'}.`);
       if (availableStock > 0) {
         setQuantity(availableStock);
@@ -174,22 +255,20 @@ export const ProductDetail = () => {
       triggerFly(colorImages[0], source);
     }
 
-    for (let i = 0; i < quantity; i++) {
-      addItem(product, selectedColor, availableStock);
+    for (let i = 0; i < purchaseQty; i++) {
+      addItem(product, selectedColor || product.colors[0], availableStock, product.esCombo ? comboSelections : undefined);
     }
 
-    showSuccess({ productName: product.name, quantity });
+    showSuccess({ productName: product.name, quantity: purchaseQty });
   };
-
-  const relatedProducts = storeProducts.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const activeWishlist = isWishlisted(product.id);
-  const hasDiscount = Boolean(product.originalPrice && product.originalPrice > product.price);
-  const amountSaved = hasDiscount ? product.originalPrice! - product.price : 0;
-  const primaryImage = colorImages[selectedImageIndex] ?? colorImages[0];
 
   return (
     <motion.div className={styles.page} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <div className="container">
+        <button type="button" className={styles.backBtn} onClick={handleBack} aria-label="Volver">
+          <ArrowLeft size={18} />
+          <span>Volver</span>
+        </button>
         <div className={styles.layout}>
           <div className={styles.gallery}>
             <div className={styles.galleryFrame}>
@@ -285,29 +364,62 @@ export const ProductDetail = () => {
               </div>
 
               <div className={styles.purchasePanel}>
-                <div className={styles.selectorCard}>
-                  <div className={styles.selectorHeader}>
-                    <p className={styles.label}>Color</p>
-                    <span className={styles.selectorValue}>{selectedColor?.name}</span>
-                  </div>
+                {product.esCombo && product.opcionesCombo && product.opcionesCombo.length > 0 ? (
+                  <div className={styles.comboSelectors}>
+                    <p className={styles.label} style={{ marginBottom: '1rem', fontWeight: 600 }}>Personaliza tu Combo</p>
+                    {product.opcionesCombo.map((opt) => {
+                      const specificColors = product.colors.filter(c => c.opcionComboNombre === opt);
+                      const availableColors = specificColors.length > 0 
+                        ? specificColors 
+                        : product.colors.filter(c => !c.opcionComboNombre);
 
-                  <div className={styles.colorSwatches}>
-                    {product.colors.map((color) => (
-                      <button
-                        key={color.name}
-                        type="button"
-                        className={`${styles.swatch} ${selectedColor?.name === color.name ? styles.activeSwatch : ''}`}
-                        onClick={() => handleColorChange(color)}
-                        aria-label={color.name}
-                        title={color.name}
-                      >
-                        <span className={styles.swatchInner} style={{ backgroundColor: color.hex }} />
-                      </button>
-                    ))}
+                      return (
+                      <div key={opt} className={`${styles.selectorCard} ${styles.colorSelectorCard}`} style={{ marginBottom: '1rem' }}>
+                        <div className={styles.selectorHeader}>
+                          <p className={styles.label}>{opt}</p>
+                          <span className={styles.selectorValue}>{comboSelections[opt] || 'Seleccionar color'}</span>
+                        </div>
+                        <div className={styles.colorSwatches}>
+                          {availableColors.map((color) => (
+                            <button
+                              key={color.name}
+                              type="button"
+                              className={`${styles.swatch} ${comboSelections[opt] === color.name ? styles.activeSwatch : ''}`}
+                              onClick={() => setComboSelections(prev => ({ ...prev, [opt]: color.name }))}
+                              title={color.name}
+                            >
+                              <span className={styles.swatchInner} style={{ backgroundColor: color.hex }} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )})}
                   </div>
-                </div>
+                ) : (
+                  <div className={`${styles.selectorCard} ${styles.colorSelectorCard}`}>
+                    <div className={styles.selectorHeader}>
+                      <p className={styles.label}>Color</p>
+                      <span className={styles.selectorValue}>{selectedColor?.name}</span>
+                    </div>
 
-                <div className={styles.selectorCard}>
+                    <div className={styles.colorSwatches}>
+                      {product.colors.map((color) => (
+                        <button
+                          key={color.name}
+                          type="button"
+                          className={`${styles.swatch} ${selectedColor?.name === color.name ? styles.activeSwatch : ''}`}
+                          onClick={() => handleColorChange(color)}
+                          aria-label={color.name}
+                          title={color.name}
+                        >
+                          <span className={styles.swatchInner} style={{ backgroundColor: color.hex }} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className={`${styles.selectorCard} ${styles.quantitySelectorCard}`}>
                   <div className={styles.selectorHeader}>
                     <p className={styles.label}>Cantidad</p>
                     <span className={styles.selectorValue}>
@@ -316,14 +428,38 @@ export const ProductDetail = () => {
                   </div>
 
                   <div className={styles.quantity}>
-                    <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} aria-label="Disminuir cantidad">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      aria-label="Disminuir cantidad"
+                    >
                       <Minus size={16} />
                     </button>
-                    <span>{quantity}</span>
-                    <button type="button" onClick={() => setQuantity(quantity + 1)} aria-label="Aumentar cantidad">
+                    <input
+                      type="number"
+                      min={1}
+                      max={currentStock > 0 ? currentStock : undefined}
+                      value={quantity === 0 ? '' : quantity}
+                      onChange={(e) => handleQuantityChange(e.target.value)}
+                      onBlur={() => {
+                        if (quantity === 0) {
+                          setQuantity(1);
+                        }
+                      }}
+                      className={styles.quantityInput}
+                      aria-label="Cantidad de productos"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(currentStock > 0 ? Math.min(currentStock, quantity + 1) : quantity + 1)}
+                      aria-label="Aumentar cantidad"
+                    >
                       <Plus size={16} />
                     </button>
                   </div>
+                  {currentStock > 0 && (
+                    <p className={styles.quantityHint}>Disponible: {currentStock} unidad{currentStock === 1 ? '' : 'es'}</p>
+                  )}
                 </div>
 
                 <div className={styles.actions}>
@@ -342,15 +478,15 @@ export const ProductDetail = () => {
                   <Sparkles size={18} />
                   <div>
                     <span className={styles.detailTitle}>Material</span>
-                    <span className={styles.detailValue}>{product.material}</span>
+                    <span className={styles.detailValue}>Materiales Premiun</span>
                   </div>
                 </div>
 
                 <div className={styles.detailCard}>
                   <ShieldCheck size={18} />
                   <div>
-                    <span className={styles.detailTitle}>Diseno</span>
-                    <span className={styles.detailValue}>NC Signature</span>
+                    <span className={styles.detailTitle}>Diseño</span>
+                    <span className={styles.detailValue}>Somos diseñadores </span>
                   </div>
                 </div>
 
@@ -358,7 +494,7 @@ export const ProductDetail = () => {
                   <Truck size={18} />
                   <div>
                     <span className={styles.detailTitle}>Envio</span>
-                    <span className={styles.detailValue}>Cobertura nacional</span>
+                    <span className={styles.detailValue}>14.000 Mil </span>
                   </div>
                 </div>
               </div>
@@ -366,18 +502,40 @@ export const ProductDetail = () => {
           </div>
         </div>
 
-        {relatedProducts.length > 0 && (
+        {curatedProducts.length > 0 && (
           <section className={styles.related}>
-            <div className={styles.relatedHeader}>
-              <h2 className={styles.relatedTitle}>Tambien te puede gustar</h2>
+            <div className={styles.relatedIntro}>
+              <p className={styles.relatedKicker}>EL MATCH PERFECTO</p>
+              <div className={styles.relatedDivider} aria-hidden="true">
+                <span />
+                <Sparkles size={18} />
+                <span />
+              </div>
+              <p className={styles.relatedSubtitle}>Crea un look completo con estos favoritos</p>
+            </div>
+
+            <div className={styles.relatedWindow}>
+              <AnimatePresence mode="popLayout">
+                {visibleRelatedProducts.map((p, idx) => (
+                  <motion.div
+                    key={`${p.id}-${idx}`}
+                    layout
+                    initial={{ opacity: 0, x: 24, scale: 0.98 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -24, scale: 0.98 }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    className={styles.relatedItem}
+                  >
+                    <ProductCard product={p} index={idx} variant="collection" />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            <div className={styles.relatedFooter}>
               <Link to="/coleccion" className={styles.relatedLink}>
                 Ver mas <ArrowRight size={16} />
               </Link>
-            </div>
-            <div className={styles.relatedGrid}>
-              {relatedProducts.map((p, idx) => (
-                <ProductCard key={p.id} product={p} index={idx} />
-              ))}
             </div>
           </section>
         )}

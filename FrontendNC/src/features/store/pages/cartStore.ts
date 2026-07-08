@@ -9,8 +9,10 @@ export const useCartStore = create<CartState>()(
       items: [],
       isOpen: false,
 
-      addItem: (product: Product, color: ColorOption, stock: number) => {
-        const cartItemId = `${product.id}-${color.name}`;
+      addItem: (product: Product, color: ColorOption, stock: number, detallesCombo?: Record<string, string>) => {
+        // If it's a combo, append a hash/string of the combo details to the ID so combos with different colors don't merge
+        const comboSuffix = detallesCombo ? JSON.stringify(detallesCombo) : '';
+        const cartItemId = `${product.id}-${color.name}${comboSuffix}`;
         const items = get().items;
         const existingItem = items.find((item) => item.id === cartItemId);
 
@@ -29,7 +31,7 @@ export const useCartStore = create<CartState>()(
         } else {
           set({
             isOpen: true,
-            items: [...items, { id: cartItemId, product, quantity: 1, selectedColor: color, stock }],
+            items: [...items, { id: cartItemId, product, quantity: 1, selectedColor: color, stock, detallesCombo }],
           });
         }
       },

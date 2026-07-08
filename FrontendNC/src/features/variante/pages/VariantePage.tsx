@@ -87,6 +87,7 @@ export const VariantePage = () => {
       color: item.color,
       stock: String(item.stock),
       imagenes: item.imagenes.join(', '),
+      opcionComboNombre: item.opcionComboNombre || '',
     });
     setIsModalOpen(true);
   };
@@ -102,7 +103,7 @@ export const VariantePage = () => {
     setSaving(true);
     try {
       if (editingId) {
-        const payload = {
+        const payload: Record<string, any> = {
           color: form.color.trim(),
           stock: Number(form.stock),
           imagenes: form.imagenes
@@ -110,6 +111,11 @@ export const VariantePage = () => {
             .map((value) => value.trim())
             .filter(Boolean),
         };
+        if (form.opcionComboNombre) {
+          payload.opcionComboNombre = form.opcionComboNombre;
+        } else {
+          payload.opcionComboNombre = null;
+        }
         await varianteService.actualizar(editingId, payload);
         toast.success('Variante actualizada con éxito');
       } else {
@@ -127,6 +133,7 @@ export const VariantePage = () => {
                   .map((val) => val.trim())
                   .filter(Boolean)
               : [],
+            ...(v.opcionComboNombre ? { opcionComboNombre: v.opcionComboNombre } : {}),
           })),
         };
         await varianteService.crearMasivo(bulkPayload);
@@ -160,6 +167,7 @@ export const VariantePage = () => {
                 .map((val) => val.trim())
                 .filter(Boolean)
             : [],
+          ...(v.opcionComboNombre ? { opcionComboNombre: v.opcionComboNombre } : {}),
         })),
       };
       await varianteService.crearMasivo(bulkPayload);

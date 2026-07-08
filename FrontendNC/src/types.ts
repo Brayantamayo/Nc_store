@@ -17,7 +17,10 @@ export type ProductCategory =
 export interface ColorOption {
   name: string;
   hex: string;
+  varianteId?: number;
+  opcionComboNombre?: string;
 }
+
 
 export interface Product {
   id: string;
@@ -34,6 +37,8 @@ export interface Product {
   isSoldOut: boolean;
   isFeatured: boolean;
   tags: string[];
+  esCombo?: boolean;
+  opcionesCombo?: string[];
 }
 
 // src/types/cart.ts
@@ -42,6 +47,7 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedColor: ColorOption;
+  detallesCombo?: Record<string, string>;
   /** Stock disponible al momento de agregar. Se usa para limitar la cantidad máxima en el carrito. */
   stock: number;
 }
@@ -49,7 +55,7 @@ export interface CartItem {
 export interface CartState {
   items: CartItem[];
   isOpen: boolean;
-  addItem: (product: Product, color: ColorOption, stock: number) => void;
+  addItem: (product: Product, color: ColorOption, stock: number, detallesCombo?: Record<string, string>) => void;
   removeItem: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   toggleCart: (open?: boolean) => void;

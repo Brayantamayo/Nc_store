@@ -7,6 +7,7 @@ export interface VarianteApiItem {
   stock: number;
   activo: boolean;
   imagenes: string[];
+  opcionComboNombre?: string;
   producto?: {
     id: number;
     nombre: string;
@@ -29,6 +30,7 @@ export interface VarianteItemForm {
   color: string;
   stock: string;
   imagenes: string;
+  opcionComboNombre?: string;
 }
 
 export interface VarianteForm {
@@ -36,6 +38,7 @@ export interface VarianteForm {
   color: string;
   stock: string;
   imagenes: string;
+  opcionComboNombre?: string;
   variantes?: VarianteItemForm[];
 }
 

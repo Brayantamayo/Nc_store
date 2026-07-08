@@ -22,6 +22,8 @@ const EMPTY_FORM = (): ProductoForm => ({
   precioOriginal: '',
   categoriaId: '',
   activo: true,
+  esCombo: false,
+  opcionesCombo: [],
 });
 
 const DEFAULT_META = {
@@ -89,11 +91,13 @@ export const ProductosPage = () => {
     setForm({
       nombre: item.nombre,
       slug: item.slug,
-      descripcion: item.descripcion ?? '',
-      precio: String(Number(item.precio)),
-      precioOriginal: item.precioOriginal ? String(Number(item.precioOriginal)) : '',
+      descripcion: item.descripcion || '',
+      precio: item.precio,
+      precioOriginal: item.precioOriginal || '',
       categoriaId: String(item.categoriaId),
       activo: item.activo,
+      esCombo: item.esCombo ?? false,
+      opcionesCombo: item.opcionesCombo ?? [],
     });
     setErrors({});
     setIsModalOpen(true);
@@ -160,6 +164,8 @@ export const ProductosPage = () => {
         precioOriginal: form.precioOriginal ? Number(form.precioOriginal) : null,
         categoriaId: Number(form.categoriaId),
         activo: form.activo,
+        esCombo: form.esCombo,
+        opcionesCombo: form.esCombo ? form.opcionesCombo : [],
       };
 
       await (editingId

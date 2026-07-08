@@ -7,6 +7,8 @@ export interface ProductoApiItem {
   descripcion: string | null;
   precio: string;
   precioOriginal?: string | null;
+  esCombo?: boolean;
+  opcionesCombo?: string[] | null;
   categoriaId: number;
   activo: boolean;
   creadoEn: string;
@@ -42,6 +44,8 @@ export interface ProductoForm {
   descripcion: string;
   precio: string;
   precioOriginal: string;
+  esCombo: boolean;
+  opcionesCombo: string[];
   categoriaId: string;
   activo: boolean;
 }
