@@ -5,6 +5,10 @@ import { toast } from 'sonner';
 
 import styles from '../../panel/css/Admin.module.css';
 import { PaginationControls } from '../../../../shared/components/PaginationControls';
+import { BulkActionBar } from '../../../../shared/components/BulkActionBar';
+import { ConfirmDeleteModal } from '../../../../shared/components/ConfirmDeleteModal';
+import { useDeleteConfirm } from '../../../../shared/hooks/useDeleteConfirm';
+import { useTableSelection } from '../../../../shared/hooks/useTableSelection';
 import { categoriaService } from '../../categoria/services/categoriaService';
 import { productoService } from '../services/productoService';
 import type { CategoriaApiItem } from '../../categoria/types';
@@ -38,16 +42,33 @@ const DEFAULT_META = {
 export const ProductosPage = () => {
   const { pendingNewProduct, setPendingNewProduct } = useAdminPanel();
 
-  const [items, setItems] = useState<ProductoApiItem[]>([]);
+  const [items, setItems]           = useState<ProductoApiItem[]>([]);
   const [categories, setCategories] = useState<CategoriaApiItem[]>([]);
-  const [page, setPage] = useState(1);
-  const [meta, setMeta] = useState(DEFAULT_META);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<ProductoForm>(EMPTY_FORM());
-  const [errors, setErrors] = useState<Partial<Record<keyof ProductoForm, string>>>({});
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [page, setPage]             = useState(1);
+  const [meta, setMeta]             = useState(DEFAULT_META);
+  const [loading, setLoading]       = useState(false);
+  const [saving, setSaving]         = useState(false);
+  const [form, setForm]             = useState<ProductoForm>(EMPTY_FORM());
+  const [errors, setErrors]         = useState<Partial<Record<keyof ProductoForm, string>>>({});
+  const [editingId, setEditingId]   = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // ── Selección y confirmación de eliminación ──────────────────────────────
+  const itemIds = items.map((i) => i.id);
+
+  const {
+    selectedIds, count: selectedCount,
+    toggle, toggleAll, clear, isSelected, allSelected, someSelected,
+  } = useTableSelection(itemIds, [page]);
+
+  const {
+    isDeleteOpen, modalTitle, modalDescription,
+    requestDelete, requestBulkDelete, closeDelete, deleteTarget,
+  } = useDeleteConfirm<number>({
+    singleTitle: '¿Eliminar este producto?',
+    bulkTitle: (n) => `¿Eliminar ${n} productos?`,
+    description: 'Esta acción no se puede deshacer. Los productos eliminados no se pueden recuperar.',
+  });
 
   const loadCategories = async () => {
     const response = await categoriaService.listar(1, 100);
@@ -184,29 +205,37 @@ export const ProductosPage = () => {
   };
 
   const handleDelete = (id: number) => {
-    toast.warning('¿Eliminar este producto?', {
-      description: 'Esta accion no se puede deshacer.',
-      duration: Infinity,
-      action: {
-        label: 'Eliminar',
-        onClick: async () => {
-          setSaving(true);
-          try {
-            await productoService.eliminar(id);
-            toast.success('Producto eliminado');
-            await load(page);
-          } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'No pudimos eliminar el producto.');
-          } finally {
-            setSaving(false);
-          }
-        },
-      },
-      cancel: {
-        label: 'Cancelar',
-        onClick: () => {},
-      },
-    });
+    requestDelete(id);
+  };
+
+  const handleBulkDelete = () => {
+    requestBulkDelete(Array.from(selectedIds));
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setSaving(true);
+    try {
+      if (deleteTarget.type === 'single') {
+        await productoService.eliminar(deleteTarget.id);
+        toast.success('Producto eliminado');
+      } else {
+        const results = await Promise.allSettled(
+          deleteTarget.ids.map((id) => productoService.eliminar(id))
+        );
+        const failed    = results.filter((r) => r.status === 'rejected').length;
+        const succeeded = results.length - failed;
+        if (succeeded > 0) toast.success(`${succeeded} producto${succeeded > 1 ? 's' : ''} eliminado${succeeded > 1 ? 's' : ''}`);
+        if (failed > 0)    toast.error(`No se pudieron eliminar ${failed} producto${failed > 1 ? 's' : ''}`);
+        clear();
+      }
+      closeDelete();
+      await load(page);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No pudimos eliminar el producto.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleToggleStatus = async (id: number, currentActive: boolean) => {
@@ -240,9 +269,20 @@ export const ProductosPage = () => {
           </button>
         </div>
 
+        <BulkActionBar
+          count={selectedCount}
+          entityLabel="producto"
+          entityLabelPlural="productos"
+          onDelete={handleBulkDelete}
+          disabled={saving}
+        />
+
         <ProductosTable
           items={items}
           loading={loading}
+          selectedIds={selectedIds}
+          onToggleSelect={toggle}
+          onToggleSelectAll={toggleAll}
           onEdit={openEdit}
           onDelete={handleDelete}
           onToggleStatus={handleToggleStatus}
@@ -263,6 +303,15 @@ export const ProductosPage = () => {
         ? <ProductoCreateModal {...sharedModalProps} />
         : <ProductoEditModal {...sharedModalProps} editingId={editingId} />
       }
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteOpen}
+        title={modalTitle}
+        description={modalDescription}
+        isLoading={saving}
+        onConfirm={() => void confirmDelete()}
+        onCancel={closeDelete}
+      />
     </>
   );
 };

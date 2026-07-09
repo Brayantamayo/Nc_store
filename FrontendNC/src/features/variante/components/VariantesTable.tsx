@@ -1,21 +1,47 @@
 import { Edit, Package, Trash2 } from 'lucide-react';
+import { TableCheckbox } from '../../../../shared/components/TableCheckbox';
 import styles from '../../panel/css/Admin.module.css';
 import type { VarianteApiItem } from '../types';
 
 interface VariantesTableProps {
   items: VarianteApiItem[];
   loading: boolean;
+  isSelected: (id: number) => boolean;
+  allSelected: boolean;
+  someSelected: boolean;
+  onToggleSelect: (id: number) => void;
+  onToggleSelectAll: () => void;
   onEdit: (item: VarianteApiItem) => void;
   onDelete: (id: number) => void;
   onAdjustStock: (id: number, currentStock: number, delta: number) => void;
   onToggleStatus?: (id: number, currentActive: boolean) => void;
 }
 
-export const VariantesTable = ({ items, loading, onEdit, onDelete, onAdjustStock, onToggleStatus }: VariantesTableProps) => (
+export const VariantesTable = ({
+  items,
+  loading,
+  isSelected,
+  allSelected,
+  someSelected,
+  onToggleSelect,
+  onToggleSelectAll,
+  onEdit,
+  onDelete,
+  onAdjustStock,
+  onToggleStatus,
+}: VariantesTableProps) => (
   <div className={styles.tableContainer}>
     <table className={styles.table}>
       <thead>
         <tr>
+          <th className={styles.tableSelectCol}>
+            <TableCheckbox
+              checked={allSelected}
+              indeterminate={someSelected && !allSelected}
+              onChange={onToggleSelectAll}
+              label="Seleccionar todas las variantes"
+            />
+          </th>
           <th>Producto</th>
           <th>Color</th>
           <th>Stock</th>
@@ -27,19 +53,26 @@ export const VariantesTable = ({ items, loading, onEdit, onDelete, onAdjustStock
       <tbody>
         {loading ? (
           <tr>
-            <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
+            <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
               Cargando variantes...
             </td>
           </tr>
         ) : items.length === 0 ? (
           <tr>
-            <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
+            <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
               No hay variantes registradas.
             </td>
           </tr>
         ) : (
           items.map((item) => (
-            <tr key={item.id}>
+            <tr key={item.id} className={isSelected(item.id) ? styles.tableRowSelected : undefined}>
+              <td className={styles.tableSelectCol}>
+                <TableCheckbox
+                  checked={isSelected(item.id)}
+                  onChange={() => onToggleSelect(item.id)}
+                  label={`Seleccionar variante ${item.color}`}
+                />
+              </td>
               <td>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div

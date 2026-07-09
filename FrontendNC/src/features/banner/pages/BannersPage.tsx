@@ -4,6 +4,8 @@ import { Trash2, Eye, EyeOff, Pencil, X, Check, Plus, ImagePlus, MonitorPlay } f
 import { toast } from 'sonner';
 import { bannerService, type BannerSlide } from '../services/bannerService';
 import { useAdminPanel } from '../../panel/context/AdminPanelContext';
+import { ConfirmDeleteModal } from '../../../../shared/components/ConfirmDeleteModal';
+import { useDeleteConfirm } from '../../../../shared/hooks/useDeleteConfirm';
 import { Bow } from '../../home/components/Moñito';
 import styles from '../../panel/css/Admin.module.css';
 
@@ -101,6 +103,15 @@ export const BannersPage = () => {
   const remaining = Math.max(0, MAX_BANNERS - banners.length);
   const ordered = useMemo(() => [...banners].sort((a, b) => a.orden - b.orden), [banners]);
 
+  const {
+    isDeleteOpen, modalTitle, modalDescription,
+    requestDelete, closeDelete, deleteTarget,
+  } = useDeleteConfirm<number>({
+    singleTitle: '¿Eliminar este banner?',
+    bulkTitle: () => '',
+    description: 'Desaparecerá del carrusel de inmediato.',
+  });
+
   // ── Carga inicial ────────────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
@@ -174,27 +185,21 @@ export const BannersPage = () => {
   };
 
   // ── Eliminar ─────────────────────────────────────────────────────
-  const handleDelete = (id: number) => {
-    toast.warning('¿Eliminar este banner?', {
-      description: 'Desaparecerá del carrusel de inmediato.',
-      duration: Infinity,
-      action: {
-        label: 'Eliminar',
-        onClick: async () => {
-          setIsLoading(true);
-          try {
-            await bannerService.eliminar(id);
-            setBanners((prev) => prev.filter((b) => b.id !== id));
-            toast.success('Banner eliminado.');
-          } catch {
-            toast.error('No pudimos eliminar el banner.');
-          } finally {
-            setIsLoading(false);
-          }
-        },
-      },
-      cancel: { label: 'Cancelar', onClick: () => {} },
-    });
+  const handleDelete = (id: number) => requestDelete(id);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || deleteTarget.type !== 'single') return;
+    setIsLoading(true);
+    try {
+      await bannerService.eliminar(deleteTarget.id);
+      setBanners((prev) => prev.filter((b) => b.id !== deleteTarget.id));
+      toast.success('Banner eliminado.');
+      closeDelete();
+    } catch {
+      toast.error('No pudimos eliminar el banner.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ── Toggle activo ────────────────────────────────────────────────
@@ -242,11 +247,12 @@ export const BannersPage = () => {
 
   // ── Render ────────────────────────────────────────────────────────
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={styles.adminGalleryShell}
-    >
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={styles.adminGalleryShell}
+      >
       {/* ── HEADER ───────────────────────────────────────────────── */}
       <div className={styles.adminGalleryHeader}>
         <div className={styles.adminGalleryTitleWrap}>
@@ -364,7 +370,7 @@ export const BannersPage = () => {
         </AnimatePresence>
       </div>
 
-      {/* ── MODAL ────────────────────────────────────────────────── */}
+      {/* ── MODAL CREAR ──────────────────────────────────────────── */}
       <AnimatePresence>
         {modalOpen && (
           /* Backdrop actúa como contenedor flex — centra el modal en el área de trabajo */
@@ -517,5 +523,15 @@ export const BannersPage = () => {
         )}
       </AnimatePresence>
     </motion.div>
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteOpen}
+        title={modalTitle}
+        description={modalDescription}
+        isLoading={isLoading}
+        onConfirm={() => void confirmDelete()}
+        onCancel={closeDelete}
+      />
+    </>
   );
 };

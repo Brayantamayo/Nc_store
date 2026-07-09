@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { useOrderStore, Order, OrderStatus } from '../../store/pages/orderStore';
 import { useAdminPanel } from '../../panel/context/AdminPanelContext';
 import { pedidoService } from '../services/pedidoService';
+import { ConfirmDeleteModal } from '../../../../shared/components/ConfirmDeleteModal';
+import { useDeleteConfirm } from '../../../../shared/hooks/useDeleteConfirm';
 import { PedidoDetailModal } from '../components/PedidoDetailModal';
 import styles from '../../panel/css/Admin.module.css';
 
@@ -22,6 +24,15 @@ export const PedidosPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [pdfOrder, setPdfOrder] = useState<Order | null>(null);
 
+  const {
+    isDeleteOpen, modalTitle, modalDescription,
+    requestDelete, closeDelete, deleteTarget,
+  } = useDeleteConfirm<string>({
+    singleTitle: '¿Eliminar este pedido?',
+    bulkTitle: () => '',
+    description: 'Esta acción no se puede deshacer.',
+  });
+
   const handleOrderStatusChange = async (orderId: string, status: OrderStatus) => {
     setIsLoading(true);
     const response = await pedidoService.actualizarEstado(orderId, status);
@@ -37,29 +48,20 @@ export const PedidosPage = () => {
     }
   };
 
-  const handleDeleteOrder = (orderId: string) => {
-    toast.warning('¿Estás seguro de que deseas eliminar este pedido?', {
-      description: 'Esta acción no se puede deshacer.',
-      duration: Infinity,
-      action: {
-        label: 'Eliminar',
-        onClick: async () => {
-          setIsLoading(true);
-          const response = await pedidoService.eliminar(orderId);
-          setIsLoading(false);
-          if (response.success) {
-            toast.success(response.message || 'Pedido eliminado');
-            setSelectedOrder(null);
-          } else {
-            toast.error(response.message || 'Error al eliminar');
-          }
-        },
-      },
-      cancel: {
-        label: 'Cancelar',
-        onClick: () => {},
-      },
-    });
+  const handleDeleteOrder = (orderId: string) => requestDelete(orderId);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || deleteTarget.type !== 'single') return;
+    setIsLoading(true);
+    const response = await pedidoService.eliminar(deleteTarget.id);
+    setIsLoading(false);
+    if (response.success) {
+      toast.success(response.message || 'Pedido eliminado');
+      setSelectedOrder(null);
+      closeDelete();
+    } else {
+      toast.error(response.message || 'Error al eliminar');
+    }
   };
 
   return (
@@ -194,6 +196,15 @@ export const PedidosPage = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteOpen}
+        title={modalTitle}
+        description={modalDescription}
+        isLoading={isLoading}
+        onConfirm={() => void confirmDelete()}
+        onCancel={closeDelete}
+      />
     </>
   );
 };

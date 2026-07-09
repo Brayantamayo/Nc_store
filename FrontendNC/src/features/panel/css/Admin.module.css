@@ -1386,6 +1386,264 @@
   color: #b71c1c;
 }
 
+/* ─── TABLE SELECTION & BULK ACTIONS ─────────────────────────────────── */
+
+.tableCheckbox {
+  width: 17px;
+  height: 17px;
+  accent-color: #c2185b;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.prettyCheckbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  border: 2px solid rgba(194, 24, 91, 0.32);
+  background: linear-gradient(180deg, #fff 0%, rgba(255, 248, 251, 0.95) 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+  padding: 0;
+  flex-shrink: 0;
+  color: transparent;
+  box-shadow: 0 1px 3px rgba(74, 20, 44, 0.06);
+}
+
+.prettyCheckboxSm {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+}
+
+.prettyCheckbox:hover {
+  border-color: rgba(194, 24, 91, 0.55);
+  background: rgba(252, 228, 236, 0.65);
+  transform: scale(1.06);
+}
+
+.prettyCheckboxChecked,
+.prettyCheckboxIndeterminate {
+  background: linear-gradient(135deg, #f06292 0%, #c2185b 100%);
+  border-color: #c2185b;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(194, 24, 91, 0.32);
+}
+
+.prettyCheckboxChecked:hover,
+.prettyCheckboxIndeterminate:hover {
+  transform: scale(1.06);
+  box-shadow: 0 5px 14px rgba(194, 24, 91, 0.38);
+}
+
+.tableSelectCol {
+  width: 44px;
+  text-align: center;
+  padding-left: 0.75rem !important;
+  padding-right: 0.25rem !important;
+}
+
+.tableRowSelected {
+  background: rgba(248, 187, 208, 0.12) !important;
+}
+
+.bulkActionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+  padding: 0.65rem 1rem;
+  border-radius: 14px;
+  background: rgba(248, 187, 208, 0.18);
+  border: 1px solid rgba(248, 187, 208, 0.35);
+}
+
+.bulkActionBar span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #7d2a4f;
+}
+
+.bulkDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 10px;
+  border: none;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.bulkDeleteBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.bulkDeleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── CONFIRM DELETE MODAL ───────────────────────────────────────────── */
+
+.confirmDeleteBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 8, 20, 0.42);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1.5rem;
+}
+
+.confirmDeleteModal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem 1.75rem 1.5rem;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(248, 187, 208, 0.25);
+  box-shadow: 0 24px 60px rgba(74, 20, 44, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.confirmDeleteClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 187, 208, 0.4);
+  background: #fff;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.confirmDeleteClose:hover {
+  background: rgba(248, 187, 208, 0.15);
+  color: #6b7280;
+}
+
+.confirmDeleteIconCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(194, 24, 91, 0.1);
+  color: #c2185b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.confirmDeleteTitle {
+  margin: 0 0 0.5rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2d0a1e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.confirmDeleteDesc {
+  margin: 0 0 1.5rem;
+  font-size: 0.88rem;
+  color: rgba(74, 20, 44, 0.62);
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.confirmDeleteActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.confirmDeleteCancelBtn {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 187, 208, 0.5);
+  background: #fff;
+  color: #4a142c;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.confirmDeleteCancelBtn:hover:not(:disabled) {
+  background: rgba(248, 187, 208, 0.12);
+  border-color: rgba(194, 24, 91, 0.35);
+}
+
+.confirmDeleteBtn {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #f06292 0%, #c2185b 100%);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(194, 24, 91, 0.3);
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.confirmDeleteBtn:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.confirmDeleteCancelBtn:disabled,
+.confirmDeleteBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cardSelectWrap {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+}
+
+.cardSelectWrap .prettyCheckbox,
+.cardSelectWrap .prettyCheckboxSm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
 /* ─── ORDERS MODULE ───────────────────────────────────────────────────── */
 
 .ordersShell {

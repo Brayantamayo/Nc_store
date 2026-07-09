@@ -3,7 +3,12 @@ import { motion } from 'motion/react';
 import { Filter, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../../panel/css/Admin.module.css';
+import { BulkActionBar } from '../../../../shared/components/BulkActionBar';
+import { ConfirmDeleteModal } from '../../../../shared/components/ConfirmDeleteModal';
 import { PaginationControls } from '../../../../shared/components/PaginationControls';
+import { useDeleteConfirm } from '../../../../shared/hooks/useDeleteConfirm';
+import { useTableSelection } from '../../../../shared/hooks/useTableSelection';
+import { deleteMany } from '../../../../shared/utils/deleteMany';
 import { productoService } from '../../productos/services/productoService';
 import { varianteService } from '../services/varianteService';
 import type { ProductoApiItem } from '../../productos/types';
@@ -17,15 +22,15 @@ const emptyForm = (isBulk = false): VarianteForm => {
     return {
       productoId: '',
       color: '',
-      stock: '0',
+      stock: '1',
       imagenes: '',
-      variantes: [{ color: '', stock: '0', imagenes: '' }],
+      variantes: [{ color: '', stock: '1', imagenes: '' }],
     };
   }
   return {
     productoId: '',
     color: '',
-    stock: '0',
+    stock: '1',
     imagenes: '',
   };
 };
@@ -41,6 +46,8 @@ export const VariantePage = () => {
   const [form, setForm] = useState<VarianteForm>(emptyForm());
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'single'; id: number } | { type: 'bulk'; ids: number[] } | null>(null);
 
   const selectedProductName = useMemo(() => {
     if (!filterProductId) return 'Todas las variantes';
@@ -74,6 +81,10 @@ export const VariantePage = () => {
     void load(page, filterProductId);
   }, [page, filterProductId]);
 
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [page, filterProductId]);
+
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyForm(true));
@@ -102,7 +113,15 @@ export const VariantePage = () => {
     e.preventDefault();
     setSaving(true);
     try {
+      // Validar que el stock sea mayor a 0 y color no esté vacío
       if (editingId) {
+        if (!form.color.trim()) {
+          throw new Error('El color no puede estar vacío');
+        }
+        if (Number(form.stock) < 1) {
+          throw new Error('El stock debe ser mayor a 0');
+        }
+        
         const payload: Record<string, any> = {
           color: form.color.trim(),
           stock: Number(form.stock),
@@ -122,6 +141,17 @@ export const VariantePage = () => {
         if (!form.productoId) {
           throw new Error('Selecciona un producto');
         }
+
+        // Validar todas las variantes
+        for (const v of form.variantes || []) {
+          if (!v.color.trim()) {
+            throw new Error('El color no puede estar vacío para todas las variantes');
+          }
+          if (Number(v.stock) < 1) {
+            throw new Error('El stock debe ser mayor a 0 para todas las variantes');
+          }
+        }
+        
         const bulkPayload = {
           productoId: Number(form.productoId),
           variantes: (form.variantes || []).map((v) => ({
@@ -156,6 +186,17 @@ export const VariantePage = () => {
       if (!form.productoId) {
         throw new Error('Selecciona un producto');
       }
+
+      // Validar todas las variantes
+      for (const v of form.variantes || []) {
+        if (!v.color.trim()) {
+          throw new Error('El color no puede estar vacío para todas las variantes');
+        }
+        if (Number(v.stock) < 1) {
+          throw new Error('El stock debe ser mayor a 0 para todas las variantes');
+        }
+      }
+
       const bulkPayload = {
         productoId: Number(form.productoId),
         variantes: (form.variantes || []).map((v) => ({
@@ -187,29 +228,72 @@ export const VariantePage = () => {
   };
 
   const handleDelete = (id: number) => {
-    toast.warning('¿Eliminar esta variante?', {
-      description: 'Esta acción no se puede deshacer.',
-      duration: Infinity,
-      action: {
-        label: 'Eliminar',
-        onClick: async () => {
-          setSaving(true);
-          try {
-            await varianteService.eliminar(id);
-            toast.success('Variante eliminada');
-            await load(page, filterProductId);
-          } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'No pudimos eliminar la variante.');
-          } finally {
-            setSaving(false);
-          }
-        },
-      },
-      cancel: {
-        label: 'Cancelar',
-        onClick: () => {},
-      },
+    setDeleteTarget({ type: 'single', id });
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    setDeleteTarget({ type: 'bulk', ids: Array.from(selectedIds) });
+  };
+
+  const handleToggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
+  };
+
+  const handleToggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      const allOnPage = items.map((item) => item.id);
+      const allSelected = allOnPage.length > 0 && allOnPage.every((id) => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(allOnPage);
+    });
+  };
+
+  const closeDeleteModal = () => {
+    if (!saving) setDeleteTarget(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    setSaving(true);
+    try {
+      if (deleteTarget.type === 'single') {
+        await varianteService.eliminar(deleteTarget.id);
+        toast.success('Variante eliminada');
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(deleteTarget.id);
+          return next;
+        });
+      } else {
+        const results = await Promise.allSettled(
+          deleteTarget.ids.map((id) => varianteService.eliminar(id))
+        );
+        const failed = results.filter((r) => r.status === 'rejected').length;
+        const succeeded = results.length - failed;
+
+        if (succeeded > 0) {
+          toast.success(`${succeeded} variante${succeeded > 1 ? 's' : ''} eliminada${succeeded > 1 ? 's' : ''}`);
+        }
+        if (failed > 0) {
+          toast.error(`No se pudieron eliminar ${failed} variante${failed > 1 ? 's' : ''}`);
+        }
+        setSelectedIds(new Set());
+      }
+
+      setDeleteTarget(null);
+      await load(page, filterProductId);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No pudimos eliminar la variante.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleAdjustStock = async (id: number, currentStock: number, delta: number) => {
@@ -287,9 +371,26 @@ export const VariantePage = () => {
           <span style={{ color: '#7d6b73' }}>{selectedProductName}</span>
         </div>
 
+        {selectedIds.size > 0 && (
+          <div className={styles.bulkActionBar}>
+            <span>
+              {selectedIds.size} variante{selectedIds.size > 1 ? 's' : ''} seleccionada{selectedIds.size > 1 ? 's' : ''}
+            </span>
+            <button type="button" onClick={handleBulkDelete} disabled={saving} className={styles.bulkDeleteBtn}>
+              <Trash2 size={14} />
+              Eliminar seleccionadas
+            </button>
+          </div>
+        )}
+
         <VariantesTable
           items={items}
           loading={loading}
+          isSelected={(id) => selectedIds.has(id)}
+          allSelected={items.length > 0 && items.every((i) => selectedIds.has(i.id))}
+          someSelected={items.some((i) => selectedIds.has(i.id))}
+          onToggleSelect={handleToggleSelect}
+          onToggleSelectAll={handleToggleSelectAll}
           onEdit={openEdit}
           onDelete={handleDelete}
           onAdjustStock={handleAdjustStock}
@@ -311,6 +412,19 @@ export const VariantePage = () => {
       ) : (
         <VarianteEditModal {...sharedModalProps} editingId={editingId} />
       )}
+
+      <ConfirmDeleteModal
+        isOpen={deleteTarget !== null}
+        title={
+          deleteTarget?.type === 'bulk'
+            ? `¿Eliminar ${deleteTarget.ids.length} variantes?`
+            : '¿Eliminar esta variante?'
+        }
+        description="Esta acción no se puede deshacer."
+        isLoading={saving}
+        onConfirm={() => void confirmDelete()}
+        onCancel={closeDeleteModal}
+      />
     </>
   );
 };

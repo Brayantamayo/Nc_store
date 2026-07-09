@@ -68,6 +68,7 @@ const ensureProductoExiste = async (productoId: number) => {
       id: true,
       nombre: true,
       activo: true,
+      esCombo: true,
     },
   });
 
@@ -140,21 +141,39 @@ export const getVarianteById = async (id: number) => {
 
 ///---Crear variante---///
 export const createVariante = async (data: CreateVarianteDto) => {
-  await ensureProductoExiste(data.productoId);
+  const producto = await ensureProductoExiste(data.productoId);
 
-  const duplicado = await prisma.variante.findFirst({
-    where: {
-      productoId: data.productoId,
-      color: { equals: data.color, mode: 'insensitive' },
-    },
-    select: { id: true },
-  });
+  // Validar duplicado: solo si NO es combo, o si es combo pero mismo color y misma opción
+  if (!producto.esCombo || !data.opcionComboNombre) {
+    const duplicado = await prisma.variante.findFirst({
+      where: {
+        productoId: data.productoId,
+        color: { equals: data.color, mode: 'insensitive' },
+        ...(data.opcionComboNombre ? { opcionComboNombre: data.opcionComboNombre } : {}),
+      },
+      select: { id: true },
+    });
 
-  if (duplicado) {
-    throw new Error(`Ya existe una variante de color "${data.color}" para este producto`);
+    if (duplicado) {
+      throw new Error(`Ya existe una variante de color "${data.color}" para este producto`);
+    }
+  } else {
+    // Para combos: validar que no haya duplicado en la MISMA opción del combo
+    const duplicado = await prisma.variante.findFirst({
+      where: {
+        productoId: data.productoId,
+        color: { equals: data.color, mode: 'insensitive' },
+        opcionComboNombre: data.opcionComboNombre,
+      },
+      select: { id: true },
+    });
+
+    if (duplicado) {
+      throw new Error(`Ya existe una variante de color "${data.color}" para "${data.opcionComboNombre}" en este combo`);
+    }
   }
 
-  const stock = data.stock ?? 0;
+  const stock = data.stock ?? 1;
   const activo = stock <= 0 ? false : (data.activo ?? true);
 
   return prisma.variante.create({
@@ -174,33 +193,65 @@ export const createVariante = async (data: CreateVarianteDto) => {
 ///---Crear múltiples variantes---///
 export const createManyVariantes = async (data: CreateManyVariantesDto) => {
   const { productoId, variantes } = data;
-  await ensureProductoExiste(productoId);
+  const producto = await ensureProductoExiste(productoId);
 
-  // 1. Validar duplicados dentro del mismo payload
-  const colores = variantes.map(v => v.color.trim().toLowerCase());
-  const uniqueColores = new Set(colores);
-  if (uniqueColores.size !== colores.length) {
-    throw new Error('No puedes enviar colores duplicados en el mismo formulario');
+  if (producto.esCombo) {
+    // Para combos: validar duplicados POR opción del combo
+    const uniqueCombos = new Set<string>();
+    
+    for (const v of variantes) {
+      const key = `${v.opcionComboNombre || 'general'}-${v.color.trim().toLowerCase()}`;
+      if (uniqueCombos.has(key)) {
+        throw new Error(`No puedes enviar colores duplicados para "${v.opcionComboNombre || 'el combo'}" en el mismo formulario`);
+      }
+      uniqueCombos.add(key);
+    }
+
+    // Validar duplicados en BD POR opción del combo
+    for (const v of variantes) {
+      const duplicado = await prisma.variante.findFirst({
+        where: {
+          productoId,
+          color: { equals: v.color.trim(), mode: 'insensitive' },
+          opcionComboNombre: v.opcionComboNombre || null,
+        },
+        select: { id: true },
+      });
+
+      if (duplicado) {
+        if (v.opcionComboNombre) {
+          throw new Error(`Ya existe una variante de color "${v.color}" para "${v.opcionComboNombre}" en este combo`);
+        } else {
+          throw new Error(`Ya existe una variante de color "${v.color}" para este combo`);
+        }
+      }
+    }
+  } else {
+    // Para productos normales: validar duplicados globales
+    const colores = variantes.map(v => v.color.trim().toLowerCase());
+    const uniqueColores = new Set(colores);
+    if (uniqueColores.size !== colores.length) {
+      throw new Error('No puedes enviar colores duplicados en el mismo formulario');
+    }
+
+    const duplicadosExistentes = await prisma.variante.findMany({
+      where: {
+        productoId,
+        color: { in: variantes.map(v => v.color.trim()), mode: 'insensitive' },
+      },
+      select: { color: true },
+    });
+
+    if (duplicadosExistentes.length > 0) {
+      const listColores = duplicadosExistentes.map(v => `"${v.color}"`).join(', ');
+      throw new Error(`Ya existe una variante de color para este producto: ${listColores}`);
+    }
   }
 
-  // 2. Validar duplicados contra la base de datos
-  const duplicadosExistentes = await prisma.variante.findMany({
-    where: {
-      productoId,
-      color: { in: variantes.map(v => v.color.trim()), mode: 'insensitive' },
-    },
-    select: { color: true },
-  });
-
-  if (duplicadosExistentes.length > 0) {
-    const listColores = duplicadosExistentes.map(v => `"${v.color}"`).join(', ');
-    throw new Error(`Ya existe una variante de color para este producto: ${listColores}`);
-  }
-
-  // 3. Crear todas las variantes en una transacción
+  // Crear todas las variantes en una transacción
   return prisma.$transaction(
     variantes.map(v => {
-      const stock = v.stock ?? 0;
+      const stock = v.stock ?? 1;
       const activo = stock <= 0 ? false : (v.activo ?? true);
       return prisma.variante.create({
         data: {
@@ -225,28 +276,49 @@ export const updateVariante = async (id: number, data: UpdateVarianteDto) => {
     select: {
       id: true,
       productoId: true,
+      opcionComboNombre: true,
     },
   });
 
   if (!variante) throw new Error(`Variante con id ${id} no encontrada`);
 
+  // Obtener el producto para ver si es combo
+  const producto = await prisma.producto.findUnique({
+    where: { id: variante.productoId },
+    select: { esCombo: true },
+  });
+
   if (data.color) {
+    // Determinar la opción del combo que se está usando
+    const opcionCombo = data.opcionComboNombre !== undefined ? data.opcionComboNombre : variante.opcionComboNombre;
+    
+    // Validar duplicado según si es combo o no
+    const where: any = {
+      id: { not: id },
+      productoId: variante.productoId,
+      color: { equals: data.color, mode: 'insensitive' },
+    };
+
+    if (producto?.esCombo || opcionCombo) {
+      where.opcionComboNombre = opcionCombo || null;
+    }
+
     const duplicado = await prisma.variante.findFirst({
-      where: {
-        id: { not: id },
-        productoId: variante.productoId,
-        color: { equals: data.color, mode: 'insensitive' },
-      },
+      where,
       select: { id: true },
     });
 
     if (duplicado) {
-      throw new Error(`Ya existe otra variante de color "${data.color}" para este producto`);
+      if (producto?.esCombo && opcionCombo) {
+        throw new Error(`Ya existe otra variante de color "${data.color}" para "${opcionCombo}" en este combo`);
+      } else {
+        throw new Error(`Ya existe otra variante de color "${data.color}" para este producto`);
+      }
     }
   }
 
-  if (data.stock !== undefined && data.stock < 0) {
-    throw new Error('El stock no puede ser negativo');
+  if (data.stock !== undefined && data.stock < 1) {
+    throw new Error('El stock debe ser mayor a 0');
   }
 
   let isActivo = data.activo;

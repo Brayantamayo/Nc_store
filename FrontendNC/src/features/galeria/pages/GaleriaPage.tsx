@@ -4,6 +4,8 @@ import { Trash2, Plus, ImagePlus, Check, X, Images } from 'lucide-react';
 import { toast } from 'sonner';
 import { galeriaService, type GaleriaImage } from '../services/galeriaService';
 import { useAdminPanel } from '../../panel/context/AdminPanelContext';
+import { ConfirmDeleteModal } from '../../../../shared/components/ConfirmDeleteModal';
+import { useDeleteConfirm } from '../../../../shared/hooks/useDeleteConfirm';
 import styles from '../../panel/css/Admin.module.css';
 
 const MAX_IMAGES = 9;
@@ -11,12 +13,21 @@ const MAX_IMAGES = 9;
 export const GaleriaPage = () => {
   const { setIsLoading, isLoading } = useAdminPanel();
 
-  const [images, setImages]       = useState<GaleriaImage[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [file, setFile]           = useState<File | null>(null);
+  const [images, setImages]         = useState<GaleriaImage[]>([]);
+  const [modalOpen, setModalOpen]   = useState(false);
+  const [file, setFile]             = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const [caption, setCaption]     = useState('');
-  const fileInputRef              = useRef<HTMLInputElement>(null);
+  const [caption, setCaption]       = useState('');
+  const fileInputRef                = useRef<HTMLInputElement>(null);
+
+  const {
+    isDeleteOpen, modalTitle, modalDescription,
+    requestDelete, closeDelete, deleteTarget,
+  } = useDeleteConfirm<number>({
+    singleTitle: '¿Eliminar esta imagen?',
+    bulkTitle: () => '',
+    description: 'Esta acción no se puede deshacer.',
+  });
 
   const remaining    = Math.max(0, MAX_IMAGES - images.length);
   const orderedImages = useMemo(() => [...images].sort((a, b) => a.orden - b.orden), [images]);
@@ -89,27 +100,21 @@ export const GaleriaPage = () => {
   };
 
   // ── Eliminar ─────────────────────────────────────────────────────
-  const handleDelete = (id: number) => {
-    toast.warning('¿Eliminar esta imagen de la galería?', {
-      description: 'Esta acción no se puede deshacer.',
-      duration: Infinity,
-      action: {
-        label: 'Eliminar',
-        onClick: async () => {
-          setIsLoading(true);
-          try {
-            await galeriaService.eliminar(id);
-            setImages((prev) => prev.filter((img) => img.id !== id));
-            toast.success('Imagen eliminada.');
-          } catch {
-            toast.error('No pudimos eliminar la imagen.');
-          } finally {
-            setIsLoading(false);
-          }
-        },
-      },
-      cancel: { label: 'Cancelar', onClick: () => {} },
-    });
+  const handleDelete = (id: number) => requestDelete(id);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || deleteTarget.type !== 'single') return;
+    setIsLoading(true);
+    try {
+      await galeriaService.eliminar(deleteTarget.id);
+      setImages((prev) => prev.filter((img) => img.id !== deleteTarget.id));
+      toast.success('Imagen eliminada.');
+      closeDelete();
+    } catch {
+      toast.error('No pudimos eliminar la imagen.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ── Render ────────────────────────────────────────────────────────
@@ -321,6 +326,15 @@ export const GaleriaPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteOpen}
+        title={modalTitle}
+        description={modalDescription}
+        isLoading={isLoading}
+        onConfirm={() => void confirmDelete()}
+        onCancel={closeDelete}
+      />
     </motion.div>
   );
 };

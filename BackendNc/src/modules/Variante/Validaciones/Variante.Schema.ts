@@ -14,8 +14,8 @@ export const createVarianteSchema = z.object({
   stock: z
     .coerce.number()
     .int('El stock debe ser un número entero')
-    .min(0, 'El stock no puede ser negativo')
-    .default(0),
+    .min(1, 'El stock debe ser mayor a 0')
+    .default(1),
   activo: z
     .coerce.boolean()
     .default(true),
@@ -41,8 +41,8 @@ export const createManyVariantesSchema = z.object({
         stock: z
           .coerce.number()
           .int('El stock debe ser un número entero')
-          .min(0, 'El stock no puede ser negativo')
-          .default(0),
+          .min(1, 'El stock debe ser mayor a 0')
+          .default(1),
         activo: z
           .coerce.boolean()
           .default(true),
