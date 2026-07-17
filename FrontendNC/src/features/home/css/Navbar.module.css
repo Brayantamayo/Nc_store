@@ -62,6 +62,13 @@
   color: var(--color-primary);
 }
 
+/* Nav en página de cuenta — fondo blanco limpio */
+.accountPage {
+  background: #fffdfd;
+  border-bottom: 1px solid rgba(194, 24, 91, 0.08);
+  box-shadow: 0 2px 16px rgba(194, 24, 91, 0.05);
+}
+
 /* =============================================
 CONTAINER — 3-COLUMN FLEXBOX
    ============================================= */

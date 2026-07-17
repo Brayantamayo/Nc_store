@@ -1,3 +1,4 @@
+///Componente que muestra la lista de productos de la colección
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -49,9 +50,12 @@ const SPECIAL_CATEGORIES: Record<string, CategoryMetadata> = {
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc';
 
-const getColorHex = (colorName: string): string => {
-  const normalized = colorName.toLowerCase().trim();
-  return colorMap[normalized] || '#808080';
+const getColorHex = (colorValue: string): string => {
+  const trimmed = colorValue.trim();
+  // Si ya es un hex válido, úsalo directamente
+  if (/^#[0-9a-fA-F]{3,6}$/.test(trimmed)) return trimmed;
+  // Si no, busca en el mapa por nombre (retrocompatibilidad)
+  return colorMap[trimmed.toLowerCase()] || '#808080';
 };
 
 const collectSlugs = (category: CategoriaTreeItem): string[] => {
@@ -128,17 +132,31 @@ export const Collection = () => {
     return dbProducts
       .map((p) => {
         const activeVariantes = p.variantes?.filter((v) => ('activo' in v ? v.activo : true)) || [];
-        const variantImages = activeVariantes.flatMap((v) => v.imagenes) || [];
-        const images = variantImages.length > 0
-          ? variantImages
-          : ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800'];
+        const variantImages = activeVariantes.flatMap((v) => v.imagenes).filter(Boolean);
+        const fallback = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800';
+        const images = p.imagenPrincipal
+          ? [p.imagenPrincipal, ...variantImages]
+          : variantImages.length > 0
+            ? variantImages
+            : [fallback];
 
         const colors = activeVariantes
           ?.filter((v): v is typeof v & { color: string } => 'color' in v && !!v.color)
-          .map((v) => ({
-            name: v.color,
-            hex: getColorHex(v.color),
-          })) || [];
+          .map((v) => {
+            const parts = v.color.split('|');
+            if (parts.length === 2) {
+              return {
+                name: parts[0].trim(),
+                hex: parts[1].trim(),
+                varianteId: (v as any).id,
+              };
+            }
+            return {
+              name: v.color,
+              hex: getColorHex(v.color),
+              varianteId: (v as any).id,
+            };
+          }) || [];
 
         return {
           id: String(p.id),

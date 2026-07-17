@@ -70,6 +70,7 @@ export const Navbar = () => {
   const { pathname } = useLocation();
   const isCartPage = pathname === '/carrito';
   const isCollectionPage = pathname === '/coleccion';
+  const isAccountPage = pathname === '/mi-cuenta';
   const usePearlNav = isCartPage || isCollectionPage;
   const { isMobileMenuOpen, setMobileMenuOpen, setSearchOpen } = useUIStore();
   const { toggleCart, itemCount } = useCartStore();
@@ -166,7 +167,7 @@ export const Navbar = () => {
         </div>
       </div>
 
-      <nav className={`${styles.nav} ${usePearlNav ? styles.cartPage : ''} ${isScrolled && !usePearlNav ? styles.scrolled : ''}`}>
+      <nav className={`${styles.nav} ${usePearlNav ? styles.cartPage : ''} ${isAccountPage ? styles.accountPage : ''} ${isScrolled && !usePearlNav && !isAccountPage ? styles.scrolled : ''}`}>
         <div className={styles.container}>
           <button
             className={styles.menuBtn}

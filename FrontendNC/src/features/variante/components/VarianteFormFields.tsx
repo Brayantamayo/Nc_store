@@ -3,6 +3,7 @@ import styles from '../../panel/css/Admin.module.css';
 import type { VarianteForm, VarianteItemForm } from '../types';
 import type { ProductoApiItem } from '../../productos/types';
 import { ImageUploader } from '../../../../shared/components/ImageUploader';
+import { ColorPicker } from './ColorPicker';
 
 interface VarianteFormFieldsProps {
   form: VarianteForm;
@@ -82,12 +83,9 @@ export const VarianteFormFields = ({
       }}
     >
       <div style={{ flex: 2 }}>
-        <input
-          className={styles.textInput}
+        <ColorPicker
           value={variant.color}
-          onChange={(e) => handleVariantChange(variant.originalIndex, { color: e.target.value })}
-          placeholder="Color (ej: Negro)"
-          style={{ margin: 0 }}
+          onChange={(val) => handleVariantChange(variant.originalIndex, { color: val })}
         />
       </div>
       <div style={{ flex: 1 }}>
@@ -288,11 +286,9 @@ export const VarianteFormFields = ({
               <div className={styles.formGrid} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Color</label>
-                  <input
-                    className={styles.textInput}
+                  <ColorPicker
                     value={variant.color}
-                    onChange={(e) => handleVariantChange(index, { color: e.target.value })}
-                    placeholder="Ej. Negro, Blanco, Rojo"
+                    onChange={(val) => handleVariantChange(index, { color: val })}
                   />
                 </div>
 
@@ -344,10 +340,9 @@ export const VarianteFormFields = ({
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Color</label>
-            <input
-              className={styles.textInput}
+            <ColorPicker
               value={form.color}
-              onChange={(e) => onChange({ color: e.target.value })}
+              onChange={(val) => onChange({ color: val })}
             />
           </div>
 

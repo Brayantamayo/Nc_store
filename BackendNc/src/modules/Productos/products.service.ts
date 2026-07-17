@@ -30,6 +30,7 @@ const productListSelect = {
   creadoEn: true,
   esCombo: true,
   opcionesCombo: true,
+  imagenPrincipal: true,
   categoria: {
     select: {
       id: true,
@@ -214,6 +215,7 @@ export const createProducto = async (data: CreateProductoDto) => {
       activo: data.activo ?? true,
       esCombo: data.esCombo ?? false,
       opcionesCombo: data.opcionesCombo ?? undefined,
+      imagenPrincipal: data.imagenPrincipal ?? null,
     },
     select: productDetailSelect,
   });
@@ -266,6 +268,7 @@ export const updateProducto = async (id: number, data: UpdateProductoDto) => {
       activo: data.activo,
       esCombo: data.esCombo,
       opcionesCombo: data.opcionesCombo ?? undefined,
+      imagenPrincipal: data.imagenPrincipal ?? undefined,
     },
     select: productDetailSelect,
   });

@@ -19,28 +19,32 @@ import { ProductCard } from './ProductCard';
 
 import styles from '../css/ProductDetail.module.css';
 
-// Mapeo de nombres de colores a códigos hex
+// Mapeo de nombres de colores a códigos hex — incluye variaciones comunes
 const colorMap: { [key: string]: string } = {
-  negro: '#000000',
-  blanco: '#FFFFFF',
-  rosado: '#E91E8C',
-  rosa: '#E91E8C',
-  rojo: '#FF0000',
-  azul: '#0066FF',
-  verde: '#00AA00',
-  amarillo: '#FFFF00',
-  naranja: '#FF8800',
-  morado: '#9933FF',
-  gris: '#808080',
-  beige: '#D4BCA8',
-  cafe: '#8B4513',
-  marron: '#8B4513',
+  negro: '#1a1a1a', blanco: '#f5f5f5', gris: '#9e9e9e', 'gris claro': '#d0d0d0',
+  rosado: '#f48fb1', rosa: '#f48fb1', 'rosa fucsia': '#e91e8c', fucsia: '#e91e8c',
+  rojo: '#e53935', coral: '#ff7043', naranja: '#fb8c00', amarillo: '#fdd835',
+  verde: '#43a047', 'verde menta': '#80cbc4', azul: '#1e88e5', 'azul cielo': '#81d4fa',
+  morado: '#8e24aa', lavanda: '#ce93d8', beige: '#d7b899', café: '#6d4c41',
+  cafe: '#6d4c41', dorado: '#ffd54f', plateado: '#b0bec5', nude: '#e8c4a0',
+  marron: '#8B4513', marrón: '#8B4513',
 };
 
-const getColorHex = (colorName: string): string => {
-  const normalized = colorName.toLowerCase().trim();
-  return colorMap[normalized] || '#808080'; // Gris por defecto
+const getColorHex = (colorName: string, index = 0): string => {
+  const trimmed = colorName.trim();
+  // 1. Si ya es un hex válido → usarlo directamente
+  if (/^#[0-9a-fA-F]{3,6}$/.test(trimmed)) return trimmed;
+  // 2. Buscar por nombre exacto
+  const normalized = trimmed.toLowerCase();
+  if (colorMap[normalized]) return colorMap[normalized];
+  // 3. Búsqueda parcial
+  const partial = Object.keys(colorMap).find((k) => normalized.includes(k) || k.includes(normalized));
+  if (partial) return colorMap[partial];
+  // 4. Fallback rotativo
+  const fallbacks = ['#c2185b', '#f48fb1', '#1a1a1a', '#f5f5f5', '#9e9e9e', '#fb8c00'];
+  return fallbacks[index % fallbacks.length];
 };
+
 
 export const ProductDetail = () => {
   const { products: storeProducts } = useProductStore();
@@ -53,6 +57,7 @@ export const ProductDetail = () => {
   const mainImageRef = useRef<HTMLImageElement>(null);
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [imagenPrincipal, setImagenPrincipal] = useState<string | null>(null);
   const [apiVariantes, setApiVariantes] = useState<ProductoDetailItem['variantes']>([]);
   const [loading, setLoading] = useState(true);
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null);
@@ -61,6 +66,11 @@ export const ProductDetail = () => {
   const [comboSelections, setComboSelections] = useState<Record<string, string>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [relatedStartIndex, setRelatedStartIndex] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const touchStartX = useRef(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -69,24 +79,35 @@ export const ProductDetail = () => {
         const apiProduct = await productoService.obtenerPorSlugParaTienda(slug);
         const availableVariantes = apiProduct.variantes.filter((v) => v.stock > 0);
 
-        // Guardar solo las variantes disponibles para mantener la vista consistente con la tienda
         setApiVariantes(availableVariantes);
+        setImagenPrincipal(apiProduct.imagenPrincipal ?? null);
 
-        // Transformar producto del API al formato Product
-        const variantImages = availableVariantes.flatMap((v) => v.imagenes) || [];
-        const images = variantImages.length > 0
-          ? variantImages
-          : ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800'];
+        // product.images = [imagenPrincipal] — solo la imagen del producto
+        // Las imágenes de variantes se cargan dinámicamente al seleccionar color
+        const imgPrincipal = apiProduct.imagenPrincipal;
+        const fallback = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800';
 
-        const colors = availableVariantes
-          ?.map((v) => ({
+        const images = imgPrincipal
+          ? [imgPrincipal]
+          : availableVariantes[0]?.imagenes?.length
+            ? availableVariantes[0].imagenes
+            : [fallback];
+
+        const colors = availableVariantes.map((v, i) => {
+          const parts = v.color.split('|');
+          if (parts.length === 2) {
+            return {
+              name: parts[0].trim(),
+              hex: parts[1].trim(),
+              varianteId: v.id,
+            };
+          }
+          return {
             name: v.color,
-            hex: getColorHex(v.color),
+            hex: getColorHex(v.color, i),
             varianteId: v.id,
-          })) || [];
-        
-        console.log('Variantes del API:', apiProduct.variantes);
-        console.log('Colors mapeados:', colors);
+          };
+        });
 
         const transformedProduct: Product = {
           id: String(apiProduct.id),
@@ -121,13 +142,21 @@ export const ProductDetail = () => {
     loadProduct();
   }, [slug]);
 
-  // Obtener imágenes del color seleccionado
-  const getColorImages = () => {
-    if (!selectedColor || apiVariantes.length === 0) {
-      return product?.images || [];
-    }
+  // Imágenes según el color seleccionado:
+  // - Si la variante tiene fotos propias → las muestra
+  // - Si no → muestra la imagenPrincipal del producto
+  // - Si no hay ninguna → fallback de unsplash
+  const getColorImages = (): string[] => {
+    const fallback = imagenPrincipal
+      ? [imagenPrincipal]
+      : product?.images ?? [];
+
+    if (!selectedColor) return fallback;
+
     const variant = apiVariantes.find((v) => v.color === selectedColor.name);
-    return variant?.imagenes || product?.images || [];
+    if (variant && variant.imagenes.length > 0) return variant.imagenes;
+
+    return fallback;
   };
 
   const colorImages = getColorImages();
@@ -200,6 +229,33 @@ export const ProductDetail = () => {
 
     return () => window.clearInterval(interval);
   }, [rotatingProducts.length]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    setIsDragging(true);
+    setDragOffset(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const diffX = e.touches[0].clientX - touchStartX.current;
+    setDragOffset(diffX);
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    if (trackRef.current) {
+      const scrollContainer = trackRef.current.parentElement;
+      if (scrollContainer) {
+        scrollContainer.scrollBy({
+          left: -dragOffset,
+          behavior: 'smooth'
+        });
+      }
+    }
+    setDragOffset(0);
+  };
+
 
   if (loading) {
     return (
@@ -505,36 +561,51 @@ export const ProductDetail = () => {
         {curatedProducts.length > 0 && (
           <section className={styles.related}>
             <div className={styles.relatedIntro}>
-              <p className={styles.relatedKicker}>EL MATCH PERFECTO</p>
+              <p className={styles.relatedKicker}>Productos recomendados</p>
               <div className={styles.relatedDivider} aria-hidden="true">
                 <span />
                 <Sparkles size={18} />
                 <span />
               </div>
-              <p className={styles.relatedSubtitle}>Crea un look completo con estos favoritos</p>
+              <p className={styles.relatedSubtitle}>Completa tu estilo con estas sugerencias</p>
             </div>
 
-            <div className={styles.relatedWindow}>
-              <AnimatePresence mode="popLayout">
-                {visibleRelatedProducts.map((p, idx) => (
-                  <motion.div
-                    key={`${p.id}-${idx}`}
-                    layout
-                    initial={{ opacity: 0, x: 24, scale: 0.98 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -24, scale: 0.98 }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                    className={styles.relatedItem}
-                  >
-                    <ProductCard product={p} index={idx} variant="collection" />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+            <div 
+              className={styles.relatedWindow}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div 
+                ref={trackRef}
+                className={`${styles.trackContainer} ${!isDragging ? styles.trackAnimated : ''}`}
+                style={{
+                  transform: isDragging ? `translate3d(${dragOffset}px, 0, 0)` : undefined,
+                  transition: isDragging ? 'none' : 'transform 0.5s ease-out'
+                }}
+              >
+                {(() => {
+                  // Para que no quede espacio vacío, repetimos la lista hasta tener al menos 10 elementos
+                  let displayItems = [...curatedProducts];
+                  while (displayItems.length > 0 && displayItems.length < 10) {
+                    displayItems = [...displayItems, ...curatedProducts];
+                  }
+                  
+                  return displayItems.map((p, idx) => (
+                    <div
+                      key={`${p.id}-${idx}`}
+                      className={styles.relatedItem}
+                    >
+                      <ProductCard product={p} index={idx} variant="collection" />
+                    </div>
+                  ));
+                })()}
+              </div>
             </div>
 
             <div className={styles.relatedFooter}>
               <Link to="/coleccion" className={styles.relatedLink}>
-                Ver mas <ArrowRight size={16} />
+                Ver toda la colección <ArrowRight size={16} />
               </Link>
             </div>
           </section>

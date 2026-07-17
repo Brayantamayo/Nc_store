@@ -589,7 +589,8 @@
 .relatedWindow {
   overflow: hidden;
   position: relative;
-  padding: 0.25rem 0;
+  padding: 1rem 0;
+  width: 100%;
 }
 
 .relatedWindow::before,
@@ -598,31 +599,62 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 70px;
+  width: 120px;
   pointer-events: none;
-  z-index: 2;
+  z-index: 5;
 }
 
 .relatedWindow::before {
   left: 0;
-  background: linear-gradient(90deg, #fff7fa 15%, rgba(255, 247, 250, 0));
+  background: linear-gradient(90deg, #fff7fa 10%, rgba(255, 247, 250, 0));
 }
 
 .relatedWindow::after {
   right: 0;
-  background: linear-gradient(270deg, #fff7fa 15%, rgba(255, 247, 250, 0));
+  background: linear-gradient(270deg, #fff7fa 10%, rgba(255, 247, 250, 0));
+}
+
+.trackContainer {
+  display: flex;
+  width: max-content;
+  gap: 1.5rem;
+  will-change: transform;
+}
+
+/* Animación de desplazamiento infinito */
+.trackAnimated {
+  animation: scrollInfinite 45s linear infinite;
+}
+
+.trackAnimated:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollInfinite {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(calc(-50% - 0.75rem), 0, 0);
+  }
 }
 
 .relatedItem {
-  width: 220px;
-  flex: 0 0 220px;
+  width: 260px;
+  flex: 0 0 260px;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.relatedItem:hover {
+  transform: translateY(-6px);
 }
 
 .relatedFooter {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
 }
+
 
 @media (max-width: 1199px) {
   .layout {

@@ -5,25 +5,27 @@ import type { ProductoApiItem } from '../../productos/types';
 import { Product } from '../../../types';
 
 const colorMap: Record<string, string> = {
-  negro: '#000000',
-  blanco: '#FFFFFF',
-  rosado: '#E91E8C',
-  rosa: '#E91E8C',
-  rojo: '#FF0000',
-  azul: '#0066FF',
-  verde: '#00AA00',
-  amarillo: '#FFFF00',
-  naranja: '#FF8800',
-  morado: '#9933FF',
-  gris: '#808080',
-  beige: '#D4BCA8',
-  cafe: '#8B4513',
-  marron: '#8B4513',
+  negro: '#1a1a1a', blanco: '#f5f5f5', gris: '#9e9e9e',
+  rosado: '#f48fb1', rosa: '#f48fb1', 'rosa fucsia': '#e91e8c', fucsia: '#e91e8c',
+  rojo: '#e53935', coral: '#ff7043', naranja: '#fb8c00', amarillo: '#fdd835',
+  verde: '#43a047', 'verde menta': '#80cbc4', azul: '#1e88e5', 'azul cielo': '#81d4fa',
+  morado: '#8e24aa', lavanda: '#ce93d8', beige: '#d7b899', café: '#6d4c41',
+  cafe: '#6d4c41', dorado: '#ffd54f', plateado: '#b0bec5', nude: '#e8c4a0',
+  marron: '#8b4513', marrón: '#8b4513',
 };
 
 const toProduct = (p: ProductoApiItem): Product => {
   const variantes = p.variantes?.filter((v) => ('activo' in v ? v.activo : true)) || [];
-  const images = variantes.flatMap((v) => v.imagenes).filter(Boolean);
+  const fallback = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800';
+
+  // La imagen principal del producto es solo la imagenPrincipal.
+  // Las imágenes de variantes solo se usan en ProductDetail al elegir color.
+  const allVariantImages = variantes.flatMap((v) => v.imagenes).filter(Boolean);
+  const images = p.imagenPrincipal
+    ? [p.imagenPrincipal]
+    : allVariantImages.length > 0
+      ? [allVariantImages[0]]
+      : [fallback];
 
   return {
     id: String(p.id),
@@ -31,18 +33,53 @@ const toProduct = (p: ProductoApiItem): Product => {
     name: p.nombre,
     price: Number(p.precio),
     originalPrice: p.precioOriginal ? Number(p.precioOriginal) : undefined,
-    images: images.length > 0
-      ? images
-      : ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800'],
+    images,
     category: (p.categoria?.slug?.toLowerCase() || 'general') as Product['category'],
     colors: variantes
       .filter((v): v is typeof v & { color: string } => 'color' in v && !!v.color)
-      .map((v) => ({
-        name: v.color,
-        hex: colorMap[v.color.toLowerCase().trim()] || '#db2777',
-        varianteId: (v as any).id,
-        opcionComboNombre: (v as any).opcionComboNombre,
-      })),
+      .map((v, i) => {
+        const trimmed = v.color.trim();
+        const parts = trimmed.split('|');
+
+        // 1. Si contiene el separador "nombre|#hex"
+        if (parts.length === 2) {
+          return {
+            name: parts[0].trim(),
+            hex: parts[1].trim(),
+            varianteId: (v as any).id,
+            opcionComboNombre: (v as any).opcionComboNombre,
+          };
+        }
+
+        // 2. Si ya es un hex válido → usarlo directamente
+        if (/^#[0-9a-fA-F]{3,6}$/.test(trimmed)) {
+          return {
+            name: trimmed,
+            hex: trimmed,
+            varianteId: (v as any).id,
+            opcionComboNombre: (v as any).opcionComboNombre,
+          };
+        }
+        // 3. Buscar por nombre exacto en el mapa
+        const normalized = trimmed.toLowerCase();
+        let hex = colorMap[normalized];
+        // 4. Búsqueda parcial
+        if (!hex) {
+          const partial = Object.keys(colorMap).find(
+            (k) => normalized.includes(k) || k.includes(normalized)
+          );
+          hex = partial ? colorMap[partial] : undefined;
+        }
+        // 5. Fallback rotativo
+        const fallbacks = ['#c2185b', '#f48fb1', '#1a1a1a', '#f5f5f5', '#9e9e9e', '#fb8c00'];
+
+        return {
+          name: trimmed,
+          hex: hex ?? fallbacks[i % fallbacks.length],
+          varianteId: (v as any).id,
+          opcionComboNombre: (v as any).opcionComboNombre,
+        };
+      }),
     material: '',
     description: p.descripcion || '',
     isNew: false,

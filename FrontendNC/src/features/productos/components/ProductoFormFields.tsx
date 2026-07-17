@@ -3,6 +3,7 @@ import { useState } from 'react';
 import styles from '../../panel/css/Admin.module.css';
 import type { CategoriaApiItem } from '../../categoria/types';
 import type { ProductoForm } from '../types';
+import { ImageUploader } from '../../../../shared/components/ImageUploader';
 
 interface ProductoFormFieldsProps {
   productForm: ProductoForm;
@@ -35,10 +36,25 @@ export const ProductoFormFields = ({
     <>
       <div className={styles.messageBanner} style={{ marginTop: 0 }}>
         <AlertCircle size={18} />
-        <span>Completa los datos básicos del producto y guarda para publicarlo.</span>
+        <span>Completa los datos básicos del producto. La imagen principal se mostrará cuando no hay variante seleccionada.</span>
       </div>
 
       <div className={styles.formGrid}>
+
+        {/* ── Imagen principal ──────────────────────────────────── */}
+        <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+          <ImageUploader
+            label="Imagen principal del producto"
+            value={productForm.imagenPrincipal}
+            onChange={(url) => onChange({ imagenPrincipal: url })}
+            multiple={false}
+          />
+          {errors.imagenPrincipal && (
+            <span className={styles.errorText}>{errors.imagenPrincipal}</span>
+          )}
+        </div>
+
+        {/* ── Nombre ───────────────────────────────────────────── */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Nombre</label>
           <input
@@ -49,6 +65,7 @@ export const ProductoFormFields = ({
           {errors.nombre && <span className={styles.errorText}>{errors.nombre}</span>}
         </div>
 
+        {/* ── Slug ─────────────────────────────────────────────── */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Slug</label>
           <input
@@ -59,6 +76,7 @@ export const ProductoFormFields = ({
           {errors.slug && <span className={styles.errorText}>{errors.slug}</span>}
         </div>
 
+        {/* ── Precio ───────────────────────────────────────────── */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Precio</label>
           <input
@@ -70,18 +88,20 @@ export const ProductoFormFields = ({
           {errors.precio && <span className={styles.errorText}>{errors.precio}</span>}
         </div>
 
+        {/* ── Precio anterior ──────────────────────────────────── */}
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Precio Anterior (Sin descuento)</label>
+          <label className={styles.formLabel}>Precio anterior (sin descuento)</label>
           <input
             className={`${styles.textInput} ${errors.precioOriginal ? styles.inputError : ''}`}
             type="number"
-            placeholder="Ej. 60000 (Debe ser mayor al precio actual)"
+            placeholder="Ej. 60000 (debe ser mayor al precio actual)"
             value={productForm.precioOriginal}
             onChange={(e) => onChange({ precioOriginal: e.target.value })}
           />
           {errors.precioOriginal && <span className={styles.errorText}>{errors.precioOriginal}</span>}
         </div>
 
+        {/* ── Categoría ────────────────────────────────────────── */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Categoría</label>
           <select
@@ -99,6 +119,7 @@ export const ProductoFormFields = ({
           {errors.categoriaId && <span className={styles.errorText}>{errors.categoriaId}</span>}
         </div>
 
+        {/* ── Descripción ──────────────────────────────────────── */}
         <div className={`${styles.formGroup} ${styles.fullWidth}`}>
           <label className={styles.formLabel}>Descripción</label>
           <textarea
@@ -109,6 +130,7 @@ export const ProductoFormFields = ({
           {errors.descripcion && <span className={styles.errorText}>{errors.descripcion}</span>}
         </div>
 
+        {/* ── Activo ───────────────────────────────────────────── */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Activo</label>
           <label className={styles.toggleLabel}>
@@ -123,6 +145,7 @@ export const ProductoFormFields = ({
           </label>
         </div>
 
+        {/* ── Es Combo ─────────────────────────────────────────── */}
         <div className={`${styles.formGroup} ${styles.fullWidth}`}>
           <label className={styles.formLabel}>Es Combo</label>
           <label className={styles.toggleLabel}>
@@ -133,48 +156,74 @@ export const ProductoFormFields = ({
               className={styles.toggleInput}
             />
             <span className={styles.toggleSwitch} />
-            <span>{productForm.esCombo ? 'Sí, requiere seleccionar colores por artículo' : 'No, es producto normal'}</span>
+            <span>
+              {productForm.esCombo
+                ? 'Sí, requiere seleccionar colores por artículo'
+                : 'No, es producto normal'}
+            </span>
           </label>
         </div>
 
+        {/* ── Artículos del combo ──────────────────────────────── */}
         {productForm.esCombo && (
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
             <label className={styles.formLabel}>Artículos del Combo</label>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-              Añade los bolsos o artículos que incluye este combo. El cliente elegirá el color para cada uno.
+            <p style={{ fontSize: '0.85rem', color: 'rgba(74,20,44,0.6)', marginBottom: '0.75rem' }}>
+              Añade los artículos que incluye este combo. El cliente elegirá el color para cada uno.
             </p>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <input
                 className={styles.textInput}
                 placeholder="Ej: Baguette LOW COST"
                 value={newOption}
                 onChange={(e) => setNewOption(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddOption())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); handleAddOption(); }
+                }}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleAddOption}
-                style={{ padding: '0 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                className={styles.primaryPillBtn}
+                style={{ whiteSpace: 'nowrap' }}
               >
-                <Plus size={16} /> Añadir
+                <Plus size={15} /> Añadir
               </button>
             </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
               {(productForm.opcionesCombo || []).map((opt, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.02)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
-                  <span>{opt}</span>
-                  <button type="button" onClick={() => handleRemoveOption(i)} style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer' }}>
-                    <X size={16} />
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.65rem 1rem',
+                    background: 'rgba(248,187,208,0.1)',
+                    border: '1px solid rgba(194,24,91,0.12)',
+                    borderRadius: '10px',
+                  }}
+                >
+                  <span style={{ fontSize: '0.88rem', color: '#4a142c' }}>{opt}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveOption(i)}
+                    style={{ background: 'none', border: 'none', color: '#c2185b', cursor: 'pointer', display: 'flex' }}
+                  >
+                    <X size={15} />
                   </button>
                 </div>
               ))}
-              {productForm.opcionesCombo?.length === 0 && (
-                <p style={{ fontSize: '0.9rem', color: '#888', fontStyle: 'italic' }}>No has añadido ningún artículo al combo.</p>
+              {(productForm.opcionesCombo?.length ?? 0) === 0 && (
+                <p style={{ fontSize: '0.85rem', color: 'rgba(74,20,44,0.4)', fontStyle: 'italic' }}>
+                  Sin artículos aún.
+                </p>
               )}
             </div>
           </div>
         )}
+
       </div>
     </>
   );

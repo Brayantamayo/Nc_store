@@ -47,60 +47,61 @@ model Usuario {
 model Cliente {
   id                 Int      @id @default(autoincrement())
   usuarioId          Int      @unique
-  tipoIdentificacion String?
-  nroIdentificacion  String?
-  telefono           String?
   direccion          String?
   direccion2         String?
   region             String?
   ciudad             String?
   codigoPostal       String?
   creadoEn           DateTime @default(now())
+  nroIdentificacion  String?
+  telefono           String?
+  tipoIdentificacion String?
   usuario            Usuario  @relation(fields: [usuarioId], references: [id])
   pedidos            Pedido[]
 }
 
 model Categoria {
-  id         Int        @id @default(autoincrement())
-  nombre     String     @unique
-  slug       String     @unique
-  imagen     String?
-  parentId   Int?
-  creadoEn   DateTime   @default(now())
-  productos  Producto[]
-  parent     Categoria? @relation("CategoriaHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children   Categoria[] @relation("CategoriaHierarchy")
+  id        Int         @id @default(autoincrement())
+  nombre    String      @unique
+  slug      String      @unique
+  imagen    String?
+  creadoEn  DateTime    @default(now())
+  parentId  Int?
+  parent    Categoria?  @relation("CategoriaHierarchy", fields: [parentId], references: [id])
+  children  Categoria[] @relation("CategoriaHierarchy")
+  productos Producto[]
 
   @@index([parentId])
 }
 
 model Producto {
-  id             Int        @id @default(autoincrement())
-  nombre         String
-  slug           String     @unique
-  descripcion    String?
-  precio         Decimal    @db.Decimal(10, 2)
-  categoriaId    Int
-  activo         Boolean    @default(true)
-  creadoEn       DateTime   @default(now())
-  precioOriginal Decimal?   @db.Decimal(10, 2)
-  esCombo        Boolean    @default(false)
-  opcionesCombo  Json?
-  categoria      Categoria  @relation(fields: [categoriaId], references: [id])
-  variantes      Variante[]
+  id              Int        @id @default(autoincrement())
+  nombre          String
+  slug            String     @unique
+  descripcion     String?
+  precio          Decimal    @db.Decimal(10, 2)
+  categoriaId     Int
+  activo          Boolean    @default(true)
+  creadoEn        DateTime   @default(now())
+  precioOriginal  Decimal?   @db.Decimal(10, 2)
+  esCombo         Boolean    @default(false)
+  opcionesCombo   Json?
+  imagenPrincipal String?
+  categoria       Categoria  @relation(fields: [categoriaId], references: [id])
+  variantes       Variante[]
 }
 
 model Variante {
-  id          Int          @id @default(autoincrement())
-  productoId  Int
-  color       String
-  stock       Int          @default(0)
-  imagenes    String[]
+  id                Int          @id @default(autoincrement())
+  productoId        Int
+  color             String
+  stock             Int          @default(0)
+  imagenes          String[]
+  activo            Boolean      @default(true)
   opcionComboNombre String?
-  activo      Boolean      @default(true)
-  itemsPedido ItemPedido[]
-  itemsVenta  ItemVenta[]
-  producto    Producto     @relation(fields: [productoId], references: [id])
+  itemsPedido       ItemPedido[]
+  itemsVenta        ItemVenta[]
+  producto          Producto     @relation(fields: [productoId], references: [id])
 }
 
 model Pedido {
@@ -118,14 +119,14 @@ model Pedido {
 }
 
 model ItemPedido {
-  id         Int      @id @default(autoincrement())
-  pedidoId   Int
-  varianteId Int
-  cantidad   Int
-  precio     Decimal  @db.Decimal(10, 2)
+  id            Int      @id @default(autoincrement())
+  pedidoId      Int
+  varianteId    Int
+  cantidad      Int
+  precio        Decimal  @db.Decimal(10, 2)
   detallesCombo Json?
-  pedido     Pedido   @relation(fields: [pedidoId], references: [id])
-  variante   Variante @relation(fields: [varianteId], references: [id])
+  pedido        Pedido   @relation(fields: [pedidoId], references: [id])
+  variante      Variante @relation(fields: [varianteId], references: [id])
 }
 
 model Pago {
@@ -149,14 +150,14 @@ model Venta {
 }
 
 model ItemVenta {
-  id         Int      @id @default(autoincrement())
-  ventaId    Int
-  varianteId Int
-  cantidad   Int
-  precio     Decimal  @db.Decimal(10, 2)
+  id            Int      @id @default(autoincrement())
+  ventaId       Int
+  varianteId    Int
+  cantidad      Int
+  precio        Decimal  @db.Decimal(10, 2)
   detallesCombo Json?
-  variante   Variante @relation(fields: [varianteId], references: [id])
-  venta      Venta    @relation(fields: [ventaId], references: [id])
+  variante      Variante @relation(fields: [varianteId], references: [id])
+  venta         Venta    @relation(fields: [ventaId], references: [id])
 }
 
 model PasswordResetOtp {
@@ -185,12 +186,12 @@ model RegistroToken {
 }
 
 model GaleriaImagen {
-  id        Int      @id @default(autoincrement())
-  url       String
-  publicId  String   @unique
-  caption   String?
-  orden     Int      @unique
-  creadoEn  DateTime @default(now())
+  id       Int      @id @default(autoincrement())
+  url      String
+  publicId String   @unique
+  caption  String?
+  orden    Int      @unique
+  creadoEn DateTime @default(now())
 }
 
 model BannerSlide {

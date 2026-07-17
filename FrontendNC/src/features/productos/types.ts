@@ -12,6 +12,7 @@ export interface ProductoApiItem {
   categoriaId: number;
   activo: boolean;
   creadoEn: string;
+  imagenPrincipal?: string | null;
   categoria: {
     id: number;
     nombre: string;
@@ -30,6 +31,7 @@ export interface ProductoApiItem {
 }
 
 export interface ProductoDetailItem extends ProductoApiItem {
+  imagenPrincipal?: string | null;
   variantes: Array<{
     id: number;
     color: string;
@@ -48,6 +50,7 @@ export interface ProductoForm {
   opcionesCombo: string[];
   categoriaId: string;
   activo: boolean;
+  imagenPrincipal: string;
 }
 
 export interface ProductoResponse<T> {

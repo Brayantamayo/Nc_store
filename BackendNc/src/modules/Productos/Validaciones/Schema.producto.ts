@@ -53,6 +53,7 @@ export const createProductoSchema = z.object({
   activo: z.coerce.boolean().default(true),
   esCombo: z.coerce.boolean().default(false),
   opcionesCombo: z.array(z.string()).optional().nullable(),
+  imagenPrincipal: z.string().url('La imagen debe ser una URL válida').optional().nullable(),
 });
 
 export const updateProductoSchema = createProductoSchema.partial().refine(

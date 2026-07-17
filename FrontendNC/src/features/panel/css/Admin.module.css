@@ -5030,3 +5030,189 @@
   color: rgba(74, 20, 44, 0.5);
   font-weight: 600;
 }
+
+/* ─── COLOR PICKER ──────────────────────────────────────────────────────────── */
+
+.colorPickerWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  position: relative;
+  width: 100%;
+}
+
+.colorPickerTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border-radius: 12px;
+  border: 1.5px solid rgba(194, 24, 91, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  text-align: left;
+  gap: 0.5rem;
+}
+
+.colorPickerTrigger:hover,
+.colorPickerTriggerOpen {
+  border-color: rgba(194, 24, 91, 0.5);
+  box-shadow: 0 0 0 3px rgba(194, 24, 91, 0.08);
+}
+
+.colorPickerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.colorPickerSwatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.colorPickerSwatchEmpty {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  border: 1.5px dashed rgba(194, 24, 91, 0.3);
+  background: transparent;
+}
+
+.colorPickerValue {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #4a142c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.colorPickerPlaceholder {
+  font-size: 0.84rem;
+  color: rgba(74, 20, 44, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.colorPickerChevron {
+  flex-shrink: 0;
+  color: rgba(74, 20, 44, 0.45);
+  transition: transform 0.2s;
+}
+
+.colorPickerChevronOpen {
+  transform: rotate(180deg);
+}
+
+.colorPickerInput {
+  width: 100%;
+  padding: 0.48rem 0.85rem;
+  border-radius: 10px;
+  border: 1.5px solid rgba(194, 24, 91, 0.15);
+  background: rgba(255, 248, 251, 0.8);
+  font-size: 0.82rem;
+  color: #4a142c;
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+.colorPickerInput:focus {
+  border-color: rgba(194, 24, 91, 0.4);
+  background: #fff;
+}
+
+.colorPickerInput::placeholder {
+  color: rgba(74, 20, 44, 0.35);
+}
+
+.colorPickerDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: #fff;
+  border: 1px solid rgba(194, 24, 91, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(74, 20, 44, 0.14);
+  padding: 0.85rem;
+  animation: colorPickerFadeIn 0.15s ease;
+}
+
+@keyframes colorPickerFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.colorPickerHint {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(74, 20, 44, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.65rem;
+}
+
+.colorPickerGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+
+.colorPickerItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.3rem;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.colorPickerItem:hover {
+  background: rgba(248, 187, 208, 0.15);
+  transform: scale(1.05);
+}
+
+.colorPickerItemSelected {
+  border-color: #c2185b;
+  background: rgba(194, 24, 91, 0.07);
+}
+
+.colorPickerItemSwatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.colorPickerItemName {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #4a142c;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 56px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

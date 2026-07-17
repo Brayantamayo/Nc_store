@@ -1,0 +1,61 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border-radius: 12px;
+  border: 1.5px solid rgba(194, 24, 91, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.wrapper:focus-within {
+  border-color: rgba(194, 24, 91, 0.5);
+  box-shadow: 0 0 0 3px rgba(194, 24, 91, 0.08);
+}
+
+/* Círculo de color clickeable */
+.swatchBtn {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1.5px rgba(194, 24, 91, 0.25), 0 2px 6px rgba(0,0,0,0.12);
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+
+.swatchBtn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px rgba(194, 24, 91, 0.45), 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Input nativo completamente oculto dentro del swatch */
+.nativeInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+/* Input de nombre */
+.nameInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.875rem;
+  color: #4a142c;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.nameInput::placeholder {
+  color: rgba(74, 20, 44, 0.38);
+}

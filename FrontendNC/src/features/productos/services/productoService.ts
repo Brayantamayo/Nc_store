@@ -40,6 +40,9 @@ export const productoService = {
     precioOriginal?: number | null;
     categoriaId: number;
     activo: boolean;
+    esCombo?: boolean;
+    opcionesCombo?: string[];
+    imagenPrincipal?: string | null;
   }) => {
     const { data } = await api.post<ProductoResponse<ProductoDetailItem>>('/productos', payload);
     return data.data;
@@ -55,6 +58,9 @@ export const productoService = {
       precioOriginal?: number | null;
       categoriaId: number;
       activo: boolean;
+      esCombo: boolean;
+      opcionesCombo: string[];
+      imagenPrincipal: string | null;
     }>
   ) => {
     const { data } = await api.patch<ProductoResponse<ProductoDetailItem>>(`/productos/${id}`, payload);

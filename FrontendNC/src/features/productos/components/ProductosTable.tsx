@@ -83,9 +83,9 @@ export const ProductosTable = ({
                   <td>
                     <div className={styles.tableProductCell}>
                       <div className={styles.tableProductIcon} style={{ padding: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {item.variantes?.[0]?.imagenes?.[0] ? (
+                        {item.imagenPrincipal ?? item.variantes?.[0]?.imagenes?.[0] ? (
                           <img
-                            src={item.variantes[0].imagenes[0]}
+                            src={item.imagenPrincipal ?? item.variantes![0].imagenes[0]}
                             alt={item.nombre}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />

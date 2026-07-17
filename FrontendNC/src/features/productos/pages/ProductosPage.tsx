@@ -28,6 +28,7 @@ const EMPTY_FORM = (): ProductoForm => ({
   activo: true,
   esCombo: false,
   opcionesCombo: [],
+  imagenPrincipal: '',
 });
 
 const DEFAULT_META = {
@@ -119,6 +120,7 @@ export const ProductosPage = () => {
       activo: item.activo,
       esCombo: item.esCombo ?? false,
       opcionesCombo: item.opcionesCombo ?? [],
+      imagenPrincipal: item.imagenPrincipal ?? '',
     });
     setErrors({});
     setIsModalOpen(true);
@@ -187,6 +189,7 @@ export const ProductosPage = () => {
         activo: form.activo,
         esCombo: form.esCombo,
         opcionesCombo: form.esCombo ? form.opcionesCombo : [],
+        imagenPrincipal: form.imagenPrincipal.trim() || null,
       };
 
       await (editingId
