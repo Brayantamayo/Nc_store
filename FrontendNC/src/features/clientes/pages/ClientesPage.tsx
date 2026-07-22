@@ -1,59 +1,65 @@
-import { useMemo } from 'react';
-import { motion } from 'motion/react';
-import { Mail, MapPin, Package2, Users } from 'lucide-react';
-import { useOrderStore } from '../../store/pages/orderStore';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Mail, MapPin, Package2, Users, Plus } from 'lucide-react';
+import { clienteService } from '../services/clienteService';
+import { ClientesTable } from '../components/ClientesTable';
+import { ClienteDetailModal } from '../components/ClienteDetailModal';
+import { ClienteEditModal } from '../components/ClienteEditModal';
+import type { ClienteListado, ClienteDetalle } from '../types';
 import styles from '../../panel/css/Admin.module.css';
 
-type ClientRow = {
-  id: string;
-  name: string;
-  email: string;
-  city: string;
-  ordersCount: number;
-  totalSpent: number;
-  lastOrderDate: string;
-};
-
 export const ClientesPage = () => {
-  const orders = useOrderStore((state) => state.orders);
+  const [clientes, setClientes] = useState<ClienteListado[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const clients = useMemo<ClientRow[]>(() => {
-    const grouped = new Map<string, ClientRow>();
+  // Modales
+  const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
+  const [editingCliente, setEditingCliente] = useState<ClienteListado | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-    orders.forEach((order) => {
-      const key = order.customerEmail.toLowerCase();
-      const current = grouped.get(key);
+  const fetchClientes = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      const data = await clienteService.listar();
+      setClientes(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar clientes');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      if (!current) {
-        grouped.set(key, {
-          id: key,
-          name: order.customerName,
-          email: order.customerEmail,
-          city: order.customerCity,
-          ordersCount: 1,
-          totalSpent: order.total,
-          lastOrderDate: order.createdAt,
-        });
-        return;
-      }
+  useEffect(() => {
+    void fetchClientes();
+  }, []);
 
-      current.ordersCount += 1;
-      current.totalSpent += order.total;
-      if (new Date(order.createdAt) > new Date(current.lastOrderDate)) {
-        current.lastOrderDate = order.createdAt;
-        current.city = order.customerCity;
-        current.name = order.customerName;
-      }
-    });
+  const handleToggleActivo = async (cliente: ClienteListado) => {
+    try {
+      await clienteService.toggleActivo(cliente.id);
+      void fetchClientes();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al cambiar estado del cliente');
+    }
+  };
 
-    return [...grouped.values()].sort(
-      (a, b) => new Date(b.lastOrderDate).getTime() - new Date(a.lastOrderDate).getTime(),
-    );
-  }, [orders]);
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
 
-  const totalClients = clients.length;
-  const repeatClients = clients.filter((client) => client.ordersCount > 1).length;
-  const totalOrders = orders.length;
+  const filteredClientes = clientes.filter((c) => {
+    const nombreCompleto = `${c.usuario.nombre || ''} ${c.usuario.apellido || ''} ${c.usuario.nombreVisible || ''}`.toLowerCase();
+    const email = (c.usuario.email || '').toLowerCase();
+    const ciudad = (c.ciudad || '').toLowerCase();
+    const query = searchTerm.toLowerCase();
+    return nombreCompleto.includes(query) || email.includes(query) || ciudad.includes(query);
+  });
+
+  const totalClients = clientes.length;
+  const activeClients = clientes.filter((c) => c.activo).length;
+  const inactiveClients = totalClients - activeClients;
 
   return (
     <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={styles.ordersShell}>
@@ -62,85 +68,94 @@ export const ClientesPage = () => {
           <div>
             <h2 className={styles.ordersSectionTitle}>Clientes ({totalClients})</h2>
             <p className={styles.ordersSectionSubtitle}>
-              Personas que ya compraron en NC, agrupadas por correo para ver sus pedidos de un vistazo.
+              Administración de clientes registrados en el sistema, compras realizadas y estado de su cuenta.
             </p>
           </div>
 
           <div className={styles.ordersLegend}>
-            <span className={styles.ordersStatusPending}>
-              <Users size={13} />
-              {totalClients} clientes
-            </span>
-            <span className={styles.ordersStatusProcessing}>
-              <Package2 size={13} />
-              {repeatClients} recurrentes
-            </span>
             <span className={styles.ordersStatusDelivered}>
-              <Mail size={13} />
-              {totalOrders} pedidos
+              <Users size={13} />
+              {activeClients} activos
             </span>
+            <span className={styles.ordersStatusCancelled}>
+              <Users size={13} />
+              {inactiveClients} inactivos
+            </span>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className={styles.saveBtn}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '6px 12px' }}
+            >
+              <Plus size={16} /> Nuevo Cliente
+            </button>
           </div>
         </div>
 
-        <div className={styles.ordersTableContainer}>
-          <table className={styles.ordersTable}>
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Email</th>
-                <th>Ciudad</th>
-                <th>Pedidos</th>
-                <th>Total gastado</th>
-                <th>Último pedido</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.length > 0 ? (
-                clients.map((client) => {
-                  const initials = client.name
-                    .split(' ')
-                    .map((part) => part[0])
-                    .join('')
-                    .slice(0, 2)
-                    .toUpperCase();
-
-                  return (
-                    <tr key={client.id} className={styles.ordersTableRow}>
-                      <td>
-                        <div className={styles.ordersCustomerCell}>
-                          <div className={styles.ordersAvatar}>{initials || 'NC'}</div>
-                          <div className={styles.ordersCustomerInfo}>
-                            <strong>{client.name}</strong>
-                            <span>Cliente de la tienda</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{client.email}</td>
-                      <td>{client.city}</td>
-                      <td>
-                        <span className={styles.ordersIdBadge}>{client.ordersCount}</span>
-                      </td>
-                      <td>
-                        <strong className={styles.ordersTotal}>${client.totalSpent.toLocaleString('es-CO')}</strong>
-                      </td>
-                      <td>{new Date(client.lastOrderDate).toLocaleDateString('es-CO')}</td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={6}>
-                    <div className={styles.ordersEmptyState}>
-                      <strong>Aun no hay clientes registrados</strong>
-                      <span>Cuando existan pedidos, aparecerán agrupados aquí automáticamente.</span>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {/* Buscador */}
+        <div style={{ padding: '0 24px 16px 24px' }}>
+          <input
+            type="text"
+            placeholder="Buscar por nombre, correo o ciudad..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className={styles.textInput}
+            style={{ width: '100%', maxWidth: '400px' }}
+          />
         </div>
+
+        {isLoading ? (
+          <div className={styles.ordersEmptyState}>
+            <strong>Cargando clientes</strong>
+            <span>Trayendo la lista de clientes desde la base de datos...</span>
+          </div>
+        ) : error ? (
+          <div className={styles.ordersEmptyState}>
+            <strong>Ocurrió un error</strong>
+            <span>{error}</span>
+          </div>
+        ) : (
+          <ClientesTable
+            clientes={filteredClientes}
+            onView={(c) => setSelectedClienteId(c.id)}
+            onEdit={(c) => setEditingCliente(c)}
+            onToggleActivo={handleToggleActivo}
+          />
+        )}
       </div>
+
+      <AnimatePresence>
+        {/* Modal de Detalle */}
+        {selectedClienteId !== null && (
+          <ClienteDetailModal
+            clienteId={selectedClienteId}
+            onClose={() => setSelectedClienteId(null)}
+            onEdit={(c) => {
+              setSelectedClienteId(null);
+              setEditingCliente(c);
+            }}
+          />
+        )}
+
+        {/* Modal de Creación */}
+        {isCreateModalOpen && (
+          <ClienteEditModal
+            mode="create"
+            onClose={() => setIsCreateModalOpen(false)}
+            onSaved={fetchClientes}
+          />
+        )}
+
+        {/* Modal de Edición */}
+        {editingCliente !== null && (
+          <ClienteEditModal
+            mode="edit"
+            cliente={editingCliente}
+            onClose={() => setEditingCliente(null)}
+            onSaved={fetchClientes}
+          />
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 };
+

@@ -8,6 +8,7 @@ import { productoService } from '../../productos/services/productoService';
 import { categoriaService } from '../../categoria/services/categoriaService';
 import type { CategoriaTreeItem } from '../../categoria/types';
 import type { ProductoApiItem } from '../../productos/types';
+import { BRAND_PLACEHOLDER_IMAGE } from '../../../types';
 import type { Product } from '../../../types';
 import { Bow } from '../../home/components/Moñito';
 import styles from '../css/Collection.module.css';
@@ -18,15 +19,21 @@ const colorMap: Record<string, string> = {
   rosado: '#E91E8C',
   rosa: '#E91E8C',
   rojo: '#FF0000',
-  azul: '#0066FF',
-  verde: '#00AA00',
+  azul: '#0000FF',
+  verde: '#008000',
   amarillo: '#FFFF00',
-  naranja: '#FF8800',
-  morado: '#9933FF',
   gris: '#808080',
-  beige: '#D4BCA8',
   cafe: '#8B4513',
+  café: '#8B4513',
+  morado: '#800080',
+  lavanda: '#E6E6FA',
+  dorado: '#FFD700',
+  plateado: '#C0C0C0',
+  beige: '#F5F5DC',
+  nude: '#E8C4A0',
   marron: '#8B4513',
+  marrón: '#8B4513',
+  fucsia: '#FF00FF',
 };
 
 interface CategoryMetadata {
@@ -39,12 +46,12 @@ const SPECIAL_CATEGORIES: Record<string, CategoryMetadata> = {
   descuentos: {
     name: 'Ofertas Especiales',
     description: 'Nuestras piezas de colección más deseadas con precios especiales por tiempo limitado.',
-    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1600',
+    image: BRAND_PLACEHOLDER_IMAGE,
   },
   all: {
     name: 'Toda la Colección',
     description: 'Explora el catálogo completo de NC Store. Expresión, elegancia y tendencia coquette.',
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1600',
+    image: BRAND_PLACEHOLDER_IMAGE,
   },
 };
 
@@ -133,7 +140,7 @@ export const Collection = () => {
       .map((p) => {
         const activeVariantes = p.variantes?.filter((v) => ('activo' in v ? v.activo : true)) || [];
         const variantImages = activeVariantes.flatMap((v) => v.imagenes).filter(Boolean);
-        const fallback = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800';
+        const fallback = BRAND_PLACEHOLDER_IMAGE;
         const images = p.imagenPrincipal
           ? [p.imagenPrincipal, ...variantImages]
           : variantImages.length > 0

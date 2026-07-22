@@ -12,6 +12,7 @@ type ClienteListado = {
   region: string | null;
   ciudad: string | null;
   codigoPostal: string | null;
+  activo: boolean;
   creadoEn: Date;
   usuario: {
     id: number;
@@ -45,6 +46,7 @@ const clienteListSelect = {
   region: true,
   ciudad: true,
   codigoPostal: true,
+  activo: true,
   creadoEn: true,
   usuario: {
     select: {
@@ -95,6 +97,7 @@ const buildNombreVisible = (dto: Pick<CreateClienteDto, 'firstName' | 'lastName'
 
 export const getAllClientes = async (
   pagination: PaginationParams,
+  activo?: boolean,
 ): Promise<{
   data: Array<
     ClienteListado & {
@@ -104,8 +107,10 @@ export const getAllClientes = async (
   >;
   meta: ReturnType<typeof buildPaginationMeta>;
 }> => {
-  const total = await prisma.cliente.count();
+  const where = activo !== undefined ? { activo } : {};
+  const total = await prisma.cliente.count({ where });
   const clientes = (await prisma.cliente.findMany({
+    where,
     orderBy: { creadoEn: 'desc' },
     skip: pagination.skip,
     take: pagination.take,
@@ -265,4 +270,18 @@ export const updateCliente = async (id: number, data: UpdateClienteDto) => {
     ...clienteActualizado,
     usuario: usuarioActualizado,
   } as unknown as ClienteListado;
+};
+
+export const toggleClienteActivo = async (id: number) => {
+  const cliente = await prisma.cliente.findUnique({ where: { id } });
+
+  if (!cliente) {
+    throw new Error(`Cliente con id ${id} no encontrado`);
+  }
+
+  return prisma.cliente.update({
+    where: { id },
+    data: { activo: !cliente.activo },
+    select: clienteListSelect as any,
+  }) as unknown as Promise<ClienteListado>;
 };

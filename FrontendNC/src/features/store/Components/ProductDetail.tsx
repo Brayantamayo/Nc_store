@@ -12,6 +12,7 @@ import { useFlyToCartStore } from '../pages/flyToCartStore';
 import { useCartFeedbackStore } from '../pages/cartFeedbackStore';
 import { useWishlistStore } from '../pages/wishlistStore';
 import { productoService } from '../../productos/services/productoService';
+import { BRAND_PLACEHOLDER_IMAGE } from '../../../types';
 import type { ColorOption, Product } from '../../../types';
 import type { ProductoDetailItem } from '../../productos/types';
 
@@ -56,11 +57,21 @@ export const ProductDetail = () => {
   const { toggle, isWishlisted } = useWishlistStore();
   const mainImageRef = useRef<HTMLImageElement>(null);
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [imagenPrincipal, setImagenPrincipal] = useState<string | null>(null);
+  const [product, setProduct] = useState<Product | null>(() => {
+    return storeProducts.find((p) => p.slug === slug) || null;
+  });
+  const [imagenPrincipal, setImagenPrincipal] = useState<string | null>(() => {
+    const local = storeProducts.find((p) => p.slug === slug);
+    return local?.images[0] || null;
+  });
   const [apiVariantes, setApiVariantes] = useState<ProductoDetailItem['variantes']>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null);
+  const [loading, setLoading] = useState(() => {
+    return !storeProducts.some((p) => p.slug === slug);
+  });
+  const [selectedColor, setSelectedColor] = useState<ColorOption | null>(() => {
+    const local = storeProducts.find((p) => p.slug === slug);
+    return local?.colors?.[0] || null;
+  });
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [comboSelections, setComboSelections] = useState<Record<string, string>>({});
@@ -70,9 +81,26 @@ export const ProductDetail = () => {
   const [isDragging, setIsDragging] = useState(false);
   const touchStartX = useRef(0);
   const trackRef = useRef<HTMLDivElement>(null);
-
+  const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
+    setIsLeaving(false);
+    // Buscar copia local para mostrar inmediatamente si cambia el slug
+    const local = storeProducts.find((p) => p.slug === slug);
+    if (local) {
+      setProduct(local);
+      setImagenPrincipal(local.images[0] || null);
+      setSelectedColor((current) => {
+        if (current && local.colors?.some((c) => c.name === current.name)) {
+          return current;
+        }
+        return local.colors?.[0] || null;
+      });
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     const loadProduct = async () => {
       if (!slug) return;
       try {
@@ -85,7 +113,7 @@ export const ProductDetail = () => {
         // product.images = [imagenPrincipal] — solo la imagen del producto
         // Las imágenes de variantes se cargan dinámicamente al seleccionar color
         const imgPrincipal = apiProduct.imagenPrincipal;
-        const fallback = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800';
+        const fallback = BRAND_PLACEHOLDER_IMAGE;
 
         const images = imgPrincipal
           ? [imgPrincipal]
@@ -129,18 +157,25 @@ export const ProductDetail = () => {
         };
 
         setProduct(transformedProduct);
-        setSelectedColor(colors[0] || null);
+        setSelectedColor((current) => {
+          if (current && colors.some((c) => c.name === current.name)) {
+            return current;
+          }
+          return colors[0] || null;
+        });
         setSelectedImageIndex(0);
       } catch (error) {
         console.error('Error loading product:', error);
-        setProduct(null);
+        if (!local) {
+          setProduct(null);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadProduct();
-  }, [slug]);
+  }, [slug, storeProducts]);
 
   // Imágenes según el color seleccionado:
   // - Si la variante tiene fotos propias → las muestra
@@ -153,7 +188,12 @@ export const ProductDetail = () => {
 
     if (!selectedColor) return fallback;
 
-    const variant = apiVariantes.find((v) => v.color === selectedColor.name);
+    const variant = apiVariantes.find((v) => {
+      if (selectedColor.varianteId && v.id === selectedColor.varianteId) return true;
+      const vName = v.color.split('|')[0].trim().toLowerCase();
+      const selName = selectedColor.name.split('|')[0].trim().toLowerCase();
+      return vName === selName;
+    });
     if (variant && variant.imagenes.length > 0) return variant.imagenes;
 
     return fallback;
@@ -161,7 +201,12 @@ export const ProductDetail = () => {
 
   const colorImages = getColorImages();
   const currentVariant = selectedColor
-    ? apiVariantes.find((v) => v.color === selectedColor.name)
+    ? apiVariantes.find((v) => {
+        if (selectedColor.varianteId && v.id === selectedColor.varianteId) return true;
+        const vName = v.color.split('|')[0].trim().toLowerCase();
+        const selName = selectedColor.name.split('|')[0].trim().toLowerCase();
+        return vName === selName;
+      })
     : undefined;
   const currentStock = currentVariant?.stock ?? 0;
 
@@ -195,12 +240,14 @@ export const ProductDetail = () => {
   };
 
   const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate('/coleccion');
+    setIsLeaving(true);
+    setTimeout(() => {
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/coleccion');
+      }
+    }, 400);
   };
 
   const relatedProducts = storeProducts
@@ -259,8 +306,9 @@ export const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="container section" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <p>Cargando producto...</p>
+      <div className={styles.loadingOverlay} style={{ position: 'relative', height: '60vh', background: 'transparent', backdropFilter: 'none' }}>
+        <div className={styles.spinner} />
+        <p style={{ color: '#c2185b', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.1em' }}>CARGANDO PRODUCTO...</p>
       </div>
     );
   }
@@ -642,6 +690,12 @@ export const ProductDetail = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      {isLeaving && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner} />
+          <p style={{ color: '#c2185b', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.1em' }}>CARGANDO...</p>
+        </div>
+      )}
     </motion.div>
   );
 };

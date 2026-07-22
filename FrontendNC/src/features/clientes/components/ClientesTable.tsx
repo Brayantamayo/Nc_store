@@ -1,4 +1,4 @@
-import { Eye, PencilLine, ShoppingBag } from 'lucide-react';
+import { Eye, PencilLine, Power, ShoppingBag } from 'lucide-react';
 import type { ClienteListado } from '../types';
 import styles from '../../panel/css/Admin.module.css';
 
@@ -6,6 +6,7 @@ interface ClientesTableProps {
   clientes: ClienteListado[];
   onView: (cliente: ClienteListado) => void;
   onEdit: (cliente: ClienteListado) => void;
+  onToggleActivo: (cliente: ClienteListado) => void;
 }
 
 const formatMoney = (value: string | number | null | undefined) => {
@@ -27,7 +28,7 @@ const getInitials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
-export const ClientesTable = ({ clientes, onView, onEdit }: ClientesTableProps) => (
+export const ClientesTable = ({ clientes, onView, onEdit, onToggleActivo }: ClientesTableProps) => (
   <div className={styles.ordersTableContainer}>
     <table className={styles.ordersTable}>
       <thead>
@@ -35,6 +36,7 @@ export const ClientesTable = ({ clientes, onView, onEdit }: ClientesTableProps) 
           <th>Cliente</th>
           <th>Email</th>
           <th>Ciudad</th>
+          <th>Estado</th>
           <th>Pedidos</th>
           <th>Total gastado</th>
           <th>Ultimo pedido</th>
@@ -62,6 +64,15 @@ export const ClientesTable = ({ clientes, onView, onEdit }: ClientesTableProps) 
                 </td>
                 <td>{cliente.usuario.email}</td>
                 <td>{cliente.ciudad || 'Sin ciudad'}</td>
+                <td>
+                  <span
+                    className={
+                      cliente.activo ? styles.ordersStatusDelivered : styles.ordersStatusCancelled
+                    }
+                  >
+                    {cliente.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
                 <td>
                   <span className={styles.ordersIdBadge}>
                     <ShoppingBag size={12} />
@@ -92,6 +103,15 @@ export const ClientesTable = ({ clientes, onView, onEdit }: ClientesTableProps) 
                     >
                       <PencilLine size={15} />
                     </button>
+                    <button
+                      type="button"
+                      className={styles.iconBtnAction}
+                      onClick={() => onToggleActivo(cliente)}
+                      aria-label={`${cliente.activo ? 'Desactivar' : 'Activar'} ${nombreVisible}`}
+                      title={cliente.activo ? 'Desactivar' : 'Activar'}
+                    >
+                      <Power size={15} />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -99,7 +119,7 @@ export const ClientesTable = ({ clientes, onView, onEdit }: ClientesTableProps) 
           })
         ) : (
           <tr>
-            <td colSpan={7}>
+            <td colSpan={8}>
               <div className={styles.ordersEmptyState}>
                 <strong>Aun no hay clientes registrados</strong>
                 <span>Cuando existan pedidos o crees un cliente manualmente, apareceran aqui.</span>

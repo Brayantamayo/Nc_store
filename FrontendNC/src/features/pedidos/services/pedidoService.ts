@@ -1,6 +1,7 @@
 import api from '@/shared/api/api';
 import { ServiceResponse } from '../../../../shared/types/serviceResponse';
 import { Order, OrderStatus } from '../../store/pages/orderStore';
+import { BRAND_PLACEHOLDER_IMAGE } from '../../../types';
 
 export const pedidoService = {
   listar: async (): Promise<{ data: Order[] }> => {
@@ -28,7 +29,7 @@ export const pedidoService = {
           quantity: i.cantidad,
           colorName: i.variante?.color || '',
           colorHex: '#000',
-          image: i.variante?.imagenes?.[0] || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800',
+          image: i.variante?.imagenes?.[0] || BRAND_PLACEHOLDER_IMAGE,
         })) : [],
         total: Number(p.total),
         status: p.estado,

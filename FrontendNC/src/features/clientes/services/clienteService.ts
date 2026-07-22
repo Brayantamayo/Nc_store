@@ -30,6 +30,11 @@ export const clienteService = {
     const { data } = await api.patch<ClienteResponse<ClienteListado>>(`/clientes/${id}`, payload);
     return data.data;
   },
+
+  toggleActivo: async (id: number): Promise<ClienteListado> => {
+    const { data } = await api.patch<ClienteResponse<ClienteListado>>(`/clientes/${id}/toggle-activo`);
+    return data.data;
+  },
 };
 
 export const clienteErrorMessage = (error: unknown) =>

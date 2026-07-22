@@ -9,6 +9,7 @@ import { categoriaService } from '../../categoria/services/categoriaService';
 import { productoService } from '../../productos/services/productoService';
 import type { CategoriaTreeItem } from '../../categoria/types';
 import type { ProductoApiItem } from '../../productos/types';
+import { BRAND_PLACEHOLDER_IMAGE } from '../../../types';
 import type { Product } from '../../../types';
 
 // 3. Componentes
@@ -24,10 +25,10 @@ import collectionStyles from '../css/NuevasColecions.module.css';
 import { Eye, EyeOff, MessageCircle } from 'lucide-react';
 
 const FALLBACK_COLLECTIONS = [
-  { name: 'Tote', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3' },
-  { name: 'Mini Bags', image: 'https://images.unsplash.com/photo-1591561954557-26941169b49e' },
-  { name: 'Noche', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa' },
-  { name: 'Crossbody', image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7' },
+  { name: 'Tote', image: BRAND_PLACEHOLDER_IMAGE },
+  { name: 'Mini Bags', image: BRAND_PLACEHOLDER_IMAGE },
+  { name: 'Noche', image: BRAND_PLACEHOLDER_IMAGE },
+  { name: 'Crossbody', image: BRAND_PLACEHOLDER_IMAGE },
 ];
 
 export const Home = () => {
@@ -52,9 +53,11 @@ export const Home = () => {
           .map((p) => {
             const variantes = p.variantes?.filter(v => 'activo' in v ? v.activo : true) || [];
             const variantImages = variantes.flatMap((v) => v.imagenes) || [];
-            const images = variantImages.length > 0
-              ? variantImages
-              : ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800'];
+            const images = p.imagenPrincipal
+              ? [p.imagenPrincipal, ...variantImages]
+              : variantImages.length > 0
+                ? variantImages
+                : [BRAND_PLACEHOLDER_IMAGE];
 
             const colors = variantes
               ?.filter((v): v is typeof v & { color: string } => 'color' in v && !!v.color)
@@ -95,19 +98,67 @@ export const Home = () => {
     loadData();
   }, []);
 
-  const scrollTrack = (direction: 'left' | 'right') => {
+  const [isHovered, setIsHovered] = useState(false);
+  const autoPlayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const scrollOneCard = (direction: 'left' | 'right') => {
     if (trackRef.current) {
-      const scrollAmount = trackRef.current.offsetWidth * 0.8;
-      trackRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+      const track = trackRef.current;
+      const slides = track.getElementsByClassName(styles.carouselSlide);
+      if (slides.length > 0) {
+        const slideWidth = (slides[0] as HTMLElement).offsetWidth;
+        const style = window.getComputedStyle(track);
+        const gap = parseFloat(style.gap || style.columnGap) || 32; // fallback to 2rem (32px)
+        const scrollAmount = slideWidth + gap;
+
+        const halfWidth = track.scrollWidth / 2;
+
+        if (direction === 'right') {
+          // Si estamos cerca de la mitad (el final del primer grupo de productos),
+          // restamos la mitad del ancho total instantáneamente para que el scroll suave siga de largo.
+          if (track.scrollLeft >= halfWidth - 10) {
+            track.scrollLeft = track.scrollLeft - halfWidth;
+          }
+          track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        } else {
+          // Si estamos al inicio y vamos a la izquierda, saltamos a la mitad correspondiente
+          if (track.scrollLeft <= 10) {
+            track.scrollLeft = track.scrollLeft + halfWidth;
+          }
+          track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        }
+      }
     }
   };
+
+  const startAutoPlay = () => {
+    stopAutoPlay();
+    if (isHovered) return;
+    autoPlayTimerRef.current = setInterval(() => {
+      scrollOneCard('right');
+    }, 7000);
+  };
+
+  const stopAutoPlay = () => {
+    if (autoPlayTimerRef.current) {
+      clearInterval(autoPlayTimerRef.current);
+      autoPlayTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (products.length > 0) {
+      startAutoPlay();
+    }
+    return () => stopAutoPlay();
+  }, [products, isHovered]);
 
   // Use categories from DB, fallback to defaults
   const collections = categories.length > 0 
     ? categories.map(cat => ({
         name: cat.nombre,
         slug: cat.slug,
-        image: cat.imagen || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3',
+        image: cat.imagen || BRAND_PLACEHOLDER_IMAGE,
         hasChildren: cat.children.length > 0,
       }))
     : FALLBACK_COLLECTIONS.map(col => ({
@@ -142,20 +193,36 @@ export const Home = () => {
           <Link to="/coleccion" className={styles.viewAll}>VER TODO EL ENCANTO</Link>
         </div>
 
-        <div className={styles.carouselContainer}>
-          <button className={`${styles.navBtn} ${styles.navBtnLeft}`} onClick={() => scrollTrack('left')}>
+        <div 
+          className={styles.carouselContainer}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <button 
+            className={`${styles.navBtn} ${styles.navBtnLeft}`} 
+            onClick={() => {
+              scrollOneCard('left');
+              startAutoPlay();
+            }}
+          >
             <ChevronLeft size={24} />
           </button>
           
           <div className={styles.carouselTrack} ref={trackRef}>
-            {products.map((product, index) => (
-              <div key={product.id} className={styles.carouselSlide}>
+            {[...products, ...products].map((product, index) => (
+              <div key={`${product.id}-${index}`} className={styles.carouselSlide}>
                 <ProductCard product={product} index={index} />
               </div>
             ))}
           </div>
 
-          <button className={`${styles.navBtn} ${styles.navBtnRight}`} onClick={() => scrollTrack('right')}>
+          <button 
+            className={`${styles.navBtn} ${styles.navBtnRight}`} 
+            onClick={() => {
+              scrollOneCard('right');
+              startAutoPlay();
+            }}
+          >
             <ChevronRight size={24} />
           </button>
         </div>

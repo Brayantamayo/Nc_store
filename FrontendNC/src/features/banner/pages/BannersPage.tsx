@@ -1,3 +1,4 @@
+///esta pagina es para crear banners para la landing page la foto que esta en la parte de atras de a  pagina 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, Eye, EyeOff, Pencil, X, Check, Plus, ImagePlus, MonitorPlay } from 'lucide-react';

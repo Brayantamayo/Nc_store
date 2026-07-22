@@ -36,3 +36,10 @@ export const update = asyncHandler(async (req, res) => {
 
   res.status(200).json({ ok: true, data });
 });
+
+export const toggleActivo = asyncHandler(async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
+  const data = await ClientesService.toggleClienteActivo(id);
+
+  res.status(200).json({ ok: true, data });
+});

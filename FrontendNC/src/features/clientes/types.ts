@@ -19,6 +19,7 @@ export type ClientePedidoResumen = {
 export type ClienteListado = {
   id: number;
   usuarioId: number;
+  activo: boolean;
   direccion: string | null;
   direccion2: string | null;
   region: string | null;
